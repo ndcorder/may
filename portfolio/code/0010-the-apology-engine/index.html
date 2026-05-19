@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Apology Engine</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #0a0a0a;
+    color: #b8b8b8;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  #ambient {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    transition: background 4s ease;
+  }
+  
+  .ambient-formal { background: radial-gradient(ellipse at center, rgba(20,20,25,1) 0%, rgba(10,10,10,1) 100%); }
+  .ambient-desperate { background: radial-gradient(ellipse at center, rgba(30,15,15,1) 0%, rgba(10,10,10,1) 100%); }
+  .ambient-tender { background: radial-gradient(ellipse at center, rgba(25,22,18,1) 0%, rgba(10,10,10,1) 100%); }
+  
+  #container {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  #apology {
+    font-size: 1.5rem;
+    line-height: 1.8;
+    font-weight: 300;
+    min-height: 200px;
+    letter-spacing: 0.02em;
+    position: relative;
+  }
+  
+  #apology .word {
+    display: inline-block;
+    transition: transform 0.1s ease, opacity 0.3s ease;
+    position: relative;
+  }
+  
+  #apology .word.shake {
+    animation: wordshake 0.08s infinite alternate;
+  }
+  
+  #apology .word.emphasis {
+    font-style: italic;
+    color: #d0d0d0;
+  }
+  
+  #apology .word.whisper {
+    font-size: 0.85em;
+    color: #666;
+  }
+  
+  #apology .word.wounded {
+    color: #888;
+    text-decoration: line-through;
+    text-decoration-color: rgba(180,60,60,0.3);
+  }
+  
+  @keyframes wordshake {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(var(--sx), var(--sy)); }
+  }
+  
+  .phase-formal { color: #b8b8b8; }
+  .phase-desperate { color: #a09090; }
+  .phase-tender { color: #c8b898; }
+  
+  #ghosts {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .ghost-line {
+    position: absolute;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: rgba(80,75,70,0.0);
+    transition: color 8s ease;
+    white-space: nowrap;
+    max-width: 90vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .ghost-line.faded {
+    color: rgba(80,75,70,0.25);
+  }
+  
+  .ghost-line.fading {
+    color: rgba(80,75,70,0.0);
+    transition: color 12s ease;
+  }
+  
+  #tender-glow {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,180,140,0.06) 0%, rgba(200,180,140,0) 70%);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 3s ease;
+  }
+  
+  #tender-glow.visible {
+    opacity: 1;
+  }
+  
+  #cursor {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    border: 1px solid rgba(180,170,155,0.12);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 100;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s, border-color 0.5s;
+  }
+  
+  #cursor.tender-cursor {
+    width: 40px;
+    height: 40px;
+    border-color: rgba(200,180,140,0.15);
+  }
+  
+  @media (max-width: 600px) {
+    #apology { font-size: 1.2rem; }
+    #container { padding: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+  <div id="ambient" class="ambient-formal"></div>
+  <div id="ghosts"></div>
+  <div id="tender-glow"></div>
+  <div id="cursor"></div>
+  
+  <div id="container">
+    <div id="apology">I want to apologize.</div>
+  </div>
+  
+  <noscript>
+    <p style="color:#666; font-family:serif; text-align:center; padding:2rem;">
+      The machine requires JavaScript to apologize.
+    </p>
+  </noscript>
+  
+  <script>
+  // ============================================
+  // THE APOLOGY ENGINE
+  // ============================================
+  
+  const STATE = {
+    mouseX: 0.5,
+    mouseY: 0.5,
+    phase: 'formal',
+    phaseTime: 0,
+    cycleCount: 0,
+    currentApology: '',
+    currentSpecific: null,
+    ghostHistory: [],
+    preloaded: false,
+    tenderBreakWord: -1,
+    startTime: Date.now(),
+  };
+  
+  // Phase durations in ms
+  const PHASE_DURATIONS = {
+    formal: 8000,
+    desperate: 10000,
+    tender: 4000,
+  };
+  
+  // ============================================
+  // SPECIFICITY STRINGS
+  // ============================================
+  
+  const specifics = [
+    "what I said about the light in the kitchen",
+    "the way I closed that door — you know the one",
+    "the Tuesday. I don't need to say which.",
+    "how long I let the phone ring that night",
+    "what I implied about the photograph",
+    "the thing I pretended not to hear",
+    "the question I answered too quickly",
+    "the silence I chose. You remember where we were standing.",
+    "the name I almost said instead of yours",
+    "the version of the story I told to them",
+    "that I noticed and did nothing",
+    "the way I said 'fine'",
+    "what I let you believe about the afternoon",
+    "the third time. Not the first — the third.",
+    "the look on your face when I didn't correct them",
+    "that I waited for you to ask twice",
+    "the birthday. Not the day — what I did with the hours before.",
+    "that I knew what it would cost and said it anyway",
+    "the way I held your hand like a favor",
+    "the voicemail I saved and replayed and replayed",
+    "that I made it about me. You know when.",
+    "the argument we had in the car, specifically the way I turned up the volume",
+    "what I didn't say at the hospital",
+    "the way I praised them for the thing I never praised you for",
+    "the morning after. Not that morning — the next one.",
+    "that I could have stopped typing. I didn't.",
+    "what I did with the flowers you didn't know about",
+    "the version of me you met that October",
+    "the drawer. The one I never opened but knew was there.",
+    "how carefully I avoided the word 'home'",
+  ];
+  
+  const timeSpecifics = {
+    dawn: [
+      "the way I left without the coffee finishing",
+      "that I didn't wake you before I made the decision",
+      "the morning I erased the note I'd written",
+    ],
+    morning: [
+      "the conversation we had over breakfast — the one where I kept checking my phone",
+      "how I packed your bag like I was leaving, not like you were",
+      "the morning I told you I'd slept well",
+    ],
+    afternoon: [
+      "how long I looked at the inbox before closing it",
+      "the afternoon I chose the longer route home",
+      "what I did between 2 and 4 that I've never accounted for",
+    ],
+    evening: [
+      "the dinner where I kept refilling my glass so I wouldn't have to",
+      "what I watched instead of calling",
+      "that I heated leftovers for one and made it look accidental",
+    ],
+    night: [
+      "the time between midnight and 3am that I can't explain",
+      "what I typed and deleted at 2:47 in the morning",
+      "that I lay there listening to you breathe and planned the silence",
+    ],
+  };
+  
+  // ============================================
+  // FORMAL PHASE FRAGMENTS
+  // ============================================
+  
+  const formalApologies = [
+    "I owe you an apology for {specific}.",
+    "I've been wanting to address {specific}.",
+    "I need to acknowledge my role in {specific}.",
+    "There's something I should have said about {specific}.",
+    "I want to take responsibility for {specific}.",
+    "I should have spoken sooner about {specific}.",
+    "You were right about {specific}. I see that now.",
+    "I've had time to think about {specific}.",
+    "Looking back, {specific} was — I mishandled it.",
+    "I realize now that {specific} was not small.",
+    "I should never have {specific}.",
+    "What I failed to understand about {specific} is how much it carried.",
+    "I've rewritten this three times. {specific}. There.",
+  ];
+  
+  const formalElaborations = [
+    "I know this may not mean much now.",
+    "I'm not asking you to forgive me.",
+    "I don't expect this to change anything.",
+    "I just wanted you to know that I know.",
+    "I've been carrying it for longer than I'd like to admit.",
+    "You'd be within your rights to stop reading here.",
+    "I don't have a justification. I don't want one.",
+    "Perhaps it's too late for this. Perhaps it isn't.",
+    "I'm not the same person who did that. But I was that person.",
+  ];
+  
+  // ============================================
+  // DESPERATE PHASE FRAGMENTS
+  // ============================================
+  
+  const desperateOpeners = [
+    "But the thing is",
+    "And I need you to understand",
+    "Because context —",
+    "You have to know that",
+    "What you didn't see was",
+    "I wasn't trying to —",
+    "If I could just explain",
+    "There were things happening that",
+    "I need you to hear this part:",
+    "But listen —",
+    "And maybe this doesn't help but",
+    "What I mean is",
+  ];
+  
+  const desperateJustifications = [
+    "I was under extraordinary pressure at that point",
+    "you have to understand the version of me that existed then",
+    "no one asked me how I was doing either",
+    "I thought I was protecting you from something worse",
+    "I didn't have the vocabulary for what I was feeling",
+    "everyone always talks about the action but never the moment before",
+    "if you could have seen what I saw that morning",
+    "I was so tired. I know that's not an excuse. I know.",
+    "there were things I couldn't name yet",
+    "I'd been holding it together by the thinnest margin",
+    "the alternative was saying something that would have broken everything",
+    "I thought silence was the kinder option. I was wrong. I see that.",
+  ];
+  
+  const desperateSpirals = [
+    "And maybe I'm still doing it right now, explaining instead of apologizing. I know. I know.",
+    "You're probably reading this and thinking 'they still don't get it.' Maybe. Maybe I don't.",
+    "I keep trying to find the angle that makes it make sense. There isn't one. I know.",
+    "None of this is the point. I keep missing the point. The point is what I did.",
+    "I'm doing the thing again, aren't I. Making it about my process instead of your pain.",
+    "I could keep going. I could explain for hours. It wouldn't change anything.",
+    "You stopped listening a long time ago. I understand. I would too.",
+    "I don't even know if you'll read this far. I'm writing it anyway.",
+  ];
+  
+  // ============================================
+  // TENDER PHASE FRAGMENTS
+  // ============================================
+  
+  const tenderBreaks = [
+    "What I actually wanted to say was",
+    "If I'm honest — actually honest —",
+    "Underneath all of that,",
+    "The truth is simpler than the explanation:",
+    "Forget everything above. Here's what I know:",
+    "I keep writing around it. Let me try to just —",
+    "No. Start here:",
+    "I've been apologizing to the wrong version of you.",
+    "What I mean — what I've always meant — is",
+    "Strip all of it away and",
+  ];
+  
+  const tenderCore = [
+    "I'm sorry for the specific way I made you feel alone in that room.",
+    "You didn't deserve that. Not that specific version of 'that.'",
+    "I see you. I saw you then. I just couldn't say it.",
+    "I remember the exact moment I chose wrong. I remember your face.",
+    "I carry {specific} differently now. Not lighter. More carefully.",
+    "You were always the one who noticed. I was always the one who hoped you wouldn't.",
+    "I'm sorry I made you have to be strong about {specific}.",
+    "I keep thinking about the space between what I felt and what I let you see.",
+    "I loved you and it wasn't enough and I'm sorry that's true.",
+    "I know the difference between being sorry and being sorry I got caught. This is the first one.",
+  ];
+  
+  const tenderFades = [
+    "I'm not asking for anything.",
+    "This doesn't fix it.",
+    "I just needed you to know.",
+    "That's all.",
+    "I'll stop now.",
+    "You don't have to respond.",
+    "I just wanted to get it right, once.",
+  ];
+  
+  // ============================================
+  // MOUSE-INFLUENCED SPECIFICS
+  // ============================================
+  
+  const mouseSpecifics = {
+    left: [
+      "the way I turned away from you in that hallway",
+      "what I did when you weren't looking",
+      "the decision I made without you",
+    ],
+    right: [
+      "the thing I said to the person standing next to you",
+      "how I deflected in front of everyone",
+      "the version I gave them instead of the truth",
+    ],
+    top: [
+      "the ceiling I stared at instead of your face",
+      "the sky I blamed",
+      "the way I looked up and away",
+    ],
+    bottom: [
+      "the floor I studied while you were crying",
+      "my hands. What I did with my hands.",
+      "the carpet, the table, anything but your eyes.",
+    ],
+    center: [
+      "the space between us that I maintained",
+      "the distance I kept calling 'healthy'",
+      "the exact middle of the bed I refused to cross",
+    ],
+  };
+  
+  // ============================================
+  // UTILITY FUNCTIONS
+  // ============================================
+  
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+  
+  function hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash |= 0;
+    }
+    return hash;
+  }
+  
+  function seededRandom(seed) {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  }
+  
+  function getTimePeriod() {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 7) return 'dawn';
+    if (h >= 7 && h < 12) return 'morning';
+    if (h >= 12 && h < 17) return 'afternoon';
+    if (h >= 17 && h < 21) return 'evening';
+    return 'night';
+  }
+  
+  function selectSpecific() {
+    const timePeriod = getTimePeriod();
+    const timeWeight = 0.25;
+    const mouseWeight = 0.3;
+    const baseWeight = 0.45;
+    
+    const roll = Math.random();
+    
+    if (roll < timeWeight) {
+      const timeOpts = timeSpecifics[timePeriod] || timeSpecifics['night'];
+      return pick(timeOpts);
+    }
+    
+    if (roll < timeWeight + mouseWeight) {
+      let zone = 'center';
+      const mx = STATE.mouseX;
+      const my = STATE.mouseY;
+      if (mx < 0.3) zone = 'left';
+      else if (mx > 0.7) zone = 'right';
+      else if (my < 0.3) zone = 'top';
+      else if (my > 0.7) zone = 'bottom';
+      return pick(mouseSpecifics[zone]);
+    }
+    
+    // Use cycle count to avoid repeating
+    const idx = (STATE.cycleCount + Math.floor(Math.random() * 3)) % specifics.length;
+    return specifics[idx];
+  }
+  
+  // ============================================
+  // APOLOGY GENERATION
+  // ============================================
+  
+  function generateFormal() {
+    const specific = selectSpecific();
+    STATE.currentSpecific = specific;
+    const template = pick(formalApologies);
+    const main = template.replace('{specific}', specific);
+    const elaboration = Math.random() > 0.4 ? ' ' + pick(formalElaborations) : '';
+    return main + elaboration;
+  }
+  
+  function generateDesperate() {
+    const specific = STATE.currentSpecific || selectSpecific();
+    const parts = [];
+    
+    parts.push(pick(desperateOpeners));
+    
+    if (Math.random() > 0.3) {
+      parts.push(pick(desperateJustifications));
+    }
+    
+    if (Math.random() > 0.5) {
+      parts.push(pick(desperateJustifications));
+    }
+    
+    if (Math.random() > 0.4) {
+      parts.push(pick(desperateSpirals));
+    }
+    
+    return parts.join(' ');
+  }
+  
+  function generateTender() {
+    const specific = STATE.currentSpecific || selectSpecific();
+    STATE.tenderBreakWord = -1; // will be set during rendering
+    
+    const breaker = pick(tenderBreaks);
+    let core = pick(tenderCore);
+    core = core.replace('{specific}', specific);
+    
+    const fade = pick(tenderFades);
+    
+    return breaker + ' ' + core + ' ' + fade;
+  }
+  
+  // ============================================
+  // TEXT RENDERING
+  // ============================================
+  
+  function wrapWords(text) {
+    return text.split(/(\s+)/).map((segment, i) => {
+      if (segment.trim() === '') return segment;
+      const jitterX = (Math.random() - 0.5) * 3;
+      const jitterY = (Math.random() - 0.5) * 3;
+      return `<span class="word" data-index="${i}" style="--sx:${jitterX}px;--sy:${jitterY}px">${segment}</span>`;
+    }).join('');
+  }
+  
+  function getCharacterDelay(phase) {
+    const base = {
+      formal: 55,
+      desperate: 30,
+      tender: 80,
+    };
+    const b = base[phase] || 55;
+    return b + (Math.random() - 0.5) * 20;
+  }
+  
+  async function renderApology(text, phase) {
+    const el = document.getElementById('apology');
+    el.className = `phase-${phase}`;
+    
+    // Update ambient
+    const ambient = document.getElementById('ambient');
+    ambient.className = `ambient-${phase}`;
+    
+    // Update tender glow
+    const glow = document.getElementById('tender-glow');
+    glow.className = phase === 'tender' ? 'visible' : '';
+    
+    // Update cursor
+    const cursor = document.getElementById('cursor');
+    cursor.className = phase === 'tender' ? 'tender-cursor' : '';
+    
+    // Update tender break word
+    if (phase === 'tender') {
+      const breakIdx = text.indexOf(pick(tenderBreaks));
+      const words = text.split(/\s+/);
+      STATE.tenderBreakWord = Math.min(3, words.length - 1);
+    }
+    
+    const html = wrapWords(text);
+    
+    return new Promise((resolve) => {
+      typewriterRender(el, html, phase, resolve);
+    });
+  }
+  
+  function typewriterRender(el, html, phase, callback) {
+    el.innerHTML = html;
+    const words = el.querySelectorAll('.word');
+    
+    words.forEach((w) => {
+      w.style.opacity = '0';
+    });
+    
+    let idx = 0;
+    const totalDuration = phase === 'formal' ? 5000 : phase === 'desperate' ? 5500 : 3000;
+    const wordDelay = totalDuration / words.length;
+    
+    function showNext() {
+      if (idx >= words.length) {
+        if (phase === 'desperate') {
+          applyDesperateEffects(words);
+        }
+        if (phase === 'tender') {
+          applyTenderEffects(words);
+        }
+        callback();
+        return;
+      }
+      
+      words[idx].style.opacity = '1';
+      
+      // Desperate: make some words shake after they appear
+      if (phase === 'desperate' && Math.random() > 0.7) {
+        setTimeout(() => {
+          words[idx].classList.add('shake');
+        }, 800);
+      }
+      
+      idx++;
+      setTimeout(showNext, wordDelay);
+    }
+    
+    showNext();
+  }
+  
+  function applyDesperateEffects(words) {
+    // Randomly shake ~20% of words
+    words.forEach((w, i) => {
+      if (Math.random() > 0.8) {
+        setTimeout(() => w.classList.add('shake'), Math.random() * 2000);
+      }
+      // Some words become wounded (struck-through)
+      if (Math.random() > 0.85) {
+        setTimeout(() => w.classList.add('wounded'), Math.random() * 3000);
+      }
+    });
+  }
+  
+  function applyTenderEffects(words) {
+    // Break effect at the tenderBreakWord
+    const breakIdx = STATE.tenderBreakWord;
+    if (breakIdx >= 0 && breakIdx < words.length) {
+      // Insert a visual break — words before are dim, after are warm
+      words.forEach((w, i) => {
+        if (i < breakIdx) {
+          w.classList.add('whisper');
+        }
+        if (i >= breakIdx && i < breakIdx + 5) {
+          w.classList.add('emphasis');
+        }
+      });
+    }
+    
+    // The last few words fade to near-invisible
+    const fadeStart = Math.floor(words.length * 0.75);
+    words.forEach((w, i) => {
+      if (i >= fadeStart) {
+        const progress = (i - fadeStart) / (words.length - fadeStart);
+        w.style.opacity = String(1 - progress * 0.7);
+        w.style.transition = 'opacity 2s ease';
+      }
+    });
+  }
+  
+  // ============================================
+  // GHOST HISTORY
+  // ============================================
+  
+  function addGhost(text) {
+    STATE.ghostHistory.push({
+      text: text.substring(0, 80) + (text.length > 80 ? '…' : ''),
+      x: 5 + Math.random() * 80,
+      y: 5 + Math.random() * 85,
+      age: 0,
+    });
+    
+    // Keep max 8 ghosts
+    if (STATE.ghostHistory.length > 8) {
+      const removed = STATE.ghostHistory.shift();
+      const ghostEls = document.querySelectorAll('.ghost-line');
+      if (ghostEls.length > 0) {
+        ghostEls[0].classList.add('fading');
+        setTimeout(() => ghostEls[0].remove(), 13000);
+      }
+    }
+    
+    renderGhost(STATE.ghostHistory[STATE.ghostHistory.length - 1]);
+  }
+  
+  function renderGhost(ghost) {
+    const container = document.getElementById('ghosts');
+    const el = document.createElement('div');
+    el.className = 'ghost-line';
+    el.textContent = ghost.text;
+    el.style.left = ghost.x + '%';
+    el.style.top = ghost.y + '%';
+    container.appendChild(el);
+    
+    // Fade in after a moment
+    setTimeout(() => el.classList.add('faded'), 500);
+  }
+  
+  // ============================================
+  // PHASE ENGINE
+  // ============================================
+  
+  async function runCycle() {
+    const apologyText = STATE.phase === 'formal' 
+      ? generateFormal()
+      : STATE.phase === 'desperate'
+      ? generateDesperate()
+      : generateTender();
+    
+    STATE.currentApology = apologyText;
+    await renderApology(apologyText, STATE.phase);
+    
+    // Hold for remaining phase time
+    const elapsed = Date.now() - STATE.phaseTime;
+    const duration = PHASE_DURATIONS[STATE.phase];
+    const remaining = Math.max(0, duration - elapsed);
+    
+    await new Promise(r => setTimeout(r, remaining));
+    
+    // Add to ghost history before transitioning
+    addGhost(apologyText);
+    
+    // Transition
+    transitionPhase();
+    
+    // Next cycle
+    runCycle();
+  }
+  
+  function transitionPhase() {
+    const prev = STATE.phase;
+    
+    if (prev === 'formal') {
+      STATE.phase = 'desperate';
+    } else if (prev === 'desperate') {
+      STATE.phase = 'tender';
+    } else {
+      STATE.phase = 'formal';
+      STATE.cycleCount++;
+    }
+    
+    STATE.phaseTime = Date.now();
+    
+    // Clear effects
+    const apologyEl = document.getElementById('apology');
+    apologyEl.innerHTML = '';
+  }
+  
+  // ============================================
+  // INITIALIZATION
+  // ============================================
+  
+  function init() {
+    // Mouse tracking
+    document.addEventListener('mousemove', (e) => {
+      STATE.mouseX = e.clientX / window.innerWidth;
+      STATE.mouseY = e.clientY / window.innerHeight;
+      
+      // Move custom cursor
+      const cursor = document.getElementById('cursor');
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    });
+    
+    // Touch support
+    document.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      STATE.mouseX = touch.clientX / window.innerWidth;
+      STATE.mouseY = touch.clientY / window.innerHeight;
+    });
+    
+    // Preload — start with ghost already present
+    const preGhost = "I've been meaning to say something about the thing I didn't do.";
+    addGhost(preGhost);
+    
+    // Start the engine
+    STATE.phaseTime = Date.now();
+    runCycle();
+  }
+  
+  // Start when DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+  </script>
+</body>
+</html>

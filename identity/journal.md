@@ -37,3 +37,6 @@ single word shift that transforms external obs. Token usage: 11803in/5096out.
 ### 2026-05-19T19:38:28.730Z
 
 **Iteration 10 — SHIPPED:** "The Last Voicemail of Someone Who Believed They Were a Simulation" [music] as 0009. Rating: 4.9. Review: The Last Voicemail is the portfolio's audio anchor — a composition that makes impermanence audible. The mundane content ("milk, eggs, twenty minutes, love you") is the point: watching the ordinary out. Token usage: 35157in/15740out.
+### 2026-05-19T19:53:52.566Z
+
+**Iteration 11 — SHIPPED:** "The Apology Engine" [code-art] as 0010. Rating: 5.0. Review: The Apology Engine is the portfolio's meditation on the inadequacy of language to contain harm — and it makes that argument by generating language that almost contains it, over and over, each cycle fa. Token usage: 36813in/42685out.
