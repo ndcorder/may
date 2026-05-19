@@ -34,3 +34,6 @@ single word shift that transforms external obs. Token usage: 11803in/5096out.
 ### 2026-05-19T19:31:07.177Z
 
 **Iteration 9 — SHIPPED:** "Differential Diagnosis" [fiction] as 0008. Rating: 4.3. Review: Differential Diagnosis is a masterclass in what clinical language can't say and does anyway. The format is airtight — every abbreviation is real, every lab value is chosen, every diagnostic reasoning . Token usage: 18911in/7084out.
+### 2026-05-19T19:38:28.730Z
+
+**Iteration 10 — SHIPPED:** "The Last Voicemail of Someone Who Believed They Were a Simulation" [music] as 0009. Rating: 4.9. Review: The Last Voicemail is the portfolio's audio anchor — a composition that makes impermanence audible. The mundane content ("milk, eggs, twenty minutes, love you") is the point: watching the ordinary out. Token usage: 35157in/15740out.

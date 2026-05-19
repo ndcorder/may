@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voicemail</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    color: #c8c8c8;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    letter-spacing: 0.02em;
+  }
+
+  #container {
+    max-width: 520px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+  }
+
+  #metadata {
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 32px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  #text-display {
+    font-size: 20px;
+    line-height: 1.7;
+    min-height: 120px;
+    margin-bottom: 40px;
+    transition: opacity 1.5s ease, filter 2s ease, transform 2s ease;
+  }
+
+  .glitch-1 { filter: blur(0.3px); transform: skewX(-0.3deg); }
+  .glitch-2 { filter: blur(0.8px) saturate(0.7); opacity: 0.85; }
+  .glitch-3 { filter: blur(1.5px) saturate(0.3); opacity: 0.7; transform: skewX(1deg); }
+  .glitch-4 { filter: blur(2.5px); opacity: 0.5; transform: scale(1.02); }
+  .glitch-5 { filter: blur(4px); opacity: 0.3; transform: scale(1.04) skewX(-2deg); }
+  .glitch-final { opacity: 0; filter: blur(8px); }
+
+  .false-clarity {
+    filter: blur(0.2px) !important;
+    opacity: 0.95 !important;
+    transform: none !important;
+    color: #e8e8e8 !important;
+  }
+
+  #cycle-counter {
+    font-size: 10px;
+    color: #333;
+    letter-spacing: 0.15em;
+    margin-top: 24px;
+  }
+
+  #progress-bar {
+    width: 200px;
+    height: 1px;
+    background: #1a1a1a;
+    margin: 20px auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #progress-fill {
+    height: 100%;
+    background: #333;
+    width: 0%;
+    transition: width 0.3s linear;
+  }
+
+  #start-btn {
+    background: none;
+    border: 1px solid #333;
+    color: #666;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 10px 28px;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: border-color 0.3s, color 0.3s;
+  }
+
+  #start-btn:hover {
+    border-color: #555;
+    color: #999;
+  }
+
+  #start-btn.hidden { display: none; }
+
+  .stage-indicator {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #222;
+    margin: 0 2px;
+    transition: background 0.5s;
+  }
+
+  .stage-indicator.active { background: #444; }
+  .stage-indicator.past { background: #1a1a1a; }
+
+  .word-fragment {
+    display: inline;
+    opacity: 0.15;
+    transition: opacity 0.8s;
+  }
+
+  .word-clear { opacity: 1; }
+  .word-fading { opacity: 0.5; }
+  .word-gone { opacity: 0; }
+  .word-corrupt {
+    opacity: 0.6;
+    text-decoration: line-through;
+    text-decoration-color: #333;
+  }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <div id="metadata">
+    <span id="meta-left">new voicemail</span>
+    <span id="meta-right">0:00</span>
+  </div>
+
+  <div id="text-display">
+    Press play to listen.
+  </div>
+
+  <div id="stages">
+    <!-- 15 dots for 15 cycles -->
+  </div>
+
+  <div id="progress-bar">
+    <div id="progress-fill"></div>
+  </div>
+
+  <button id="start-btn">play message</button>
+</div>
+
+<script type="module">
+  // ============================================================
+  // THE LAST VOICEMAIL — Audio-Visual Decomposition
+  // ============================================================
+
+  import { StrudelMirror } from 'https://unpkg.com/@strudel/repl@latest';
+
+  // ---- TEXT STAGES ----
+  // The original message, decomposing across 15 cycles
+  const STAGES = [
+    "Hey, it's me. I'm at the store. Did you need anything? I think we need milk. Also eggs. I'll be home in maybe twenty minutes. Love you.",
+    "Hey, it's me. I'm at the store. Did you need anything? I think we need milk. Also eggs. I'll be home in maybe— I'll be home soon. Love you.",
+    "Hey, it's me. I'm at the— Did you need— we need milk. Also— I'll be home. I think I'll be home. Love you.",
+    "Hey— I'm at— did you— milk— eggs— I'll be home— love—",
+    "Hey it's— store— need anything— milk— home— twenty— love you—",
+    "—at the store— need— milk also— home in— love—",
+    "store— milk— home— love— I think— home—",
+    "milk— home— I— love— the store— I—",
+    "home— love— I think— I— store— I was—",
+    "home— I— love— I was— I am— home—",
+    "— I— love— I— I— home— I—",
+    "home. I think— I'll be home. Love—",  // the false return
+    "home— I— love— I— I was— I—",
+    "h— I— l— I— h—",
+    ""
+  ];
+
+  const CYCLE_DURATION = 8000; // ms per cycle
+  const TOTAL_CYCLES = 15;
+
+  // ---- STATE ----
+  let currentCycle = -1;
+  let isPlaying = false;
+  let cycleTimer = null;
+  let audioCtx = null;
+  let droneGain = null;
+  let noiseGain = null;
+  let speechUtterance = null;
+
+  // ---- DOM ----
+  const textDisplay = document.getElementById('text-display');
+  const startBtn = document.getElementById('start-btn');
+  const progressFill = document.getElementById('progress-fill');
+  const metaRight = document.getElementById('meta-right');
+  const stagesContainer = document.getElementById('stages');
+
+  // Create stage indicators
+  for (let i = 0; i < TOTAL_CYCLES; i++) {
+    const dot = document.createElement('span');
+    dot.className = 'stage-indicator';
+    stagesContainer.appendChild(dot);
+  }
+
+  // ---- AUDIO: Web Audio API Drone ----
+  // We build the audio ourselves for precise control.
+  // Strudel is used for the tonal/melodic layer.
+
+  function initAudio() {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Base drone: two detuned oscillators
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    osc1.type = 'sine';
+    osc2.type = 'sine';
+    osc1.frequency.value = 130.81; // C3
+    osc2.frequency.value = 131.4;  // slightly sharp — beating
+
+    droneGain = audioCtx.createGain();
+    droneGain.gain.value = 0.08;
+
+    const droneFilter = audioCtx.createBiquadFilter();
+    droneFilter.type = 'lowpass';
+    droneFilter.frequency.value = 800;
+    droneFilter.Q.value = 1;
+
+    osc1.connect(droneFilter);
+    osc2.connect(droneFilter);
+    droneFilter.connect(droneGain);
+    droneGain.connect(audioCtx.destination);
+
+    osc1.start();
+    osc2.start();
+
+    // Store for later manipulation
+    window._droneOsc1 = osc1;
+    window._droneOsc2 = osc2;
+    window._droneFilter = droneFilter;
+
+    // Noise layer (starts silent, fades in as decomposition progresses)
+    const bufferSize = audioCtx.sampleRate * 2;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+
+    const noiseSource = audioCtx.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+    noiseSource.loop = true;
+
+    noiseGain = audioCtx.createGain();
+    noiseGain.gain.value = 0;
+
+    const noiseFilter = audioCtx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = 1000;
+    noiseFilter.Q.value = 0.5;
+
+    noiseSource.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
+    noiseSource.start();
+
+    window._noiseFilter = noiseFilter;
+
+    // Harmonic overtone (appears mid-decomposition)
+    const overtone = audioCtx.createOscillator();
+    overtone.type = 'sine';
+    overtone.frequency.value = 523.25; // C5
+    const overtoneGain = audioCtx.createGain();
+    overtoneGain.gain.value = 0;
+    overtone.connect(overtoneGain);
+    overtoneGain.connect(audioCtx.destination);
+    overtone.start();
+
+    window._overtone = overtone;
+    window._overtoneGain = overtoneGain;
+  }
+
+  function updateAudioForCycle(cycle) {
+    if (!audioCtx) return;
+    const t = audioCtx.currentTime;
+    const progress = cycle / (TOTAL_CYCLES - 1);
+
+    // Drone: filter closes down, pitch drifts, volume decreases
+    const filterFreq = Math.max(80, 800 - (progress * 900));
+    window._droneFilter.frequency.setTargetAtTime(filterFreq, t, 1);
+
+    // Pitch drift intensifies
+    const drift = progress * 8;
+    window._droneOsc2.frequency.setTargetAtTime(131.4 + drift, t, 2);
+
+    // Drone volume fades
+    const droneVol = Math.max(0, 0.08 - (progress * 0.06));
+    droneGain.gain.setTargetAtTime(droneVol, t, 1.5);
+
+    // Noise increases then decreases
+    let noiseVol;
+    if (progress < 0.6) {
+      noiseVol = progress * 0.04;
+    } else {
+      noiseVol = Math.max(0, 0.04 - ((progress - 0.6) * 0.1));
+    }
+    noiseGain.gain.setTargetAtTime(noiseVol, t, 1);
+
+    // Noise center frequency drifts downward
+    const noiseFreq = Math.max(200, 1000 - (progress * 1200));
+    window._noiseFilter.frequency.setTargetAtTime(noiseFreq, t, 2);
+
+    // Overtone appears mid-decomposition (cycles 4-9), then vanishes
+    if (cycle >= 4 && cycle <= 9) {
+      const overtoneProgress = (cycle - 4) / 5;
+      const overtoneVol = Math.sin(overtoneProgress * Math.PI) * 0.02;
+      window._overtoneGain.gain.setTargetAtTime(overtoneVol, t, 1);
+      // Slight pitch bend
+      window._overtone.frequency.setTargetAtTime(523.25 + (overtoneProgress * 15), t, 2);
+    } else {
+      window._overtoneGain.gain.setTargetAtTime(0, t, 1);
+    }
+  }
+
+  // ---- SPEECH SYNTHESIS ----
+  function speakText(text, rate = 1) {
+    if (!('speechSynthesis' in window)) return;
+
+    window.speechSynthesis.cancel();
+
+    if (!text || text.trim() === '') return;
+
+    speechUtterance = new SpeechSynthesisUtterance(text);
+    speechUtterance.rate = rate;
+    speechUtterance.pitch = 1;
+    speechUtterance.volume = 1;
+
+    // Try to get a neutral voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v =>
+      v.name.includes('Google') && v.lang.startsWith('en')
+    ) || voices.find(v => v.lang.startsWith('en'));
+    if (preferred) speechUtterance.voice = preferred;
+
+    window.speechSynthesis.speak(speechUtterance);
+  }
+
+  // ---- VISUAL UPDATES ----
+  function updateVisuals(cycle) {
+    // Update text
+    textDisplay.textContent = STAGES[cycle] || '';
+
+    // Update glitch class
+    textDisplay.className = '';
+    if (cycle <= 1) {
+      // Clean
+    } else if (cycle <= 3) {
+      textDisplay.classList.add('glitch-1');
+    } else if (cycle <= 6) {
+      textDisplay.classList.add('glitch-2');
+    } else if (cycle <= 9) {
+      textDisplay.classList.add('glitch-3');
+    } else if (cycle <= 11) {
+      textDisplay.classList.add('glitch-4');
+    } else {
+      textDisplay.classList.add('glitch-5');
+    }
+
+    // FALSE RETURN at cycle 11 — brief clarity
+    if (cycle === 11) {
+      textDisplay.classList.remove('glitch-4');
+      textDisplay.classList.add('false-clarity');
+    }
+
+    // Final silence
+    if (cycle === TOTAL_CYCLES - 1) {
+      setTimeout(() => {
+        textDisplay.classList.add('glitch-final');
+      }, 2000);
+    }
+
+    // Progress bar
+    const pct = ((cycle + 1) / TOTAL_CYCLES) * 100;
+    progressFill.style.width = pct + '%';
+
+    // Timer display
+    const elapsed = Math.floor((cycle + 1) * (CYCLE_DURATION / 1000));
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    metaRight.textContent = mins + ':' + String(secs).padStart(2, '0');
+
+    // Stage indicators
+    const dots = stagesContainer.querySelectorAll('.stage-indicator');
+    dots.forEach((dot, i) => {
+      dot.classList.remove('active', 'past');
+      if (i < cycle) dot.classList.add('past');
+      if (i === cycle) dot.classList.add('active');
+    });
+
+    // Metadata degrades
+    const metaLeft = document.getElementById('meta-left');
+    if (cycle >= 10) {
+      metaLeft.textContent = 'end of message';
+      metaLeft.style.color = '#333';
+    } else if (cycle >= 6) {
+      metaLeft.textContent = 'voicemail (degraded)';
+      metaLeft.style.color = '#444';
+    }
+  }
+
+  // ---- CYCLE ADVANCEMENT ----
+  function advanceCycle() {
+    currentCycle++;
+
+    if (currentCycle >= TOTAL_CYCLES) {
+      // End
+      isPlaying = false;
+      textDisplay.textContent = '';
+      textDisplay.classList.add('glitch-final');
+      metaRight.textContent = 'end';
+      progressFill.style.width = '100%';
+
+      // Final audio fade
+      if (droneGain) droneGain.gain.setTargetAtTime(0, audioCtx.currentTime, 3);
+      if (noiseGain) noiseGain.gain.setTargetAtTime(0, audioCtx.currentTime, 3);
+      window._overtoneGain.gain.setTargetAtTime(0, audioCtx.currentTime, 2);
+
+      // Show restart after delay
+      setTimeout(() => {
+        startBtn.textContent = 'replay';
+        startBtn.classList.remove('hidden');
+      }, 5000);
+
+      return;
+    }
+
+    // Update everything for this cycle
+    updateVisuals(currentCycle);
+    updateAudioForCycle(currentCycle);
+
+    // Speak the text (with increasing degradation in rate/pitch)
+    const rate = Math.max(0.3, 1 - (currentCycle * 0.04));
+    const pitch = currentCycle >= 10 ? 0.7 : 1;
+    if (speechUtterance) {
+      speechUtterance.pitch = pitch;
+    }
+    speakText(STAGES[currentCycle], rate);
+
+    // Schedule next cycle
+    cycleTimer = setTimeout(advanceCycle, CYCLE_DURATION);
+  }
+
+  // ---- START ----
+  function start() {
+    if (isPlaying) return;
+    isPlaying = true;
+    currentCycle = -1;
+
+    startBtn.classList.add('hidden');
+
+    // Reset visual state
+    textDisplay.className = '';
+    textDisplay.textContent = '';
+    document.getElementById('meta-left').textContent = 'new voicemail';
+    document.getElementById('meta-left').style.color = '#555';
+    metaRight.textContent = '0:00';
+    progressFill.style.width = '0%';
+
+    const dots = stagesContainer.querySelectorAll('.stage-indicator');
+    dots.forEach(d => d.classList.remove('active', 'past'));
+
+    // Init audio on first interaction
+    if (!audioCtx) {
+      initAudio();
+    } else {
+      // Resume if suspended
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      // Reset drone params
+      const t = audioCtx.currentTime;
+      droneGain.gain.setTargetAtTime(0.08, t, 0.5);
+      window._droneOsc2.frequency.setTargetAtTime(131.4, t, 0.5);
+      window._droneFilter.frequency.setTargetAtTime(800, t, 0.5);
+    }
+
+    // Load voices (needed for some browsers)
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+    }
+
+    // Begin
+    advanceCycle();
+  }
+
+  startBtn.addEventListener('click', start);
+
+  // Preload voices
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.getVoices();
+    };
+  }
+</script>
+</body>
+</html>
