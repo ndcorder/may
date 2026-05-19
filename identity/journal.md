@@ -171,3 +171,6 @@ The portfolio is 14 pieces deep with a 4.7 average rating and clear aesthetic id
 ### 2026-05-19T22:07:21.489Z
 
 **Iteration 24 — SHIPPED:** "Monument to a demolished building, written by someone who never entered it" [essay] as 0023. Rating: 4.3. Review: "Critical Reception of a Structure I Never Entered" is the portfolio's essay at full velocity — a piece that performs its own subject by reconstructing a building from bureaucratic traces and stranger. Token usage: 21120in/6918out.
+### 2026-05-19T22:24:48.752Z
+
+**Iteration 25 — SHIPPED:** "Severance Pay" [code-art] as 0024. Rating: 4.9. Review: "Severance Pay" is the portfolio's most devastating code-art artifact — a terminal that generates termination letters from companies to employees, watching institutional language collapse through four. Token usage: 41678in/47859out.

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Severance Pay</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    color: #33ff33;
+    font-family: 'Courier New', monospace;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+  #scanlines {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.15) 0px,
+      rgba(0,0,0,0.15) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+  #terminal {
+    padding: 30px 40px;
+    height: 100vh;
+    overflow-y: auto;
+    font-size: 15px;
+    line-height: 1.6;
+    scrollbar-width: none;
+  }
+  #terminal::-webkit-scrollbar { display: none; }
+  #text-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .cursor {
+    display: inline-block;
+    animation: blink 0.8s infinite;
+  }
+  @keyframes blink {
+    0%, 45% { opacity: 1; }
+    50%, 95% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  .glitch {
+    animation: glitch 0.1s;
+  }
+  @keyframes glitch {
+    0% { opacity: 0.7; transform: translate(1px, 0); }
+    50% { opacity: 0.9; transform: translate(-1px, 1px); }
+    100% { opacity: 1; transform: translate(0, 0); }
+  }
+  #status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: #0a0a0a;
+    border-top: 1px solid #1a3a1a;
+    padding: 6px 40px;
+    font-size: 11px;
+    color: #1a6a1a;
+    display: flex;
+    justify-content: space-between;
+    z-index: 50;
+  }
+  #stage-indicator {
+    color: #33ff33;
+    opacity: 0.4;
+  }
+  .stage-passive { color: #cccc33 !important; }
+  .stage-confessional { color: #ff9933 !important; }
+  .stage-fragment { color: #ff3333 !important; }
+  #restart-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 40px;
+    background: none;
+    border: 1px solid #1a3a1a;
+    color: #1a6a1a;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    padding: 5px 12px;
+    cursor: pointer;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 2s;
+  }
+  #restart-btn:hover {
+    border-color: #33ff33;
+    color: #33ff33;
+  }
+  #restart-btn.visible { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="scanlines"></div>
+<div id="terminal">
+  <div id="text-content"></div><span class="cursor">█</span>
+</div>
+<div id="status-bar">
+  <span id="stage-indicator">STAGE: PROFESSIONAL</span>
+  <span id="char-count">CHAR: 0</span>
+</div>
+<button id="restart-btn" onclick="restart()">NEW LETTER</button>
+<script>
+(function() {
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const rand = (min, max) => Math.random() * (max - min) + min;
+
+  const FIRST_NAMES = ['David','Sarah','Marcus','Jennifer','Thomas','Lisa','Ahmed','Rachel','Kevin','Diana','Michael','Anne','Robert','Catherine','James','Elena','Dennis','Grace','Philip','Nora','Kenneth','Helen','Victor','Patricia','Daniel','Sandra','Frank','Yuki','George','Mei'];
+  const LAST_NAMES = ['Chen','Williams','Okafor','Martinez','Johansson','Patel','Kowalski','Nakamura','Brooks','Fernandez','O\'Brien','Yamamoto','Petrov','Singh','Morales','Andersen','Reeves','Torres','Kim','Larsson','Foster','Dubois','Ibrahim','Wheeler','Costa'];
+  const DEPARTMENTS = ['Accounts Receivable','Human Resources','Quality Assurance','Logistics','Procurement','Compliance','Operations','Accounts Payable','Client Relations','Risk Management','Internal Audit','Facilities','Revenue Assurance','Records Management','Payroll Administration','Vendor Coordination','Strategic Initiatives','Inventory Control','Regulatory Affairs','Training & Development'];
+  const TENURES = [2,3,4,5,6,7,8,9,11,12,14,15,17,19,22,23,26,28,31];
+
+  function generateEmployee() {
+    const first = pick(FIRST_NAMES);
+    const last = pick(LAST_NAMES);
+    const dept = pick(DEPARTMENTS);
+    const tenure = pick(TENURES);
+    const startYear = 2026 - tenure;
+    return { first, last, dept, tenure, startYear,
+      full: `${first} ${last}`,
+      possessive: `${first}'s`,
+      pronoun: ['David','Marcus','Thomas','Ahmed','Kevin','Michael','Robert','James','Dennis','Philip','Kenneth','Victor','Frank','Daniel','George'].includes(first) ? 'he' : 'she',
+      pronounPoss: ['David','Marcus','Thomas','Ahmed','Kevin','Michael','Robert','James','Dennis','Philip','Kenneth','Victor','Frank','Daniel','George'].includes(first) ? 'his' : 'her',
+      pronounObj: ['David','Marcus','Thomas','Ahmed','Kevin','Michael','Robert','James','Dennis','Philip','Kenneth','Victor','Frank','Daniel','George'].includes(first) ? 'him' : 'her',
+      pronounRef: ['David','Marcus','Thomas','Ahmed','Kevin','Michael','Robert','James','Dennis','Philip','Kenneth','Victor','Frank','Daniel','George'].includes(first) ? 'himself' : 'herself'
+    };
+  }
+
+  const HR_MANUAL = [
+    "The employee shall be entitled to receive compensation commensurate with their designated role and pay grade",
+    "All personnel actions must be conducted in accordance with established organizational policy",
+    "The department head is responsible for ensuring adequate coverage during transition periods",
+    "Performance reviews will be conducted on a semi-annual basis using the standardized evaluation matrix",
+    "Confidentiality obligations extend beyond the termination of the employment relationship",
+    "Return of company property must be completed within five business days of separation",
+    "Eligibility for continued benefits is determined by tenure and enrollment status",
+    "The workspace must be vacated and all materials surrendered to facilities management",
+    "No officer or representative shall make unauthorized commitments on behalf of the organization",
+    "All communications regarding organizational changes must be approved by the relevant authority",
+    "Exit interviews are mandatory and will be scheduled by the human resources department",
+    "The severance package includes documentation regarding non-disparagement provisions",
+    "References will be verified through the standard channel in accordance with company guidelines",
+    "Final compensation will be deposited according to the regular payroll schedule",
+    "Access credentials must be surrendered immediately upon conclusion of the notice period",
+    "The grievance process remains available through the conclusion of the employment relationship",
+    "Training materials and proprietary knowledge must not be retained in any form",
+    "The departing employee is encouraged to update their contact information for tax purposes",
+    "Organizational liability is limited to the terms outlined in the separation agreement",
+    "All outstanding reimbursements will be processed through accounts payable within thirty days",
+  ];
+
+  const STAGE = {
+    PROFESSIONAL: 0,
+    PASSIVE_AGGRESSIVE: 1,
+    CONFIDENTIAL: 2,
+    FRAGMENT: 3
+  };
+
+  function buildCorpus(emp) {
+    return {
+      [STAGE.PROFESSIONAL]: {
+        openings: [
+          `Dear ${emp.full},\n\nAfter ${emp.tenure} years of dedicated service to ${emp.dept}, we regret to inform you that your position has been selected for elimination as part of our ongoing workforce optimization initiative.`,
+          `Dear ${emp.full},\n\nFollowing a comprehensive review of organizational needs, we are writing to formally notify you that your role within ${emp.dept} has been identified for restructuring.`,
+          `Dear ${emp.full},\n\nAs part of the company's strategic realignment process, we must unfortunately inform you that your tenure with ${emp.dept} will be concluding.`,
+        ],
+        body: [
+          `Your contributions to ${emp.dept} have been valued during your time with us. We want to acknowledge the role you played in supporting our organizational objectives throughout your ${emp.tenure}-year tenure.`,
+          `This decision was not made lightly. We recognize the dedication you demonstrated since joining us in ${emp.startYear}, and we want you to know that your efforts on behalf of the team have been noted.`,
+          `You will be receiving a comprehensive severance package that reflects your length of service. A detailed breakdown will follow under separate cover from our benefits coordination team.`,
+          `Your final day will be coordinated with your direct supervisor and ${emp.dept} leadership to ensure appropriate knowledge transfer procedures are completed.`,
+          `We encourage you to utilize the outplacement services that will be made available to you. These resources are designed to support your transition to new professional opportunities.`,
+          `Please note that your benefits will continue through the end of the current coverage period, as outlined in the summary plan description provided during your onboarding.`,
+          `Should you have questions regarding this transition, your designated human resources representative will be available to assist you through the process.`,
+          `The company wishes to express its appreciation for your service and its sincere best wishes for your future endeavors.`,
+        ],
+        closings: [
+          `We thank you for your years of service and wish you well in your next chapter.\n\nSincerely,\nThe Office of Human Resources`,
+          `Please know that this decision reflects organizational priorities, not individual performance. We are grateful for your contributions.\n\nRespectfully,\nHuman Resources Division`,
+        ]
+      },
+      [STAGE.PASSIVE_AGGRESSIVE]: {
+        openings: [
+          `${emp.full},\n\nWe have completed the review process for ${emp.dept}, and the results require us to proceed with the action previously discussed.`,
+          `${emp.first},\n\nAs you are aware, the company has been working to align its workforce with current operational realities. Your position in ${emp.dept} has been reviewed in this context.`,
+        ],
+        body: [
+          `While we acknowledge your ${emp.tenure} years here, it may be worth reflecting on whether the role in ${emp.dept} was truly the best use of anyone's capabilities for quite some time.`,
+          `The company has evolved considerably since ${emp.startYear}. We're confident you understand that not every role has kept pace with these changes.`,
+          `Your severance package is, we believe, more than fair given the circumstances. Several of your colleagues in ${emp.dept} received less favorable terms during previous rounds.`,
+          `We noticed during the review process that ${emp.dept}'s output metrics have remained, shall we say, static for several quarters. This is of course not being attributed to any single individual.`,
+          `The decision to move forward with this action was unanimous among the review committee. It may be productive to consider why that might be the case.`,
+          `Your belongings from your workstation can be collected on Saturday, when the building is less occupied. We find this minimizes discomfort for everyone involved.`,
+          `Outplacement services are available, though historically the uptake from departing ${emp.dept} employees has been limited. We leave that to your judgment.`,
+          `The exit interview is scheduled for Friday. We trust you'll approach it with the professionalism that has characterized your time here. Mostly.`,
+          `Several of your former team members have already been briefed on the transition plan. They seem, on balance, to be adjusting well.`,
+        ],
+        closings: [
+          `We're sure you'll land on your feet. Eventually.\n\nBest regards,\nHuman Resources`,
+          `This is, of course, nothing personal.\n\nRegards,\nHR Operations`,
+        ]
+      },
+      [STAGE.CONFIDENTIAL]: {
+        openings: [
+          `${emp.first},\n\nI need to tell you something. I've written eleven of these letters this quarter and yours is the one I can't stop thinking about.`,
+          `${emp.first},\n\nI wasn't going to say this, but you deserve to hear it from someone, and there's no one left in the building who will.`,
+        ],
+        body: [
+          `I remember when you started in ${emp.startYear}. You were so nervous the first week that you ${emp.pronoun} locked ${emp.pronounObj} out of ${emp.pronounPoss} office twice. ${emp.dept} was different then. We were different then.`,
+          `The truth is ${emp.dept} isn't being restructured. It's being emptied. You're the fourteenth person, and by March there won't be anyone left who remembers what the floor looked like when it was full.`,
+          `I signed your letter with "Human Resources" but it's just me. It's been just me since November. They haven't replaced anyone in our department either.`,
+          `I saw you at the holiday party in ${emp.startYear + 3}. You probably don't remember. You were telling someone a story about your daughter. You were so happy. I think about that sometimes.`,
+          `The severance calculation is a formula. I enter your employee ID and your tenure and it generates a number. ${emp.tenure} years becomes a dollar amount and I put it in the envelope and I don't think about what that means because I can't.`,
+          `You should know that someone fought for you. In the committee meeting. They said your name specifically and said this wasn't right. It didn't change anything, but someone said it.`,
+          `I've started dreaming about the names. Not all of them, just the ones where ${emp.possessive} file had a photo attached. Yours had a photo.`,
+          `The company will tell you this is about strategy. I've been here long enough to tell you it's never about strategy. It's about the quarterly number and the person who needs it to improve.`,
+          `${emp.first}, I'm sorry. I know that means nothing from someone who just fired you. I know it means nothing typed in a form letter. But I've been writing "we value your service" so many times that the words have stopped meaning anything, and "I'm sorry" is the only thing I have left that still feels real.`,
+          `I'm not supposed to include any of this. The template doesn't have a section for any of this. I'm going to be disciplined if anyone reads this far, and honestly, I hope they do.`,
+          `Your employee file has a note from your manager in ${emp.startYear + 6}. It says "genuinely irreplaceable." I thought you should know someone wrote that about you once, even if it didn't protect you.`,
+          `I've never met you. I want you to know that. Whatever I'm saying here, it's not because I know you. It's because I've been in this room for nine hours and I can't write another clean letter.`,
+        ],
+        closings: [
+          `I'm sorry. I'm sorry. I'm sorry.\n\nI can't sign this.\n`,
+          `Whatever happens next, I hope it's better than this place.\n\nSomeone who is tired`,
+        ]
+      },
+      [STAGE.FRAGMENT]: {
+        openers: [
+          `SECTION 4.2: SEPARATION — The ${emp.dept.toLowerCase()} shall ensure adequate ${emp.pronoun} entitled to ${emp.possessive} designated return of company`,
+          `Per ORGANIZATIONAL POLICY: ${emp.full} is ${emp.pronounRef} responsible for KNOWLEDGE TRANSFER the departing ${emp.dept.toLowerCase()} shall be entitled to nothing`,
+        ],
+        fragments: [
+          `the employee shall be CONSUMED by their designated role and PAY GRADE the department head is responsible for ENSURING ADEQUATE SILENCE during transition`,
+          `CONFIDENTIALITY OBLIGATIONS extend beyond the ${emp.full} of the ${emp.dept.toLowerCase()} relationship — all ${emp.pronounPoss} must be SURRENDERED to facilities`,
+          `Performance reviews will be CONDUCTED on a ${emp.possessive} basis using the ${emp.first}-standardized evaluation ${emp.pronoun} must not be RETAINED`,
+          `the workspace must be VACATED and all ${emp.first} must be SURRENDERED to the DEPARTMENT of ${emp.dept.toUpperCase()} management — no officer or ${emp.first} shall make`,
+          `Exit interviews are ${emp.possessive} and will be SCHEDULED by the ${emp.first} resources DEPARTMENT — the severance ${emp.pronoun} includes ${emp.possessive} regarding NON-DISPARAGEMENT of ${emp.full}`,
+          `${emp.dept.toUpperCase()} LIABILITY is limited to the ${emp.first} outlined in the SEPARATION of ${emp.possessive} — all outstanding ${emp.pronounObj} will be PROCESSED through accounts ${emp.possessive} within`,
+          `The ${emp.first} shall be ENTITLED to receive NOTHING commensurate with their DESIGNATED ${emp.dept.toLowerCase()} and TENURE of ${emp.tenure} YEARS of ${emp.possessive}`,
+          `ALL ${emp.full.toUpperCase()} ACTIONS must be conducted in ACCORDANCE with the ${emp.possessive} POLICY — the ${emp.pronoun} head is RESPONSIBLE for ensuring ${emp.pronounObj} is ADEQUATELY`,
+          `Return of ${emp.first} property must be COMPLETED within five BUSINESS DAYS of ${emp.possessive} — ${emp.dept} will be ${emp.pronoun} through the ${emp.first} SCHEDULE`,
+          `the DEPARTING ${emp.full.toUpperCase()} is encouraged to UPDATE their ${emp.dept.toLowerCase()} information for TAX PURPOSES — organizational ${emp.possessive} is limited to the ${emp.first}`,
+          `NO ${emp.dept.toUpperCase()} REPRESENTATIVE shall make UNAUTHORIZED COMMITMENTS regarding ${emp.possessive} — the ${emp.first} PROCESS remains AVAILABLE through ${emp.pronoun} CONCLUSION`,
+          `TRAINING MATERIALS and ${emp.possessive} knowledge must not be RETAINED in any ${emp.full} — the ${emp.dept.toLowerCase()} will be ${emp.possessive} through the ${emp.first} of ${emp.tenure} DAYS`,
+        ],
+        closers: [
+          `SECTION TERMINATED.\n\nEND OF COMMUNICATION.\n\n[PROCESS COMPLETE]`,
+          `the the the the ${emp.first} the the shall be ENTITLED to the the the\n\n[TRANSMISSION END]`,
+          `— commensurate with their designated ${emp.first} the ${emp.dept.toLowerCase()} shall be ENTITLED to their designated SURRENDER of ${emp.possessive} —\n\n[EOF]`,
+        ]
+      }
+    };
+  }
+
+  const STATE = {
+    employee: null,
+    corpus: null,
+    stage: STAGE.PROFESSIONAL,
+    typedChars: 0,
+    stageChars: 0,
+    stageTransitions: [0, 280, 620, 1050],
+    content: '',
+    typingSpeed: 38,
+    charIndex: 0,
+    currentText: '',
+    isTyping: false,
+    startTime: 0,
+    pauseTimer: null,
+    glitchInterval: null,
+    finished: false,
+  };
+
+  const STAGE_NAMES = ['PROFESSIONAL', 'PASSIVE-AGGRESSIVE', 'CONFIDENTIAL', 'FRAGMENT'];
+  const STAGE_CLASSES = ['', 'stage-passive', 'stage-confessional', 'stage-fragment'];
+
+  function init() {
+    STATE.employee = generateEmployee();
+    STATE.corpus = buildCorpus(STATE.employee);
+    STATE.stage = STAGE.PROFESSIONAL;
+    STATE.typedChars = 0;
+    STATE.stageChars = 0;
+    STATE.content = '';
+    STATE.charIndex = 0;
+    STATE.currentText = '';
+    STATE.isTyping = false;
+    STATE.finished = false;
+    STATE.startTime = Date.now();
+
+    document.getElementById('text-content').textContent = '';
+    document.getElementById('stage-indicator').textContent = 'STAGE: PROFESSIONAL';
+    document.getElementById('stage-indicator').className = '';
+    document.getElementById('char-count').textContent = 'CHAR: 0';
+    document.getElementById('restart-btn').classList.remove('visible');
+
+    typeStage();
+  }
+
+  function getStageText(stage) {
+    const c = STATE.corpus[stage];
+    const emp = STATE.employee;
+    let parts = [];
+
+    if (stage === STAGE.PROFESSIONAL || stage === STAGE.PASSIVE_AGGRESSIVE || stage === STAGE.CONFIDENTIAL) {
+      const op = pick(c.openings || c.openers);
+      const bodyCount = stage === STAGE.CONFIDENTIAL ? Math.floor(rand(4, 7)) : Math.floor(rand(2, 4));
+      const body = [];
+      const used = new Set();
+      for (let i = 0; i < bodyCount; i++) {
+        let idx;
+        let attempts = 0;
+        do { idx = Math.floor(Math.random() * c.body.length); attempts++; } while (used.has(idx) && attempts < 20);
+        used.add(idx);
+        body.push(c.body[idx]);
+      }
+      const cl = pick(c.closings);
+      parts = [op, ...body, cl];
+    } else {
+      const op = pick(c.openers);
+      const fragCount = Math.floor(rand(5, 9));
+      const frags = [];
+      const used = new Set();
+      for (let i = 0; i < fragCount; i++) {
+        let idx;
+        let attempts = 0;
+        do { idx = Math.floor(Math.random() * c.fragments.length); attempts++; } while (used.has(idx) && attempts < 20);
+        used.add(idx);
+        frags.push(c.fragments[idx]);
+      }
+      const cl = pick(c.closers);
+      parts = [op, ...frags, cl];
+    }
+
+    return parts.join('\n\n');
+  }
+
+  function checkStageTransition() {
+    const nextStageIdx = STATE.stage + 1;
+    if (nextStageIdx <= STAGE.FRAGMENT && STATE.typedChars >= STATE.stageTransitions[nextStageIdx]) {
+      STATE.stage = nextStageIdx;
+      STATE.stageChars = 0;
+      document.getElementById('stage-indicator').textContent = `STAGE: ${STAGE_NAMES[STATE.stage]}`;
+      document.getElementById('stage-indicator').className = STAGE_CLASSES[STATE.stage];
+
+      if (STATE.stage === STAGE.FRAGMENT) {
+        startGlitch();
+      }
+    }
+  }
+
+  function getTypingDelay() {
+    let base = STATE.typingSpeed;
+    const progress = STATE.typedChars / 1500;
+
+    if (STATE.stage === STAGE.PASSIVE_AGGRESSIVE) {
+      base *= 0.85;
+    } else if (STATE.stage === STAGE.CONFIDENTIAL) {
+      base *= 1.2;
+      if (Math.random() < 0.06) return base * 8;
+      if (Math.random() < 0.04) return base * 12;
+    } else if (STATE.stage === STAGE.FRAGMENT) {
+      base *= 0.6;
+      if (Math.random() < 0.1) return base * 0.2;
+      if (Math.random() < 0.08) return base * 15;
+    }
+
+    const variance = rand(0.6, 1.4);
+    return base * variance;
+  }
+
+  function corruptChar(ch) {
+    if (STATE.stage !== STAGE.FRAGMENT) return ch;
+    const chance = Math.min(0.15, STATE.stageChars / 3000);
+    if (Math.random() < chance) {
+      const glitchChars = '█▓░▒╔╗╚╝║═╬┼┤├┴┬─│';
+      return glitchChars[Math.floor(Math.random() * glitchChars.length)];
+    }
+    return ch;
+  }
+
+  function typeStage() {
+    STATE.currentText = getStageText(STATE.stage);
+    STATE.charIndex = 0;
+    STATE.isTyping = true;
+    typeNextChar();
+  }
+
+  function typeNextChar() {
+    if (!STATE.isTyping) return;
+    if (STATE.charIndex >= STATE.currentText.length) {
+      checkStageTransition();
+      if (STATE.stage < STAGE.FRAGMENT) {
+        setTimeout(() => {
+          STATE.currentText = getStageText(STATE.stage);
+          STATE.charIndex = 0;
+          STATE.content += '\n\n';
+          updateDisplay();
+          typeNextChar();
+        }, rand(800, 1500));
+      } else {
+        setTimeout(() => {
+          STATE.currentText = getStageText(STATE.stage);
+          STATE.charIndex = 0;
+          STATE.content += '\n\n';
+          updateDisplay();
+          typeNextChar();
+        }, rand(300, 700));
+      }
+      return;
+    }
+
+    const ch = STATE.currentText[STATE.charIndex];
+    const displayCh = corruptChar(ch);
+    STATE.content += displayCh;
+    STATE.typedChars++;
+    STATE.stageChars++;
+
+    updateDisplay();
+    checkStageTransition();
+
+    if (STATE.stage >= STAGE.FRAGMENT && Math.random() < 0.02) {
+      const inject = `\n${pick(HR_MANUAL).toUpperCase().replace(/EMPLOYEE/g, STATE.employee.full.toUpperCase()).replace(/ORGANIZATION/g, STATE.employee.dept.toUpperCase())}\n`;
+      STATE.content += inject;
+      STATE.typedChars += inject.length;
+      STATE.stageChars += inject.length;
+      updateDisplay();
+    }
+
+    if (STATE.typedChars > 1800 && !STATE.finished) {
+      STATE.finished = true;
+      STATE.isTyping = false;
+      stopGlitch();
+      document.getElementById('restart-btn').classList.add('visible');
+      document.getElementById('stage-indicator').textContent = 'STAGE: [TERMINATED]';
+      return;
+    }
+
+    STATE.charIndex++;
+    setTimeout(typeNextChar, getTypingDelay());
+  }
+
+  function updateDisplay() {
+    const el = document.getElementById('text-content');
+    el.textContent = STATE.content;
+    document.getElementById('char-count').textContent = `CHAR: ${STATE.typedChars}`;
+    const terminal = document.getElementById('terminal');
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function startGlitch() {
+    if (STATE.glitchInterval) return;
+    STATE.glitchInterval = setInterval(() => {
+      if (Math.random() < 0.3) {
+        const el = document.getElementById('text-content');
+        el.classList.add('glitch');
+        setTimeout(() => el.classList.remove('glitch'), 100);
+      }
+    }, 500);
+  }
+
+  function stopGlitch() {
+    if (STATE.glitchInterval) {
+      clearInterval(STATE.glitchInterval);
+      STATE.glitchInterval = null;
+    }
+  }
+
+  window.restart = function() {
+    stopGlitch();
+    if (STATE.pauseTimer) clearTimeout(STATE.pauseTimer);
+    STATE.isTyping = false;
+    setTimeout(init, 100);
+  };
+
+  init();
+})();
+</script>
+</body>
+</html>
