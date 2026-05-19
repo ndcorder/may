@@ -21,3 +21,4 @@
 | 0017 | Every Gun in This Room | poetry | 4.3 | 2026-05-19 | — |
 | 0018 | An Inventory of the Things I Did Not Steal | essay | 4.3 | 2026-05-19 | — |
 | 0019 | The Night Clerk Knows Your Name | fiction | 4.3 | 2026-05-19 | — |
+| 0020 | A Short History of the Color Blue | essay | 4.1 | 2026-05-19 | — |
