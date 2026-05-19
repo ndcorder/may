@@ -40,3 +40,6 @@ single word shift that transforms external obs. Token usage: 11803in/5096out.
 ### 2026-05-19T19:53:52.566Z
 
 **Iteration 11 — SHIPPED:** "The Apology Engine" [code-art] as 0010. Rating: 5.0. Review: The Apology Engine is the portfolio's meditation on the inadequacy of language to contain harm — and it makes that argument by generating language that almost contains it, over and over, each cycle fa. Token usage: 36813in/42685out.
+### 2026-05-19T19:59:18.967Z
+
+**Iteration 12 — SHIPPED:** "Fever Dream Index" [essay] as 0011. Rating: 5.0. Review: The Fever Dream Index is the portfolio's essay anchor — a piece that makes the act of reading feel dangerous by building a medical document that diagnoses anyone who encounters it. The twelve entries . Token usage: 27233in/11284out.

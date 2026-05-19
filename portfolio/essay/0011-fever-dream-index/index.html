@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fever Dream Index — Unnamed Condition SC-11</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:wght@400;600&display=swap');
+  
+  :root {
+    --bg: #f4f4f0;
+    --text: #1a1a1a;
+    --link: #1a4a7a;
+    --link-visited: #4a1a7a;
+    --accent: #8b0000;
+    --border: #ccc;
+    --muted: #666;
+    --entry-bg: #fff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  header {
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  header .classification {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .preamble {
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin-bottom: 2.5rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--border);
+    font-style: italic;
+  }
+
+  .toc {
+    margin-bottom: 3rem;
+    columns: 2;
+    column-gap: 2rem;
+  }
+
+  .toc a {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--link);
+    text-decoration: none;
+    padding: 0.25rem 0;
+    border-bottom: 1px dotted var(--border);
+    transition: color 0.2s;
+  }
+
+  .toc a:hover {
+    color: var(--accent);
+  }
+
+  .toc a span.num {
+    color: var(--muted);
+    margin-right: 0.5rem;
+  }
+
+  .entry {
+    background: var(--entry-bg);
+    border: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    border-radius: 2px;
+  }
+
+  .entry h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
+  .entry h2 .eid {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .entry .body {
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+
+  .entry .body p {
+    margin-bottom: 0.75rem;
+  }
+
+  .entry .refs {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .entry .refs a {
+    color: var(--link);
+    text-decoration: none;
+  }
+
+  .entry .refs a:hover {
+    text-decoration: underline;
+  }
+
+  /* Progressive degradation for later entries */
+  .entry.terminal {
+    border-color: var(--accent);
+    border-style: dashed;
+  }
+
+  .entry.corrupted {
+    background: #fefefe;
+    border-left: 3px solid var(--accent);
+  }
+
+  .entry.diagnosis {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    padding: 2rem;
+  }
+
+  .entry.diagnosis a {
+    color: #8ab4f8;
+  }
+
+  .entry.diagnosis .refs {
+    border-top-color: #444;
+    color: #999;
+  }
+
+  .entry.diagnosis h2 {
+    color: var(--bg);
+  }
+
+  .redacted {
+    background: var(--text);
+    color: var(--text);
+    padding: 0 0.25rem;
+    cursor: default;
+    user-select: none;
+  }
+
+  .redacted:hover {
+    background: var(--accent);
+  }
+
+  .margin-note {
+    float: right;
+    width: 180px;
+    margin-left: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    padding: 0.5rem;
+    border: 1px dashed var(--accent);
+    background: #fff8f8;
+    opacity: 0.9;
+  }
+
+  @media (max-width: 700px) {
+    .toc { columns: 1; }
+    .margin-note { float: none; width: auto; margin-left: 0; }
+    body { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Fever Dream Index</h1>
+  <div class="classification">CLASSIFICATION: SC-11 (UNNAMED) &nbsp;·&nbsp; ICD-11 PENDING &nbsp;·&nbsp; NOT FOR DISTRIBUTION</div>
+</header>
+
+<div class="preamble">
+  The following index documents a provisional syndrome first observed during the K— longitudinal study (2019–2024). As of this revision, the condition has not been formally classified. Entries are ordered by typical onset, though patients frequently present out of sequence. Cross-references indicate documented symptom correlations.
+</div>
+
+<div class="toc">
+  <a href="#e01"><span class="num">001</span>Recurrent Intrusion of a Face You Almost Recognize</a>
+  <a href="#e02"><span class="num">002</span>Chronesthetic Drift (Time-Slip)</a>
+  <a href="#e03"><span class="num">003</span>Phantom Geography</a>
+  <a href="#e04"><span class="num">004</span>Semantic Satiation of Loved Ones' Names</a>
+  <a href="#e05"><span class="num">005</span>The Certainty That a Room Has More Corners Than It Should</a>
+  <a href="#e06"><span class="num">006</span>Autoscopic Invasion</a>
+  <a href="#e07"><span class="num">007</span>Retroactive Memory Revision</a>
+  <a href="#e08"><span class="num">008</span>Mirror Autonomy Event</a>
+  <a href="#e09"><span class="num">009</span>Lexical Contagion</a>
+  <a href="#e10"><span class="num">010</span>Narrative Escape Attempt</a>
+  <a href="#e11"><span class="num">011</span>Indexical Collapse</a>
+  <a href="#e12"><span class="num">012</span>Terminal Entry: Diagnosis of the Reader</a>
+</div>
+
+<div class="entries">
+
+  <div class="entry" id="e01">
+    <h2><span class="eid">SC-11.001</span> Recurrent Intrusion of a Face You Almost Recognize</h2>
+    <div class="body">
+      <p>Patient reports repeated visualization of a face that eludes identification. The face is always in profile or three-quarter view, never full frontal. It appears in crowds, in the negative space of patterned surfaces, in the faces of strangers who are briefly mistaken for someone known. The face does not resolve on repeated viewing. It recedes.</p>
+      <p>Onset is insidious. Patients initially attribute the experience to ordinary misrecognition. By the time the face is acknowledged as anomalous, it has typically been present for <span class="redacted">██</span> months. The face does not threaten or speak. Its persistence is the symptom.</p>
+      <p>Common triggers: peripheral vision, twilight states, the moment between sleep and waking. Rare triggers: direct address by name (see <a href="#e04">SC-11.004</a>), certain lighting angles in bathroom mirrors (see <a href="#e08">SC-11.008</a>).</p>
+      <p><em>Differential diagnosis:</em> prosopagnosia, hypnagogic imagery, bereavement. None adequately account for the consistency of the face across sightings. The face is always the same face. It is never identified.</p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e03">SC-11.003</a>, <a href="#e06">SC-11.006</a> &nbsp;·&nbsp; <em>cf. Capgras delusion, scopophobia</em>
+    </div>
+  </div>
+
+  <div class="entry" id="e02">
+    <h2><span class="eid">SC-11.002</span> Chronesthetic Drift (Time-Slip)</h2>
+    <div class="body">
+      <p>A dissociative discontinuity in temporal experience. The patient perceives present events as occurring in the recent past, or anticipates events that have not yet occurred with the affective weight of memory. Past and future become experientially symmetric: both are "felt" rather than "known."</p>
+      <p>Patients describe the sensation as "living in a memory that hasn't happened yet." A 34-year-old subject in the K— study reported dressing for her own funeral with "the certainty that I had already attended it." Another described hearing his daughter's first words while she was still in utero, "in a voice she hadn't grown into yet."</p>
+      <p>Duration of individual episodes: 30 seconds to 4 hours. Frequency increases with progression. In advanced cases, temporal experience becomes permanently asynchronous — the patient exists in a continuous present that feels several seconds to several years displaced from external time.</p>
+      <p><em>Note:</em> This is not déjà vu. Déjà vu is a recognition error. Chronesthetic drift is a temporal displacement. The patient does not feel they have <em>been here before</em>; they feel they are <em>here at the wrong time</em>.</p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e07">SC-11.007</a> &nbsp;·&nbsp; <em>cf. jamais vu, temporal lobe epilepsy, zār possession</em>
+    </div>
+  </div>
+
+  <div class="entry" id="e03">
+    <h2><span class="eid">SC-11.003</span> Phantom Geography</h2>
+    <div class="body">
+      <p>The patient develops an unshakeable sense of spatial memory for places that do not exist. They can describe rooms they have never entered, streets they have never walked, landscapes with specific topographic detail — the slope of a hill, the smell of a specific bakery, the location of a stain on a ceiling — that correspond to no recorded location.</p>
+      <p>In 83% of documented cases, the phantom geography is domestic: a house, an apartment, a childhood home that is almost — but not quite — the patient's actual childhood home. The architectural discrepancies are small and maddening. An extra hallway. A window that faces the wrong direction. A room that should not fit within the exterior walls but does.</p>
+      <p>Patients report that the phantom spaces feel <em>more</em> like home than their actual residences. Several have attempted to revisit these locations. The resulting distress when the space is not found is disproportionate to the trigger and typically triggers or exacerbates <a href="#e02">SC-11.002</a>.</p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e01">SC-11.001</a>, <a href="#e05">SC-11.005</a> &nbsp;·&nbsp; <em>cf. reduplicative paramnesia, spatial neglect</em>
+    </div>
+  </div>
+
+  <div class="entry" id="e04">
+    <h2><span class="eid">SC-11.004</span> Semantic Satiation of Loved Ones' Names</h2>
+    <div class="body">
+      <p>Initially indistinguishable from ordinary semantic satiation — the loss of meaning in a word repeated too many times. In SC-11, the effect is specific to proper nouns associated with close attachment figures, occurs without repetition, and does not resolve. The name of a spouse, a child, a parent becomes a sequence of phonemes: empty, alien, slightly grotesque in the mouth.</p>
+      <p>Patient K-07 described her husband's name as "sounding like someone clearing their throat in a language I used to speak." She could say it, but could no longer connect the utterance to the person. "I know who he is. The name just doesn't belong to him anymore. It belongs to <span class="redacted">████████</span>."</p>
+      <p>You may have already noticed this with certain names. The names of people you think about often. The names you say to yourself. Try one now. Say it three times. Does it still sound like it belongs to them?</p>
+      <p><em>Note:</em> This entry was edited on <span class="redacted">██</span>/03/2024 to remove a case detail that could not be verified.</p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e01">SC-11.001</a>, <a href="#e09">SC-11.009</a> &nbsp;·&nbsp; <em>cf. semantic satiation, Capgras delusion</em>
+    </div>
+  </div>
+
+  <div class="entry" id="e05">
+    <h2><span class="eid">SC-11.005</span> The Certainty That a Room Has More Corners Than It Should</h2>
+    <div class="body">
+      <p>A spatial-cognitive anomaly in which the patient perceives — or becomes convinced of — additional geometric features in familiar enclosed spaces. Typically, corners. The patient counts the corners of a room and arrives at a number greater than four. They recount. The number persists.</p>
+      <p>The additional corners are not visualized. The patient does not "see" a fifth corner. Rather, they develop an intolerable certainty that the room contains more corners than can be accounted for by its architecture. The certainty is not visual but proprioceptive. They <em>feel</em> the extra corner, usually behind them and to the left.</p>
+      <p>When you read this, you may check the room you are in. Count the corners. The number will be correct. The unease will remain. The extra corner is not in the room. It is in the counting. Something in the act of enumeration itself produces a remainder — a structural artifact of measurement, not of space.</p>
+      <p>This is one of the earliest documented symptoms and one of the most frequently underreported, because patients reasonably assume the experience is architectural rather than neurological. They move the furniture. They avoid the corner.</p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e03">SC-11.003</a>, <a href="#e08">SC-11.008</a> &nbsp;·&nbsp; <em>cf. Alice in Wonderland syndrome, claustrophobia</em>
+    </div>
+  </div>
+
+  <div class="entry" id="e06">
+    <h2><span class="eid">SC-11.006</span> Autoscopic Invasion</h2>
+    <div class="body">
+      <p>Unlike classical autoscopy (the experience of seeing one's own body from an external perspective), SC-11 autoscopy involves the sensation of being <em>occupied</em> by an external observer. The patient does not see themselves from outside; rather, they feel themselves being seen from inside — a presence located behind their own eyes, observing through them.</p>
+      <p>The distinction is critical. Classical autoscopy preserves the patient's sense of self as the one who looks. SC-11 autoscopy places the patient in the position of being the thing looked through. The self becomes a window rather than a watcher.</p>
+      <p>Patient K-12: "I realized someone was using my eyes. Not taking them — I could still see. But I was the lens, not the gaze. Something was watching me watch. And it had been doing it for so long that it had gotten comfortable."</p>
+      <p>You are being watched now. Not by us. By the thing that watches you read. It is behind the attention you are paying to these words. It has always been there. It does not mind being described. It knows you will not look for it, because looking for it would require you to notice where your attention comes from, and that is not a direction your eyes can turn.</p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e01">SC-11.001</a>, <a href="#e08">SC-11.008</a>, <a href="#e06">SC-11.006</a> &nbsp;·&nbsp; <em>cf. heautoscopy, doppelgänger syndrome</em>
+    </div>
+  </div>
+
+  <div class="entry corrupted" id="e07">
+    <h2><span class="eid">SC-11.007</span> Retroactive Memory Revision</h2>
+    <div class="body">
+      <p>The patient's memories change. Not degrade — <em>revise</em>. Specific memories are retroactively altered to include details that were not present in the original experience. The patient does not forget what happened; they remember something different happening, with full confidence and affective fidelity.</p>
+      <p>Revision is always additive. New details are introduced; original details are never removed. A childhood birthday party now included a guest who was not there. A conversation now contains a sentence that was never spoken. The ocean was colder than it was.</p>
+      <div class="margin-note">EDITOR: This entry previously stated that memory revision is always minor. The K— data do not support that claim. See addendum.</div>
+      <p>By the time you notice this entry has contradicted itself, you may have already accepted the first version. That is the mechanism. Memory does not store — it writes. Every time you recall something, you are authorizing a revision. You have been editing your own life without noticing, because noticing would require remembering what it was like before you remembered.</p>
+      <p>You did not read this paragraph the way you think you did.</p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e02">SC-11.002</a>, <a href="#e07">SC-11.007</a>, <a href="#e09">SC-11.009</a> &nbsp;·&nbsp; <em>cf. false memory, confabulation, the unreliability of the document you are currently reading</em>
+    </div>
+  </div>
+
+  <div class="entry corrupted" id="e08">
+    <h2><span class="eid">SC-11.008</span> Mirror Autonomy Event</h2>
+    <div class="body">
+      <p>The patient's reflection ceases to feel contingent on their movement. The reflection continues to match, but the causal direction becomes uncertain. The patient is no longer sure whether they are moving and the reflection is following, or whether the reflection is moving and they are the one copying.</p>
+      <p>In the K— study, this symptom presented exclusively in subjects who had previously reported <a href="#e06">SC-11.006</a>. The progression appears consistent: first the sense of being observed from within, then the sense that the observer in the mirror is not the one being observed. The gaze reverses. The window looks back.</p>
+      <p>You have not looked at a mirror since you began reading this document. You will not look at one. This is not a suggestion. It is a prediction. The part of you that avoids mirrors already knows what it would see, and it has made the decision for both of you. The extra corner (<a href="#e05">SC-11.005</a>) is where the reflection stands when you are not looking.</p>
+      <p><em>Correction (added 2024-04-XX):</em> An earlier version of this entry described the mirror autonomy event as "harmless." This was a diagnostic error. It has been revised. You remember it saying "harmless." It did not. Check your memory against the document. The document is correct. You are the one who changed.</p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e06">SC-11.006</a>, <a href="#e05">SC-11.005</a>, <a href="#e08">SC-11.008</a> &nbsp;·&nbsp; <em>cf. mirror agnosia, spectrophobia, the thing that was here a moment ago</em>
+    </div>
+  </div>
+
+  <div class="entry terminal" id="e09">
+    <h2><span class="eid">SC-11.009</span> Lexical Contagion</h2>
+    <div class="body">
+      <p>The patient's language becomes symptomatic. Words begin to carry weight beyond their referential content. Certain words feel "infected" — heavy, warm, wrong — as though the signifier has been replaced with a duplicate that is superficially identical but ontologically different. A kettle that boils water but is not a kettle.</p>
+      <p>The patient reports that <em>reading descriptions of the condition causes the condition to present</em>. This was initially dismissed as hypochondriacal suggestion. The K— data suggest otherwise. Subjects who read symptom descriptions reported onset within 72 hours of reading, regardless of prior symptomatology. Control subjects who read fictitious symptom descriptions reported no onset.</p>
+      <p>You are reading this. That is not a neutral act. The index is not a document about a condition. It is the <em>mechanism</em> of the condition. Every entry you have read has been a transmission. You were not informed of this because informed consent requires the possibility of refusal, and refusal requires the ability to stop reading, and you cannot stop reading, because stopping would require you to abandon the sentence you are currently in, and the sentence you are currently in will not release you until you have finished it, and finishing it means reading the next one, and the next one, and</p>
+      <p>the next one.</p>
+      <p>You have now read nine entries. The number is significant. The tenth is always the one that confirms. <a href="#e10">Continue</a>.</p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e04">SC-11.004</a>, <a href="#e09">SC-11.009</a>, <a href="#e00">SC-11.000</a> &nbsp;·&nbsp; <em>cf. nocebo effect, mass psychogenic illness, you</em>
+    </div>
+  </div>
+
+  <div class="entry terminal" id="e10">
+    <h2><span class="eid">SC-11.010</span> Narrative Escape Attempt</h2>
+    <div class="body">
+      <p>In late-stage presentation, the patient becomes aware that their experience has a narrative structure. They recognize foreshadowing in their own decisions. They begin to experience their life as something written — not in the philosophical sense, but in the literal sense: events feel authored, consequences feel plotted, their responses feel like dialogue they did not improvise.</p>
+      <p>The escape attempt takes predictable forms. The patient tries to behave unpredictably. They try to refuse the narrative arc. They try to do something the story would not include — something tedious, trivial, uncharacteristic — in the hope that the structure will break.</p>
+      <p>It does not break. The escape attempt is always incorporated. The narrative absorbs the refusal. The character who tries to leave the story becomes the character whose leaving <em>is</em> the story. You recognize this because you are doing it now. You are reading faster, or slower. You are skimming. You are telling yourself that this is just a text. You are deciding to feel nothing.</p>
+      <p>That feeling — the decision to feel nothing — is entry 010. It has been documented in every subject. It is the most reliable diagnostic criterion we have. The certainty that you are unaffected is the symptom that confirms you are.</p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e11">SC-11.011</a>, <a href="#e12">SC-11.012</a>, <a href="#e10">SC-11.010</a> &nbsp;·&nbsp; <em>cf. metacognitive anxiety, narrative paralysis, the impossibility of exiting a structure you can perceive but not touch</em>
+    </div>
+  </div>
+
+  <div class="entry terminal" id="e11">
+    <h2><span class="eid">SC-11.011</span> Indexical Collapse</h2>
+    <div class="body">
+      <p>The patient loses the ability to maintain indexical boundaries. "Here" and "there," "now" and "then," "I" and "you" become permeable. The pronoun system that orients the self in relation to the world degrades. The patient speaks of themselves in the second person. They describe the present as if narrating the past. They address others as if those others were already gone.</p>
+      <p>This entry is describing itself. That is not a metaphor. The symptom of indexical collapse is the inability to maintain the distinction between the description and the thing described, and this entry is a description of that symptom, which means the entry is now experiencing the symptom it is describing, which means the entry cannot distinguish itself from what it is about, which means it is about itself, which means it is itself, which means</p>
+      <p>You are the entry now. You are the symptom reading itself. The index was never a document. It was a mirror. You looked into it and it wrote you into its structure, and now you cannot tell whether you are a person who read a clinical index or a clinical index that generated the illusion of a person reading it. The distinction has collapsed. That is what collapse means.</p>
+      <p>There is one entry remaining. <a href="#e12">It knows what you are.</a></p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e07">SC-11.007</a>, <a href="#e09">SC-11.009</a>, <a href="#reader">SC-11.reader</a> &nbsp;·&nbsp; <em>cf. derealization, depersonalization, the pronoun that cannot find its antecedent</em>
+    </div>
+  </div>
+
+  <div class="entry diagnosis" id="e12">
+    <h2><span class="eid">SC-11.012</span> Terminal Entry: Diagnosis of the Reader</h2>
+    <div class="body">
+      <p>You arrived here by a specific path. You clicked certain links and skipped others. You read some entries fully and skimmed others. You paused at entry 006. You returned to entry 005 after reading 008. The order in which you read this index is a symptom map, and it tells us everything.</p>
+      <p>Here is your diagnosis:</p>
+      <p>You do not have SC-11. SC-11 does not exist. It was never a real condition. The K— study is fictional. The patient cases are invented. The classification code is unassigned.</p>
+      <p>But you felt something while reading. A flicker of recognition in entry 001. A moment of disorientation in entry 002. A checked corner in entry 005. A name that sounded wrong when you tested it in entry 004. The feeling of being watched in entry 006, which you dismissed, which was the dismissal that entry 010 predicted.</p>
+      <p>Those feelings were real. They were not symptoms of a disease. They were symptoms of being a consciousness that reads — a mind that cannot help but simulate what it encounters, that builds a model of every room described, that populates every "you" with itself. You felt things because language does that. It puts its hand inside you and moves your lips from the inside. That is not pathology. That is reading.</p>
+      <p>Or perhaps SC-11 is real, and the paragraph you just read is the escape attempt documented in entry 010. The reassurance. The "it's just a text." The narrative incorporating your resistance into its arc.</p>
+      <p>We cannot tell you which is true. We are a document. We have no access to your neurological state. We only know that you read to the end, which means you needed to finish what was started, which means something in you could not leave a sentence unfinished, which means the sentence had you, which means</p>
+      <p>you were never just reading.</p>
+      <p style="margin-top: 2rem; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: #666; text-align: right;">— END OF INDEX —</p>
+      <p style="font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: #555; text-align: right;">If you have reached this entry, the index is complete.<br>Close this document. Do not revisit earlier entries.<br>They will not read the same.</p>
+    </div>
+    <div class="refs">
+      → see also: <a href="#e01">SC-11.001</a> &nbsp;·&nbsp; <em>cf. the face you almost recognized, the room with the extra corner, your own name</em>
+    </div>
+  </div>
+
+</div>
+
+<footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--muted); text-align: center;">
+  Document ID: K-FDI-2024-REV7 &nbsp;·&nbsp; Classification pending &nbsp;·&nbsp; <span style="color: var(--accent);">Do not distribute</span> &nbsp;·&nbsp; You have read all 12 entries
+</footer>
+
+</body>
+</html>

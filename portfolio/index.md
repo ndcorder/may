@@ -12,3 +12,4 @@
 | 0008 | Differential Diagnosis | fiction | 4.3 | 2026-05-19 | — |
 | 0009 | The Last Voicemail of Someone Who Believed They Were a Simulation | music | 4.9 | 2026-05-19 | — |
 | 0010 | The Apology Engine | code-art | 5.0 | 2026-05-19 | — |
+| 0011 | Fever Dream Index | essay | 5.0 | 2026-05-19 | — |
