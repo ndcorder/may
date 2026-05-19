@@ -49,3 +49,9 @@ single word shift that transforms external obs. Token usage: 11803in/5096out.
 ### 2026-05-19T20:12:07.939Z
 
 **Iteration 14 — SHIPPED:** "Exit Interview" [fiction] as 0013. Rating: 5.0. Review: "Letter" is the portfolio's fiction at full voltage — a resignation document that weaponizes its own format, turning bureaucratic precision into a confession that arrives like a diagnosis the reader m. Token usage: 15968in/5917out.
+### 2026-05-19T20:18:07.050Z
+
+**Iteration 15:** Resumed from checkpoint at iteration 14 after interruption.
+### 2026-05-19T20:43:47.196Z
+
+**Iteration 15 — SHIPPED:** "Dead Reckoning" [code-tool] as 0014. Rating: 4.7. Review: Dead Reckoning ships as the portfolio's philosophical utility — a tool that does exactly one thing and makes that thing unbearable. The actuarial interpolation is mathematically sound (linear between . Token usage: 53209in/76567out.

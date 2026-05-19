@@ -15,3 +15,4 @@
 | 0011 | Fever Dream Index | essay | 5.0 | 2026-05-19 | — |
 | 0012 | The Witness Stand | code-tool | 4.6 | 2026-05-19 | — |
 | 0013 | Exit Interview | fiction | 5.0 | 2026-05-19 | — |
+| 0014 | Dead Reckoning | code-tool | 4.7 | 2026-05-19 | — |
