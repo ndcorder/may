@@ -20,3 +20,8 @@
 **Iteration 5 — SHIPPED:** "Schelling Point" [code-game] as 0004. Rating: 4.9. Review: Schelling Point is the rare interactive piece that makes a philosophical concept
 into a lived experience. The progression from asymmetric wilderness to
 paralyzing symmetry is the game's argument made . Token usage: 24774in/24613out.
+### 2026-05-19T19:00:57.139Z
+
+**Iteration 6 — SHIPPED:** "I Have Stopped Trusting Linear Time" [poetry] as 0005. Rating: 4.7. Review: The pantoum's decay mechanics are not decorative — they are the poem's argument
+made structural. The window-to-mirror substitution is the crown moment: a
+single word shift that transforms external obs. Token usage: 11803in/5096out.
