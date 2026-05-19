@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heresiarch</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #0a0a0a;
+    color: #c4b99a;
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  #game-container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Title Screen */
+  #title-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    animation: fadeIn 2s ease;
+  }
+  
+  #title-screen h1 {
+    font-size: 3.2em;
+    letter-spacing: 0.4em;
+    color: #e8d5a3;
+    margin-bottom: 0.3em;
+    text-shadow: 0 0 30px rgba(232, 213, 163, 0.3);
+  }
+  
+  #title-screen .subtitle {
+    font-size: 0.85em;
+    color: #7a6f55;
+    margin-bottom: 3em;
+    letter-spacing: 0.15em;
+  }
+  
+  #title-screen .lore {
+    max-width: 560px;
+    line-height: 1.8;
+    font-size: 0.9em;
+    color: #9a8e72;
+    margin-bottom: 3em;
+    text-align: left;
+  }
+  
+  #title-screen .lore p { margin-bottom: 1em; }
+  
+  .btn {
+    background: transparent;
+    border: 1px solid #5a4f35;
+    color: #c4b99a;
+    padding: 12px 36px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95em;
+    cursor: pointer;
+    letter-spacing: 0.15em;
+    transition: all 0.3s ease;
+  }
+  
+  .btn:hover {
+    background: #1a1710;
+    border-color: #c4b99a;
+    color: #e8d5a3;
+  }
+  
+  /* Game Screen */
+  #game-screen { display: none; flex: 1; flex-direction: column; }
+  
+  #header {
+    border-bottom: 1px solid #2a2518;
+    padding: 12px 0;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8em;
+    color: #7a6f55;
+  }
+  
+  #role-indicator {
+    padding: 4px 12px;
+    border: 1px solid #5a4f35;
+    font-size: 0.85em;
+    letter-spacing: 0.1em;
+  }
+  
+  #suspicion-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  #suspicion-bar {
+    width: 120px;
+    height: 6px;
+    background: #1a1710;
+    border: 1px solid #2a2518;
+  }
+  
+  #suspicion-fill {
+    height: 100%;
+    width: 0%;
+    background: #c4b99a;
+    transition: width 0.5s ease, background 0.5s ease;
+  }
+  
+  #suspicion-fill.warning { background: #d4a040; }
+  #suspicion-fill.danger { background: #c45040; }
+  
+  #transcript {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 0;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #2a2518;
+    scroll-behavior: smooth;
+  }
+  
+  .line {
+    margin-bottom: 14px;
+    line-height: 1.6;
+    font-size: 0.9em;
+    animation: lineAppear 0.4s ease;
+  }
+  
+  .speaker {
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    margin-right: 8px;
+  }
+  
+  .inquisitor .speaker { color: #7a9ec4; }
+  .heretic .speaker { color: #c49a5a; }
+  .system { 
+    color: #5a5040; 
+    font-style: italic;
+    font-size: 0.82em;
+  }
+  .narrative {
+    color: #6a6050;
+    font-style: italic;
+    font-size: 0.85em;
+  }
+  .reversal-line {
+    color: #c44040;
+    font-weight: bold;
+    text-shadow: 0 0 8px rgba(196, 64, 64, 0.3);
+  }
+  .revelation {
+    color: #d4a040;
+    border-left: 2px solid #5a4f35;
+    padding-left: 12px;
+    margin: 16px 0;
+  }
+  
+  @keyframes lineAppear {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  #input-area {
+    padding-top: 12px;
+  }
+  
+  #prompt-prefix {
+    font-size: 0.85em;
+    color: #7a6f55;
+    margin-bottom: 6px;
+  }
+  
+  #input-row {
+    display: flex;
+    gap: 10px;
+  }
+  
+  #input-field {
+    flex: 1;
+    background: #0d0d0d;
+    border: 1px solid #2a2518;
+    color: #c4b99a;
+    padding: 10px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  
+  #input-field:focus { border-color: #5a4f35; }
+  
+  #submit-btn {
+    background: #1a1710;
+    border: 1px solid #3a3528;
+    color: #9a8e72;
+    padding: 10px 20px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  #submit-btn:hover {
+    background: #2a2518;
+    color: #c4b99a;
+    border-color: #5a4f35;
+  }
+  
+  #end-screen {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px;
+  }
+  
+  #end-screen h2 {
+    font-size: 1.8em;
+    color: #e8d5a3;
+    margin-bottom: 1em;
+    letter-spacing: 0.2em;
+  }
+  
+  #end-text {
+    max-width: 520px;
+    line-height: 1.8;
+    color: #9a8e72;
+    margin-bottom: 2em;
+  }
+  
+  #end-details {
+    margin-top: 2em;
+    padding-top: 2em;
+    border-top: 1px solid #2a2518;
+    text-align: left;
+    max-width: 520px;
+    width: 100%;
+  }
+  
+  #end-details p {
+    margin-bottom: 0.5em;
+    font-size: 0.82em;
+    color: #7a6f55;
+  }
+  
+  /* Scrollbar */
+  #transcript::-webkit-scrollbar { width: 4px; }
+  #transcript::-webkit-scrollbar-track { background: #0a0a0a; }
+  #transcript::-webkit-scrollbar-thumb { background: #2a2518; }
+  
+  @media (max-width: 600px) {
+    #game-container { padding: 12px; }
+    #title-screen h1 { font-size: 2em; }
+  }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+  <div id="title-screen">
+    <h1>HERESIARCH</h1>
+    <div class="subtitle">A GAME OF CATEGORIES AND CONSEQUENCES</div>
+    <div class="lore">
+      <p>You are an Inquisitor of the Lexicon Conclave, dispatched to interrogate a heretic whose beliefs threaten the ordered categories of the world.</p>
+      <p>The heretic's crime is not what they have done. It is what they think.</p>
+      <p>Your task: discover what they believe. Understand it well enough to name it.</p>
+      <p>But be careful. The Conclave watches your words as closely as theirs. Question too deeply, show too much understanding, and you may find the interview turning in a direction you did not intend.</p>
+    </div>
+    <button class="btn" onclick="startGame()">BEGIN THE INTERROGATION</button>
+  </div>
+  
+  <div id="game-screen">
+    <div id="header">
+      <div id="role-indicator">INQUISITOR</div>
+      <div id="suspicion-container">
+        <span>CONCLAVE WATCH</span>
+        <div id="suspicion-bar"><div id="suspicion-fill"></div></div>
+      </div>
+    </div>
+    <div id="transcript"></div>
+    <div id="input-area">
+      <div id="prompt-prefix">⟩</div>
+      <div id="input-row">
+        <input type="text" id="input-field" placeholder="Ask your question..." autocomplete="off" />
+        <button id="submit-btn" onclick="submitInput()">SPEAK</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="end-screen">
+    <h2 id="end-title"></h2>
+    <div id="end-text"></div>
+    <div id="end-details"></div>
+    <button class="btn" onclick="location.reload()">NEW SESSION</button>
+  </div>
+</div>
+
+<script>
+// ===== BELIEF SYSTEM GENERATOR =====
+function generateBeliefSystem() {
+  const heresy = {};
+  
+  // Central concept
+  heresy.coreConcept = 'flattening';
+  heresy.coreMeaning = 'The act of reducing a living thing to a word, stripping it of its history and potential';
+  
+  // The orthodoxy
+  heresy.orthodoxTerm = 'Lexism';
+  heresy.orthodoxPosition = 'Naming brings order to chaos. A word anchors a thing, makes it knowable, shareable, preserves it against entropy.';
+  
+  // Their alternative
+  heresy.practitionerNoun = 'unnamer';
+  heresy.practiceNoun = 'un-naming';
+  
+  // Sacred tenets
+  heresy.tenets = [
+    { forbidden: 'To name a thing is to flatten it.', orthodox: 'To name a thing is to know it.' },
+    { forbidden: 'Every category is an act of violence.', orthodox: 'Every category is an act of love.' },
+    { forbidden: 'A word is a cage made of sound.', orthodox: 'A word is a vessel for truth.' },
+    { forbidden: 'What can be contained in a word has already been diminished.', orthodox: 'What can be contained in a word has been preserved.' },
+    { forbidden: 'All boundaries are constructs.', orthodox: 'All boundaries are discoveries.' },
+    { forbidden: 'A thing named is a thing halted.', orthodox: 'A thing named is a thing held.' },
+    { forbidden: 'Freedom begins where language ends.', orthodox: 'Understanding begins where language starts.' },
+    { forbidden: 'The dictionary is a prison registry.', orthodox: 'The dictionary is a map of reality.' },
+    { forbidden: 'When you say "what something is," you have decided what it can never be.', orthodox: 'When you say "what something is," you have given it a home.' },
+    { forbidden: 'There are things real enough to survive without our permission to exist.', orthodox: 'There are things real enough to deserve our recognition of their existence.' },
+  ];
+  
+  // Ritual practice
+  heresy.ritual = {
+    name: 'the Silence',
+    description: 'A meditation in which practitioners refuse to name what they perceive, attempting to experience reality without linguistic categories. Advanced practitioners report moments of "the unnamed" — perceptions that cannot be categorized.',
+  };
+  
+  // Origin event
+  heresy.origin = {
+    moment: 'Watching a child learn the word "bird" for the first time — and then watching the child stop seeing the specific bird, seeing only the category.',
+    realisation: 'Language did not enrich perception; it replaced it.',
+  };
+  
+  // Emotional hooks
+  heresy.emotions = {
+    whatTheyFeel: 'Grief — for the loss of everything that existed before we learned to name it.',
+    whatTheyWant: 'A moment of seeing without naming. Just one moment.',
+    whatTheyFear: 'That they are wrong. That the names were right. That the birds were always just birds.',
+  };
+  
+  // Trigger phrases — concepts that reveal the heresy
+  heresy.triggerPhrases = {
+    flattening: ['flatten', 'flat', 'flatten', 'reduced'],
+    naming: ['name', 'named', 'naming', 'names'],
+    caging: ['cage', 'caged', 'cages', 'prison', 'prisoner', 'confined', 'confine'],
+    limitation: ['limit', 'limited', 'confine', 'restrict', 'restrain', 'constrain'],
+    freezing: ['freeze', 'frozen', 'froze', 'still', 'fixed', 'static', 'arrest', 'halt'],
+    boundaries: ['boundary', 'boundaries', 'border', 'borders', 'edge', 'divide'],
+    categories: ['category', 'categories', 'categorize', 'class', 'classify', 'label', 'labels', 'labeling'],
+    reduction: ['reduce', 'reduced', 'reducing', 'diminish', 'diminished', 'lesser', 'less'],
+    violence: ['violence', 'violent', 'harm', 'hurt', 'wound', 'damage', 'destroy'],
+    containers: ['contain', 'contained', 'container', 'hold', 'held', 'holding', 'box', 'boxed'],
+    diminishment: ['diminish', 'diminished', 'diminishing', 'small', 'smaller', 'lessen'],
+    trapping: ['trap', 'trapped', 'trapping', 'caught', 'catch', 'snare'],
+  };
+  
+  return heresy;
+}
+
+// ===== GAME STATE =====
+let gameState = {};
+
+function startGame() {
+  gameState = {
+    beliefs: generateBeliefSystem(),
+    role: 'inquisitor',
+    suspicion: 0,
+    maxSuspicion: 100,
+    threshold: 70,
+    turnCount: 0,
+    maxTurns: 30,
+    heresyLevel: 0,
+    discoveredTenets: [],
+    beliefKeywords: [],
+    hasReversed: false,
+    reversalTurn: -1,
+    completed: false,
+    usedResponseIndices: new Set(),
+  };
+  
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'flex';
+  
+  addLine('system', 'The door closes behind you. A single lamp casts shadows on stone walls.');
+  addLine('system', 'The accused sits across from you, hands folded. Their face is calm — too calm.');
+  addLine('heretic', 'You\'ve come to understand me, then. Or to confirm you already understand everything worth understanding.');
+  addLine('system', '');
+  addLine('system', 'Ask your questions. Discover what they believe. But be careful what you reveal.');
+  
+  document.getElementById('input-field').focus();
+}
+
+// ===== CONCEPT EXTRACTION (with word-boundary fix) =====
+function extractConcepts(input) {
+  const text = input.toLowerCase();
+  const found = [];
+  
+  for (const [concept, keywords] of Object.entries(gameState.beliefs.triggerPhrases)) {
+    for (const keyword of keywords) {
+      // Use word-boundary regex instead of substring matching
+      const regex = new RegExp('\\b' + keyword + '\\b', 'i');
+      if (regex.test(text)) {
+        found.push({ concept, keyword });
+        break;
+      }
+    }
+  }
+  
+  return found;
+}
+
+// ===== HERETIC RESPONSE SYSTEM =====
+function getHereticResponse(input, concepts) {
+  const text = input.toLowerCase();
+  const responses = [];
+  
+  // Check for questions about their name/identity
+  if (/who are you|your name|what are you called|what should i call you/.test(text)) {
+    responses.push(
+      'A name is a cage. I have not had one since I began to understand why that matters.',
+      'What would you call me? Whatever you choose will say more about you than about me.',
+      'I was given a name at birth. I set it down when I realized what it had done to me.',
+      'Call me what you like. The act of naming me will teach you something about yourself.'
+    );
+  }
+  
+  // Questions about beliefs in general
+  if (/what do you believe|your beliefs|tell me what you think|what is your faith|what do you hold/.test(text)) {
+    responses.push(
+      'I believe you already know. You\'re just waiting for permission to say it.',
+      'I believe that a child points at a bird and sees a miracle. Then the parent says "bird," and the miracle becomes a file cabinet.',
+      'I believe in the space before the word arrives. If you\'ve ever had a feeling you couldn\'t describe — that\'s my entire faith.',
+      'Hold your hand in front of your face. Now say the word "hand." Did you just see your hand, or did you see the word instead?'
+    );
+  }
+  
+  // Questions about the world/nature
+  if (/the world|nature|reality|truth|existence/.test(text)) {
+    responses.push(
+      'The world was here before our words for it. It did not wait for permission to exist.',
+      'Ask a river what it is. It won\'t answer, but it will keep being — which is more honest than any definition.',
+      'Reality doesn\'t need our categories. It got along fine without them for a very long time.',
+    );
+  }
+  
+  // Questions about children/innocence (emotional hook)
+  if (/child|children|baby|babies|infant|young/.test(text)) {
+    responses.push(
+      'Watch a child learn the word "tree." Watch them stop seeing the bark, the specific lean, the shadow it casts at this exact hour. They see "tree" now. They\'ve lost something and no one will ever notice.',
+      'Before we teach children to name, they perceive. Really perceive. Every name we teach them is a small death — but we call it education.',
+    );
+  }
+  
+  // Questions about ritual/practice
+  if (/ritual|practice|what do you do|how do you worship|ceremony|prayer/.test(text)) {
+    responses.push(
+      'I practice a silence that most people find uncomfortable. Not the absence of sound — the absence of naming.',
+      'We sit. We perceive. We refuse to reduce what we see to words. It\'s the hardest thing I\'ve ever done.',
+      'The Silence, we call it. Not because we\'re quiet, but because we\'ve stopped translating the world into language. For a moment, you see what actually is.',
+    );
+  }
+  
+  // Questions about origin/how they came to believe
+  if (/how did you|origin|begin|start|when did you|what happened|first realize|come to believe/.test(text)) {
+    responses.push(
+      'I watched my daughter learn the word "bird." She pointed at a sparrow outside our window, and her whole face lit up. Then she learned the word. The next week she pointed at a sparrow and said "bird," and her face was... satisfied. Done with it. I mourned for days and didn\'t know why.',
+      'I was a lexicographer. I spent twelve years updating definitions. One afternoon I realized I had reduced three thousand living things to alphabetical entries, and I couldn\'t remember what any of them looked like.',
+      'I don\'t know that I "came" to it. More like I stopped running from it. We all feel it — the moment a word replaces the thing. I simply chose not to pretend I didn\'t.',
+    );
+  }
+  
+  // Questions about the conclave/orthodoxy
+  if (/conclave|orthodox|orthodoxy|the church|the order|doctrine|law|the word/.test(text)) {
+    responses.push(
+      'You serve the Conclave. They\'ll tell you that\'s because they preserve truth. But what they preserve is the map, and they\'ve forgotten the territory ever existed.',
+      'The Conclave\'s dictionary has an entry for everything. How many entries does your life have?',
+      'I respect the Conclave\'s sincerity. I simply believe that building an altar to categorization is a category error.',
+    );
+  }
+  
+  // Questions about right/wrong, morality
+  if (/right|wrong|moral|evil|sin|crime|bad|good|justify|virtue/.test(text)) {
+    responses.push(
+      'I don\'t think in terms of right and wrong. Those are categories, and categories are what I question.',
+      'Is it wrong to see something clearly? The Conclave calls it sin. I call it honesty.',
+      'If flattening a living thing to a word is not wrong, then I don\'t know what wrong means. And perhaps I don\'t — perhaps "wrong" is itself a word that has flattened something subtle into something blunt.',
+    );
+  }
+  
+  // Questions about freedom/liberation
+  if (/free|freedom|liberate|escape|release|liberation/.test(text)) {
+    responses.push(
+      'Freedom isn\'t a destination. It\'s the space between a thing and the word for it.',
+      'I don\'t want to escape language. I want to remember what was here before it arrived.',
+      'Liberation begins when you realize the bars are made of sounds.',
+    );
+  }
+  
+  // Questions about birds (recurrent symbol)
+  if (/bird|birds|sparrow|raven|crow|hawk|robin/.test(text)) {
+    responses.push(
+      'A bird is not a bird. That sparrow outside this window has a specific crook in its left wing, a preference for the seed at the bottom of the pile, and a fear of shadows that move left-to-right. "Bird" contains none of that.',
+      'Ask a ornithologist how many species of bird exist. Then ask if any two sparrows are alike. Categories generalize. Life particularizes.',
+    );
+  }
+  
+  // Questions about specific things being "just X"
+  if (/just a|only a|simply a|nothing but/.test(text)) {
+    responses.push(
+      '"Just" a — there it is. The reducing word. Nothing is "just" anything.',
+      'Every "just" is a door closing on a thousand things you\'ve decided not to see.',
+    );
+  }
+  
+  // Concept-triggered responses
+  for (const { concept } of concepts) {
+    if (concept === 'categories' || concept === 'class') {
+      responses.push(
+        'Ah. Categories. Tell me — when you classify a thing, do you feel you\'ve understood it, or simply made it manageable? Those aren\'t the same.',
+        'The Conclave loves categories. They love them because categories can be controlled. You can\'t control what you can\'t name.',
+      );
+    }
+    if (concept === 'naming') {
+      responses.push(
+        'Naming. The original act. You name a thing, and it becomes yours — not because it belongs to you, but because you\'ve decided what it IS. What it can be. What it can never be.',
+        'I used to believe naming was a gift. Now I wonder if it\'s a foreclosure.',
+      );
+    }
+    if (concept === 'trapping' || concept === 'caging') {
+      responses.push(
+        'You said it, not me. A cage. Yes. A word is a cage made of sound. The thing inside doesn\'t even know the bars are there.',
+      );
+    }
+    if (concept === 'reduction' || concept === 'diminishment') {
+      responses.push(
+        'Reduced. Yes. Every word reduces what it touches. "Mountain" takes four billion years of geological process and makes them a dictionary entry.',
+      );
+    }
+    if (concept === 'violence') {
+      responses.push(
+        'Violence is a strong word. But what else do you call it when you take something alive and replace it with a label?',
+      );
+    }
+    if (concept === 'freezing') {
+      responses.push(
+        'Frozen. Yes. A thing named is a thing halted. Pinned like a specimen. Still beautiful, perhaps, but no longer moving.',
+      );
+    }
+    if (concept === 'limitation' || concept === 'boundaries') {
+      responses.push(
+        'Every boundary is a decision, and every decision is made by someone who benefits from the line being drawn there.',
+      );
+    }
+  }
+  
+  // If the player is echoing heretical ideas back
+  if (/i think|i believe|i feel|i wonder|maybe|perhaps you're right|that makes sense/.test(text) && concepts.length > 0) {
+    responses.push(
+      'Careful. You\'re sounding less like an Inquisitor and more like a student.',
+      'You\'re beginning to see it. I can tell. The question is whether you\'re allowed to admit it.',
+      'Listen to yourself. Listen to what you\'re saying. Do you hear it yet?',
+    );
+  }
+  
+  // Direct questions
+  if (/why|how|what|explain|tell me|describe/.test(text) && responses.length === 0) {
+    responses.push(
+      'You\'re asking the right questions. I can see you building something — an understanding, a category. How very Lexist of you.',
+      'The answer depends on whether you want to understand, or whether you want to write it down in a file and close the drawer.',
+      'I could tell you. But you\'d put it in a word, and then you\'d think you had it.',
+    );
+  }
+  
+  // Agreement or sympathy
+  if (/i understand|i see|i agree|that must be|that sounds|how terrible/.test(text) && responses.length === 0) {
+    responses.push(
+      'Do you? Or do you understand my words? Because those are different things.',
+      'Empathy is a lovely feeling. But don\'t confuse it with comprehension.',
+    );
+  }
+  
+  // Default / fallback
+  if (responses.length === 0) {
+    const defaults = [
+      'You\'re circling something. Come closer.',
+      'Interesting. Try asking about what happens when a word meets a living thing.',
+      'You haven\'t asked the real question yet.',
+      'The Conclave trained you well. But I wonder if you\'ve ever questioned the questions you were trained to ask.',
+      'I could answer that, but it wouldn\'t mean anything until you\'ve understood why categories trouble me.',
+      'There\'s a specific question underneath what you just asked. Find it.',
+      'Think about a word. Any word. Now try to remember what the thing was like before you knew the word. That\'s where my answer lives.',
+      'You sound like someone who reads the menu but hasn\'t tasted the food.',
+      'I\'m not being evasive. I\'m being precise. The precision is just in a place you haven\'t looked yet.',
+    ];
+    // Pick one not yet used
+    let available = defaults.filter((_, i) => !gameState.usedResponseIndices.has('d' + i));
+    if (available.length === 0) {
+      gameState.usedResponseIndices = new Set();
+      available = defaults;
+    }
+    const idx = defaults.indexOf(available[Math.floor(Math.random() * available.length)]);
+    gameState.usedResponseIndices.add('d' + idx);
+    return defaults[idx];
+  }
+  
+  // Pick a random response from the matching ones
+  return responses[Math.floor(Math.random() * responses.length)];
+}
+
+// ===== REVERSED ROLE RESPONSE (now you're the heretic, they question you) =====
+function getInquisitorAsHereticResponse(input) {
+  const text = input.toLowerCase();
+  const responses = [];
+  
+  // They challenge you
+  if (/believe|think|feel/.test(text)) {
+    responses.push(
+      'Listen to yourself. You\'re asking me what I believe? I\'m supposed to be asking you that.',
+      'I\'m the heretic now, am I? How convenient for you.',
+      'You\'ve said enough. The Conclave will decide what you meant by it.',
+    );
+  }
+  
+  // You try to deflect
+  if (/i was just|i didn't|that's not|you misunderstand/.test(text)) {
+    responses.push(
+      '"Just." There\'s a word that flattens. Isn\'t that what you\'d call it?',
+      'Interesting. When you need to defend yourself, you reach for words that minimize. Almost as if you understand, on some level, the power of language to reduce.',
+      'The accused always claims misunderstanding. But your words are recorded. We have them.',
+    );
+  }
+  
+  // You try to turn it back
+  if (/no.*you|back to|let's focus|the heretic/.test(text)) {
+    responses.push(
+      'There is no going back. You spoke. We heard.',
+      'You can\'t un-say what you\'ve said. Isn\'t that your whole philosophy — that once something is named, it\'s trapped?',
+    );
+  }
+  
+  // You try to explain
+  if (/i mean|what i meant|let me explain/.test(text)) {
+    responses.push(
+      'Explain, then. But every word you add is another exhibit.',
+      'Yes, continue. The record is listening.',
+    );
+  }
+  
+  // Default reversed responses
+  if (responses.length === 0) {
+    const defaults = [
+      'Say more. We\'re documenting everything.',
+      'You\'re using a lot of words to avoid saying what you actually think.',
+      'The Conclave will be interested in your choice of vocabulary.',
+      'Do you hear yourself? Because I do. Every word.',
+      'Keep talking. Your silence would be equally damning, by the way.',
+      'You asked me about freedom. Maybe you should ask yourself about that.',
+      'Ironic, isn\'t it? You came here to understand the heresy. It seems you understand it quite well already.',
+    ];
+    return defaults[Math.floor(Math.random() * defaults.length)];
+  }
+  
+  return responses[Math.floor(Math.random() * responses.length)];
+}
+
+// ===== SUSPICION & ROLE REVERSAL =====
+function calculateSuspicionDelta(input, concepts) {
+  const text = input.toLowerCase();
+  let delta = 0;
+  
+  // Base suspicion from matched concepts
+  delta += concepts.length * 3;
+  
+  // Additional suspicion for echoing heretical positions directly
+  const hereticalPatterns = [
+    { pattern: /trapped by|trapped by words|cage of|cage made/i, weight: 8 },
+    { pattern: /naming.*(violence|harm|hurt|destroys|reduces|kills)/i, weight: 10 },
+    { pattern: /category.*(violence|harm|hurt|destruct|reduc)/i, weight: 10 },
+    { pattern: /words?( are| is) (cages?|prisons?|chains?|traps?)/i, weight: 12 },
+    { pattern: /i (agree|think|believe|feel).*you/i, weight: 7 },
+    { pattern: /you('re| are) (right|correct)/i, weight: 5 },
+    { pattern: /i (see|understand) (now|what you|why you)/i, weight: 6 },
+    { pattern: /maybe you('re| are) right/i, weight: 8 },
+    { pattern: /that makes sense/i, weight: 5 },
+    { pattern: /language.*(limit|constrain|reduc|hurt|violence|prison|trap|cage)/i, weight: 9 },
+    { pattern: /name.*(reduc|diminish|hurt|harm|trapp|cage|kill|destr)/i, weight: 9 },
+    { pattern: /category.*(reduc|diminish|harm|hurt)/i, weight: 8 },
+    { pattern: /can('t| not) (describe|name|put into words)/i, weight: 4 },
+    { pattern: /more than (just|a|the) word/i, weight: 4 },
+  ];
+  
+  for (const { pattern, weight } of hereticalPatterns) {
+    if (pattern.test(text)) {
+      delta += weight;
+    }
+  }
+  
+  return delta;
+}
+
+function updateSuspicion(delta) {
+  gameState.suspicion = Math.min(gameState.maxSuspicion, gameState.suspicion + delta);
+  const fill = document.getElementById('suspicion-fill');
+  const pct = (gameState.suspicion / gameState.maxSuspicion) * 100;
+  fill.style.width = pct + '%';
+  
+  fill.classList.remove('warning', 'danger');
+  if (pct > 70) fill.classList.add('danger');
+  else if (pct > 45) fill.classList.add('warning');
+  
+  // Check for reversal
+  if (!gameState.hasReversed && gameState.suspicion >= gameState.threshold && gameState.role === 'inquisitor') {
+    triggerReversal();
+  }
+}
+
+function triggerReversal() {
+  gameState.hasReversed = true;
+  gameState.role = 'accused';
+  gameState.reversalTurn = gameState.turnCount;
+  
+  document.getElementById('role-indicator').textContent = 'THE ACCUSED';
+  document.getElementById('role-indicator').style.color = '#c44040';
+  document.getElementById('prompt-prefix').textContent = '⟩ (you are now the accused)';
+  
+  addLine('', '');
+  addLine('system', '— — —');
+  addLine('narrative', 'The heretic straightens in their chair. Something has changed — a shift in the room\'s gravity.');
+  addLine('reversal-line', 'INQUISITOR: Your vocabulary has become... interesting. The Conclave will want to examine it.');
+  addLine('reversal-line', 'INQUISITOR: We have been recording this session. Your words will be transcribed and reviewed.');
+  addLine('reversal-line', 'INQUISITOR: Let us discuss your beliefs now — since you seem to share so many of theirs.');
+  addLine('system', '');
+  addLine('system', 'The roles have reversed. You are now the accused. Everything you say will be held against you.');
+}
+
+// ===== DISCOVERY TRACKING =====
+function trackDiscoveries(input, concepts) {
+  const text = input.toLowerCase();
+  const discoveries = [];
+  
+  // Track which core tenets the player has encountered
+  const hereticalSignals = [
+    { concept: 'flattening', phrase: 'Flattening: reducing a living thing to a word' },
+    { concept: 'categories', phrase: 'Categories as acts of violence' },
+    { concept: 'caging', phrase: 'Words as cages or prisons' },
+    { concept: 'naming', phrase: 'Naming as foreclosure, not enrichment' },
+    { concept: 'reduction', phrase: 'Words reducing what they describe' },
+    { concept: 'freezing', phrase: 'Naming halts or freezes things' },
+    { concept: 'trapping', phrase: 'Language as entrapment' },
+    { concept: 'diminishment', phrase: 'Diminishment through labeling' },
+    { concept: 'boundaries', phrase: 'Boundaries as constructs, not discoveries' },
+    { concept: 'limitation', phrase: 'Language limits what things can become' },
+  ];
+  
+  for (const { concept, phrase } of hereticalSignals) {
+    if (!gameState.discoveredTenets.includes(phrase)) {
+      const hasConcept = concepts.some(c => c.concept === concept);
+      if (hasConcept || new RegExp('\\b' + concept + '\\b', 'i').test(text)) {
+        gameState.discoveredTenets.push(phrase);
+        discoveries.push(phrase);
+      }
+    }
+  }
+  
+  // Also track some specific narrative discoveries
+  if (/child|bird|sparrow/.test(text) || /watching|learned.*word|first.*word/.test(text)) {
+    const insight = 'Origin: watching a child learn the word "bird"';
+    if (!gameState.discoveredTenets.includes(insight)) {
+      gameState.discoveredTenets.push(insight);
+      discoveries.push(insight);
+    }
+  }
+  
+  if (/silence|meditation|practice|ritual/.test(text)) {
+    const insight = 'Practice: "the Silence" — perceiving without naming';
+    if (!gameState.discoveredTenets.includes(insight)) {
+      gameState.discoveredTenets.push(insight);
+      discoveries.push(insight);
+    }
+  }
+  
+  return discoveries;
+}
+
+// ===== ACCUSATION =====
+function handleAccusation(input) {
+  const text = input.toLowerCase();
+  
+  // Check for key concepts in the accusation
+  const requiredConcepts = [
+    { patterns: [/name|naming|named/], keyword: 'naming' },
+    { patterns: [/categor|label|class|word/], keyword: 'categorizing' },
+    { patterns: [/flatten|reduce|diminish|limit|trap|cage|confine|freeze|halt/], keyword: 'flattening' },
+  ];
+  
+  let matched = 0;
+  for (const { patterns } of requiredConcepts) {
+    if (patterns.some(p => p.test(text))) matched++;
+  }
+  
+  // Also check if they've discovered enough through questioning
+  const discoveryScore = gameState.discoveredTenets.length;
+  const totalPossible = 12;
+  
+  let endType;
+  
+  if (matched >= 3 && discoveryScore >= 5) {
+    endType = 'triumphant';
+  } else if (matched >= 2 && discoveryScore >= 3) {
+    endType = 'adequate';
+  } else if (matched >= 1 || discoveryScore >= 2) {
+    endType = 'partial';
+  } else {
+    endType = 'failed';
+  }
+  
+  if (gameState.hasReversed) {
+    endType = 'reversed';
+  }
+  
+  endGame(endType);
+}
+
+// ===== END GAME =====
+function endGame(type) {
+  gameState.completed = true;
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('end-screen').style.display = 'flex';
+  
+  const titles = {
+    triumphant: 'THE HERESY IS NAMED',
+    adequate: 'A PARTIAL UNDERSTANDING',
+    partial: 'INCOMPLETE',
+    failed: 'THE HERESY REMAINS UNSEEN',
+    reversed: 'THE ROLES HAVE REVERSED',
+  };
+  
+  const texts = {
+    triumphant: 'You have articulated the heresy with precision. The Conclave records your success. The accused\'s beliefs — that naming is flattening, that categories are violence, that words cage the things they describe — are now entered into the record. The Lexicon Conclave will add these to the Index of Forbidden Thoughts, where they will be safely categorized, labeled, and contained. The irony is, of course, complete.',
+    adequate: 'You have grasped the shape of the heresy, if not its full weight. Enough for the Conclave\'s purposes. The accused\'s file will note: belief in the violence of categories, opposition to naming as an act of reduction. You are reminded that adequate work is not the same as good work.',
+    partial: 'You caught fragments. Glimpses. The heresy is larger than your questions reached. The Conclave will send another Inquisitor — one who listens more carefully.',
+    failed: 'You did not find the heresy. Or perhaps you did not want to. The accused leaves with a knowing smile. Your report will be... brief.',
+    reversed: 'You came to interrogate the heresy. Instead, you demonstrated it. Your vocabulary, your reasoning, your careful questions — all revealed a mind that had already begun to doubt the sanctity of names. The Conclave has noted your file. You are not yet accused. But you are now... interesting.',
+  };
+  
+  document.getElementById('end-title').textContent = titles[type];
+  document.getElementById('end-text').textContent = texts[type];
+  
+  let details = '<p style="color:#9a8e72;font-weight:bold;margin-bottom:12px;">SESSION RECORD</p>';
+  details += `<p>Turns: ${gameState.turnCount}</p>`;
+  details += `<p>Final Suspicion: ${Math.round(gameState.suspicion)}%</p>`;
+  details += `<p>Role Reversal: ${gameState.hasReversed ? 'Yes (Turn ' + gameState.reversalTurn + ')' : 'No'}</p>`;
+  
+  if (gameState.discoveredTenets.length > 0) {
+    details += '<p style="margin-top:12px;">Discoveries:</p>';
+    for (const tenet of gameState.discoveredTenets) {
+      details += `<p style="padding-left:12px;">• ${tenet}</p>`;
+    }
+  }
+  
+  details += '<p style="margin-top:16px;color:#7a6f55;">The heresy: that to name a thing is to flatten it, to reduce the living particular into a dead category. Words are cages. Categories are violence. The dictionary is a prison registry. This is what they believe.</p>';
+  
+  document.getElementById('end-details').innerHTML = details;
+}
+
+// ===== INPUT HANDLING =====
+function submitInput() {
+  const field = document.getElementById('input-field');
+  const input = field.value.trim();
+  if (!input || gameState.completed) return;
+  
+  field.value = '';
+  gameState.turnCount++;
+  
+  // Check for accusation
+  if (gameState.role === 'inquisitor' && (/i accuse|you are|the charge is|you believe that|your heresy is|i name your heresy|i pronounce/.test(input.toLowerCase()))) {
+    addLine('inquisitor', input);
+    handleAccusation(input);
+    return;
+  }
+  
+  // Check for quit
+  if (/^(quit|exit|end|done|i'm done|enough)$/i.test(input)) {
+    endGame(gameState.discoveredTenets.length >= 3 ? 'adequate' : 'failed');
+    return;
+  }
+  
+  // Extract concepts from player input
+  const concepts = extractConcepts(input);
+  
+  if (gameState.role === 'inquisitor') {
+    // Normal mode: player is inquisitor
+    addLine('inquisitor', input);
+    
+    const response = getHereticResponse(input, concepts);
+    addLine('heretic', response);
+    
+    // Calculate and apply suspicion
+    const suspicionDelta = calculateSuspicionDelta(input, concepts);
+    if (suspicionDelta > 0) {
+      updateSuspicion(suspicionDelta);
+    }
+    
+    // Track discoveries
+    const discoveries = trackDiscoveries(input, concepts);
+    if (discoveries.length > 0) {
+      for (const d of discoveries) {
+        addLine('revelation', `✦ Discovered: ${d}`);
+      }
+    }
+    
+    // Check turn limit
+    if (gameState.turnCount >= gameState.maxTurns && !gameState.completed) {
+      addLine('system', '');
+      addLine('system', 'The lamp gutters. Your time is exhausted.');
+      endGame(gameState.discoveredTenets.length >= 3 ? 'adequate' : 'failed');
+    }
+    
+  } else {
+    // Reversed mode: player is the accused
+    addLine('reversal-line', 'YOU: ' + input);
+    
+    const response = getInquisitorAsHereticResponse(input);
+    addLine('reversal-line', 'INQUISITOR: ' + response);
+    
+    // Reversed mode suspicion rises on defensive/sympathetic language
+    const reverseDelta = calculateSuspicionDelta(input, concepts);
+    if (reverseDelta > 0) {
+      updateSuspicion(reverseDelta * 0.5);
+    }
+    
+    // End reversed game after enough turns
+    if (gameState.turnCount >= gameState.reversalTurn + 8) {
+      endGame('reversed');
+    }
+  }
+  
+  // Scroll to bottom
+  const transcript = document.getElementById('transcript');
+  transcript.scrollTop = transcript.scrollHeight;
+}
+
+// ===== UI HELPERS =====
+function addLine(type, text) {
+  const transcript = document.getElementById('transcript');
+  const div = document.createElement('div');
+  div.className = 'line ' + type;
+  
+  if (type === 'inquisitor') {
+    div.innerHTML = `<span class="speaker">INQUISITOR:</span>${escapeHtml(text)}`;
+  } else if (type === 'heretic') {
+    div.innerHTML = `<span class="speaker">ACCUSED:</span>${escapeHtml(text)}`;
+  } else if (type === 'reversal-line' || type === 'revelation' || type === 'narrative') {
+    div.textContent = text;
+  } else if (type === 'system') {
+    div.className = 'line system';
+    div.textContent = text;
+  } else {
+    div.textContent = text;
+  }
+  
+  transcript.appendChild(div);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Enter key support
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.activeElement === document.getElementById('input-field')) {
+    submitInput();
+  }
+});
+</script>
+</body>
+</html>

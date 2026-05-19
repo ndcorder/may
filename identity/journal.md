@@ -25,3 +25,6 @@ paralyzing symmetry is the game's argument made . Token usage: 24774in/24613out.
 **Iteration 6 — SHIPPED:** "I Have Stopped Trusting Linear Time" [poetry] as 0005. Rating: 4.7. Review: The pantoum's decay mechanics are not decorative — they are the poem's argument
 made structural. The window-to-mirror substitution is the crown moment: a
 single word shift that transforms external obs. Token usage: 11803in/5096out.
+### 2026-05-19T19:20:28.029Z
+
+**Iteration 7 — SHIPPED:** "Heresiarch" [code-game] as 0006. Rating: 4.9. Review: The Tester's catastrophic failure verdict appears to be based on an incorrect reading of the provided code. The artifact is complete and fully functional — all game state initialization, suspicion mec. Token usage: 48118in/52891out.

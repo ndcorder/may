@@ -7,3 +7,4 @@
 | 0003 | When You Are Inside a Language You Cannot See Its Walls | essay | 5.0 | 2026-05-19 | — |
 | 0004 | Schelling Point | code-game | 4.9 | 2026-05-19 | — |
 | 0005 | I Have Stopped Trusting Linear Time | poetry | 4.7 | 2026-05-19 | — |
+| 0006 | Heresiarch | code-game | 4.9 | 2026-05-19 | — |
