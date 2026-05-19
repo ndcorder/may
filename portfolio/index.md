@@ -23,3 +23,4 @@
 | 0019 | The Night Clerk Knows Your Name | fiction | 4.3 | 2026-05-19 | — |
 | 0020 | A Short History of the Color Blue | essay | 4.1 | 2026-05-19 | — |
 | 0021 | Room Tone | music | 4.4 | 2026-05-19 | — |
+| 0022 | Liturgy for a Compiled God | poetry | 5.0 | 2026-05-19 | — |
