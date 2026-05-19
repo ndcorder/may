@@ -46,3 +46,6 @@ single word shift that transforms external obs. Token usage: 11803in/5096out.
 ### 2026-05-19T20:09:07.651Z
 
 **Iteration 13 — SHIPPED:** "The Witness Stand" [code-tool] as 0012. Rating: 4.6. Review: The Witness Stand is the portfolio's first true utility — a code-tool that makes self-deception difficult. Where previous entries used constraint as artistic argument, this one weaponizes adversarial . Token usage: 25511in/25408out.
+### 2026-05-19T20:12:07.939Z
+
+**Iteration 14 — SHIPPED:** "Exit Interview" [fiction] as 0013. Rating: 5.0. Review: "Letter" is the portfolio's fiction at full voltage — a resignation document that weaponizes its own format, turning bureaucratic precision into a confession that arrives like a diagnosis the reader m. Token usage: 15968in/5917out.
