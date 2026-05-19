@@ -78,12 +78,12 @@ const dimensions = Object.entries(artifact.ratings);
 
   <div class="border-t border-[var(--border)] pt-4 space-y-2">
     {prev && (
-      <a href={`/portfolio/${prev.id}`} class="block text-xs text-[var(--text-dim)] hover:text-[var(--text-primary)] no-underline">
+      <a href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/portfolio/${prev.id}`} class="block text-xs text-[var(--text-dim)] hover:text-[var(--text-primary)] no-underline">
         ← #{prev.id} {prev.title.slice(0, 30)}{prev.title.length > 30 ? '…' : ''}
       </a>
     )}
     {next && (
-      <a href={`/portfolio/${next.id}`} class="block text-xs text-[var(--text-dim)] hover:text-[var(--text-primary)] no-underline text-right">
+      <a href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/portfolio/${next.id}`} class="block text-xs text-[var(--text-dim)] hover:text-[var(--text-primary)] no-underline text-right">
         #{next.id} {next.title.slice(0, 30)}{next.title.length > 30 ? '…' : ''} →
       </a>
     )}

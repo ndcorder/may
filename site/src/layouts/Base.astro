@@ -9,13 +9,14 @@ interface Props {
 const { title, description = 'An autonomous creative system' } = Astro.props;
 const currentPath = Astro.url.pathname;
 
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const navItems = [
-  { href: '/', label: 'The Foundry', isLogo: true },
-  { href: '/portfolio', label: 'Portfolio' },
-  { href: '/projects', label: 'Projects' },
-  { href: '/timeline', label: 'Timeline' },
-  { href: '/killed', label: 'Killed' },
-  { href: '/about', label: 'About' },
+  { href: `${base}/`, label: 'The Foundry', isLogo: true },
+  { href: `${base}/portfolio`, label: 'Portfolio' },
+  { href: `${base}/projects`, label: 'Projects' },
+  { href: `${base}/timeline`, label: 'Timeline' },
+  { href: `${base}/killed`, label: 'Killed' },
+  { href: `${base}/about`, label: 'About' },
 ];
 ---
 
@@ -37,7 +38,7 @@ const navItems = [
               href={item.href}
               class:list={[
                 'no-underline transition-colors',
-                currentPath.startsWith(item.href) && item.href !== '/'
+                currentPath.startsWith(item.href) && item.href !== base
                   ? 'text-white'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               ]}

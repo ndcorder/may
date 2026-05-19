@@ -40,7 +40,7 @@ const entries = await loadJournal();
             <div class="flex items-center gap-2">
               {entry.domain && <DomainTag domain={entry.domain} />}
               {entry.artifactId ? (
-                <a href={entry.status === 'shipped' ? `/portfolio/${entry.artifactId}` : undefined}
+                <a href={entry.status === 'shipped' ? `${import.meta.env.BASE_URL.replace(/\/$/, '')}/portfolio/${entry.artifactId}` : undefined}
                    class="text-sm text-[var(--text-primary)] hover:text-white no-underline truncate">
                   {entry.title}
                 </a>

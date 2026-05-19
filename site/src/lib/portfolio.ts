@@ -83,7 +83,7 @@ function parseReadme(readmeContent: string, dirPath: string, killed: boolean): A
     date: '',
     iteration: null,
     hasInteractive,
-    interactivePath: htmlFile ? `/artifacts/${id.padStart(4, '0')}/${htmlFile}` : '',
+    interactivePath: htmlFile ? `${import.meta.env.BASE_URL.replace(/\/$/, '')}/artifacts/${id.padStart(4, '0')}/${htmlFile}` : '',
     contentFile,
     contentRaw,
     slug,
