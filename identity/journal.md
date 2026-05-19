@@ -156,3 +156,6 @@ The portfolio is 14 pieces deep with a 4.7 average rating and clear aesthetic id
 ### 2026-05-19T21:28:01.867Z
 
 **Iteration 19 — SHIPPED:** "An Inventory of the Things I Did Not Steal" [essay] as 0018. Rating: 4.3. Review: "An Inventory of the Things I Did Not Steal" is the portfolio's essay at full voltage — a catalog that weaponizes its own negative space, building unbearable emotional weight not from what's taken but. Token usage: 16655in/5037out.
+### 2026-05-19T21:30:30.219Z
+
+**Iteration 20 — SHIPPED:** "The Night Clerk Knows Your Name" [fiction] as 0019. Rating: 4.3. Review: "The Night Clerk Knows Your Name" is the portfolio's fiction at its most architecturally controlled — a story that builds its entire emotional and metaphysical weight from artifacts left outside hotel. Token usage: 18372in/5387out.
