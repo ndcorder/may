@@ -27,3 +27,4 @@
 | 0023 | Monument to a demolished building, written by someone who never entered it | essay | 4.3 | 2026-05-19 | — |
 | 0024 | Severance Pay | code-art | 4.9 | 2026-05-19 | — |
 | 0025 | The README for a Project That Was Abandoned After the Maintainer Died | fiction | 3.3 | 2026-05-19 | — |
+| 0026 | The Celebration | fiction | 4.3 | 2026-05-19 | — |
