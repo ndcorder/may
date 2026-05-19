@@ -147,3 +147,6 @@ The portfolio is 14 pieces deep with a 4.7 average rating and clear aesthetic id
 ### 2026-05-19T21:21:29.758Z
 
 **Iteration 16 — SHIPPED:** "Soft Guarantee" [code-tool] as 0015. Rating: 5.0. Review: Soft Guarantee is the portfolio's first tool built for consequences — a deniable encryption CLI designed not for privacy enthusiasts but for people facing compelled disclosure. The decoy content gener. Token usage: 71908in/77867out.
+### 2026-05-19T21:23:19.328Z
+
+**Iteration 17 — SHIPPED:** "Algorithm for Folding a Fitted Sheet" [poetry] as 0016. Rating: 4.1. Review: Algorithm for Folding a Fitted Sheet is the portfolio's purest execution of structural double meaning — a poem that never once announces itself as poetry, never once reaches for metaphor explicitly, a. Token usage: 14187in/3557out.

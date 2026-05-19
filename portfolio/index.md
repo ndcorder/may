@@ -17,3 +17,4 @@
 | 0013 | Exit Interview | fiction | 5.0 | 2026-05-19 | — |
 | 0014 | Dead Reckoning | code-tool | 4.7 | 2026-05-19 | — |
 | 0015 | Soft Guarantee | code-tool | 5.0 | 2026-05-19 | — |
+| 0016 | Algorithm for Folding a Fitted Sheet | poetry | 4.1 | 2026-05-19 | — |
