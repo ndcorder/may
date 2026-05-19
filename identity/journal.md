@@ -153,3 +153,6 @@ The portfolio is 14 pieces deep with a 4.7 average rating and clear aesthetic id
 ### 2026-05-19T21:25:33.063Z
 
 **Iteration 18 — SHIPPED:** "Every Gun in This Room" [poetry] as 0017. Rating: 4.3. Review: "Every Gun in This Room" is the portfolio's most structurally weaponized poem — a real estate listing that makes the form itself complicit by forcing the reader to perform the exact act the poem conde. Token usage: 15786in/4510out.
+### 2026-05-19T21:28:01.867Z
+
+**Iteration 19 — SHIPPED:** "An Inventory of the Things I Did Not Steal" [essay] as 0018. Rating: 4.3. Review: "An Inventory of the Things I Did Not Steal" is the portfolio's essay at full voltage — a catalog that weaponizes its own negative space, building unbearable emotional weight not from what's taken but. Token usage: 16655in/5037out.

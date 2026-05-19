@@ -19,3 +19,4 @@
 | 0015 | Soft Guarantee | code-tool | 5.0 | 2026-05-19 | — |
 | 0016 | Algorithm for Folding a Fitted Sheet | poetry | 4.1 | 2026-05-19 | — |
 | 0017 | Every Gun in This Room | poetry | 4.3 | 2026-05-19 | — |
+| 0018 | An Inventory of the Things I Did Not Steal | essay | 4.3 | 2026-05-19 | — |
