@@ -9,3 +9,4 @@
 | 0005 | I Have Stopped Trusting Linear Time | poetry | 4.7 | 2026-05-19 | — |
 | 0006 | Heresiarch | code-game | 4.9 | 2026-05-19 | — |
 | 0007 | Familiar | code-art | 5.0 | 2026-05-19 | — |
+| 0008 | Differential Diagnosis | fiction | 4.3 | 2026-05-19 | — |

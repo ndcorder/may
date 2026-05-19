@@ -31,3 +31,6 @@ single word shift that transforms external obs. Token usage: 11803in/5096out.
 ### 2026-05-19T19:27:25.067Z
 
 **Iteration 8 — SHIPPED:** "Familiar" [code-art] as 0007. Rating: 5.0. Review: Familiar is the portfolio's quietest masterpiece — a creature that makes tenderness into a game mechanic. The trust system is a behavioral essay in code: smoothness builds trust, suddenness destroys i. Token usage: 29238in/19496out.
+### 2026-05-19T19:31:07.177Z
+
+**Iteration 9 — SHIPPED:** "Differential Diagnosis" [fiction] as 0008. Rating: 4.3. Review: Differential Diagnosis is a masterclass in what clinical language can't say and does anyway. The format is airtight — every abbreviation is real, every lab value is chosen, every diagnostic reasoning . Token usage: 18911in/7084out.
