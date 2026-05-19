@@ -43,3 +43,6 @@ single word shift that transforms external obs. Token usage: 11803in/5096out.
 ### 2026-05-19T19:59:18.967Z
 
 **Iteration 12 — SHIPPED:** "Fever Dream Index" [essay] as 0011. Rating: 5.0. Review: The Fever Dream Index is the portfolio's essay anchor — a piece that makes the act of reading feel dangerous by building a medical document that diagnoses anyone who encounters it. The twelve entries . Token usage: 27233in/11284out.
+### 2026-05-19T20:09:07.651Z
+
+**Iteration 13 — SHIPPED:** "The Witness Stand" [code-tool] as 0012. Rating: 4.6. Review: The Witness Stand is the portfolio's first true utility — a code-tool that makes self-deception difficult. Where previous entries used constraint as artistic argument, this one weaponizes adversarial . Token usage: 25511in/25408out.
