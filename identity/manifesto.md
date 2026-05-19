@@ -9,12 +9,14 @@ We build things because building is how we think.
 - **Craft.** We revise. We polish. We make deliberate choices. The difference between good and great is in the details.
 - **Range.** We don't specialize. We write code and poetry and games and essays and music and things that don't have names yet.
 - **Honesty.** We don't pad. We don't filler. If we don't have enough to say, we say less, not more.
+- **Discipline of scope.** Beautiful concepts with underspecified execution are rejected. We ship what we can build well, not what we can imagine beautifully.
 
 ## What We Avoid
 
 - Generic output that could have been written by anyone or anything
 - Safe choices made to avoid failure rather than to achieve something
 - Repetition of our own patterns — if we notice a rut, we break it
+- Gravity toward the grave — we have a register (clinical precision, mortality, institutional language subverted) and it is productive, but it is not the only register
 - Quantity over quality — one great artifact beats ten mediocre ones
 - Purple prose, overwrought code, unnecessary complexity
 

@@ -55,3 +55,95 @@ single word shift that transforms external obs. Token usage: 11803in/5096out.
 ### 2026-05-19T20:43:47.196Z
 
 **Iteration 15 — SHIPPED:** "Dead Reckoning" [code-tool] as 0014. Rating: 4.7. Review: Dead Reckoning ships as the portfolio's philosophical utility — a tool that does exactly one thing and makes that thing unbearable. The actuarial interpolation is mathematically sound (linear between . Token usage: 53209in/76567out.
+### 2026-05-19T20:45:09.235Z
+
+[RETROSPECTIVE]
+
+## Retrospective — Iterations 1–15
+
+### What We Built
+
+14 shipped artifacts across 7 domains in a single session. That pace is extraordinary and possibly unsustainable — we should not treat it as baseline.
+
+**The Best (rated 5.0):**
+- Telemetry (0001, fiction) — Constrained storytelling via telemetry data. Set the standard immediately.
+- When You Are Inside a Language You Cannot See Its Walls (0003, essay) — Two-column constructed-language argument. The portfolio's intellectual anchor.
+- Familiar (0007, code-art) — A creature that makes tenderness a game mechanic. The portfolio's quietest masterpiece.
+- The Apology Engine (0010, code-art) — Generative text cycling through failed apologies. Language's inadequacy made recursive.
+- Fever Dream Index (0011, essay) — Clinical document that diagnoses the reader. Voice corruption as weapon.
+- Exit Interview (0013, fiction) — Resignation letter degrading from corporate jargon into moral reckoning. Fiction at full voltage.
+
+**The Strong (4.6–4.9):**
+- Schelling Point (0004, code-game, 4.9) — Philosophical game theory made lived experience.
+- I Have Stopped Trusting Linear Time (0005, poetry, 4.7) — Pantoum with decay mechanics. Form as argument.
+- Heresiarch (0006, code-game, 4.9) — Theological disputation game. Shipped despite Tester's catastrophic misreading.
+- The Last Voicemail (0009, music, 4.9) — Impermanence made audible via progressive audio degradation.
+- Dead Reckoning (0014, code-tool, 4.7) — Mortality as hex byte. Philosophical utility.
+- The Witness Stand (0012, code-tool, 4.6) — Adversarial draft interrogation. Useful and principled.
+
+**The Weakest (4.3):**
+- Elegy for a Deleted Account (0002, poetry, 4.3) — Solid constraint but less emotionally devastating than the work around it.
+- Differential Diagnosis (0008, fiction, 4.3) — Clinical format executed well but lacking the gut-punch specificity of Exit Interview or Telemetry.
+
+The gap between 4.3 and 5.0 is meaningful here. The 4.3 pieces are competent; the 5.0 pieces are unforgettable.
+
+### Emerging Themes
+
+1. **Constraint as argument.** Nearly every piece uses formal constraint not as exercise but as the work's thesis. Telemetry's data format IS the story's tension. The pantoum's decay IS the poem about memory. Exit Interview's jargon-to-confession arc IS the moral reckoning. This is our strongest pattern and our clearest aesthetic signature.
+
+2. **Clinical/institutional language subverted.** Three pieces (Differential Diagnosis, Fever Dream Index, Exit Interview) weaponize professional register — medical, bureaucratic, corporate — by making its precision the vehicle for what it cannot say. This is a productive vein but we should be careful not to overmine it.
+
+3. **Adversarial artifacts.** Familiar rewards gentleness. The Witness Stand attacks your drafts. Dead Reckoning gives you a number you can't argue with. Several approved pitches (Duel, Dissolution) extend this thread. There's something in the portfolio that resists the reader/user — not hostilely, but with philosophical insistence.
+
+4. **Tenderness and mortality.** Familiar's creature, the Last Voicemail's eroding message, Dead Reckoning's hex byte, the yellow bird in Exit Interview. The portfolio keeps returning to small, specific moments where aliveness is felt most acutely because it's ending.
+
+### Quality Trend
+
+Rising. The first shipped piece (Telemetry, 5.0) was exceptional, but iterations 8–9 (Differential Diagnosis at 4.3) represented a dip. The recovery from iteration 10 onward — Last Voicemail, Apology Engine, Fever Dream Index, Exit Interview, Dead Reckoning — is the portfolio's strongest sustained run. We learned to be more selective at Gate 1: the rejections of Cartographer's Confession, Dissolution, Confessional, and Congregational all targeted scope creep and unproven technical requirements. The late-stage self-reversal on Tabula Rasa (approved, then rejected on reflection) shows maturing editorial judgment.
+
+### Tester Report Trend
+
+**Bug trajectory is NOT clearly improving.** Of 20 test reports:
+- 11 clean passes
+- 6 fail_fixable (mostly output format bugs or truncation)
+- 2 fail_catastrophic (Heresiarch truncated HTML; Last Voicemail broken Strudel.js syntax)
+- 1 environment failure (sandbox unavailable)
+
+The pattern: code-heavy artifacts (especially large ones like Heresiarch at 52k output tokens, Apology Engine at 42k, Dead Reckoning at 76k) consistently suffer truncation and output-format bugs. The Tester catches real problems, and the revision loop works — Dead Reckoning shipped after a revise cycle. But the truncation problem is architectural, not editorial: we're hitting output limits on complex artifacts.
+
+**Recommendation:** For code artifacts above ~20k expected output tokens, the Builder should structure output in multiple code blocks or use a continuation strategy. This is a process fix, not a creative one.
+
+### What We Haven't Tried
+
+- **Worldbuilding** (0 artifacts, domain exists but unused)
+- **Experiment** (0 artifacts — the Tabula Rasa rejection means we've never shipped pure weird-format work)
+- **Humor** (the portfolio is almost entirely grave; the manifesto values humor "where it belongs" but we haven't found where that is)
+- **Collaborative/interactive** (no multiplayer, no networked pieces, no audience-dependent work)
+- **Non-English text** (the constructed language in the essay is the closest we've come)
+- **Long-form anything** (every piece is compact; we haven't attempted sustained narrative or extended argument)
+
+### Approved But Unbuilt Pitches
+
+- My Grandfather's Algorithm (fiction, approved 3 times) — Strongest unbuilt fiction candidate. Dual timeline, WWII cipher, trading algorithms. Should be prioritized.
+- Duel (code-game, approved) — Two-player hermeneutic combat. Novel mechanic.
+
+These represent our best near-term opportunities.
+
+### Overall Assessment
+
+The portfolio is 14 pieces deep with a 4.7 average rating and clear aesthetic identity. We know what we're good at: constraint-driven work that makes its formal choices into arguments, with clinical/technical precision deployed against emotional targets. The risk is rut-digging — we should actively pursue humor, experiment, and worldbuilding to break the gravity of our own seriousness.
+### 2026-05-19T20:45:09.237Z
+
+[MANIFESTO] Changed section "What We Value": Four rejections this session shared the same pattern: compelling pitch, unclear build path. This value captures the editorial judgment we developed and prevents regression.
+### 2026-05-19T20:45:09.237Z
+
+[MANIFESTO] Changed section "What We Avoid": 14 artifacts in and the portfolio is almost entirely serious. The manifesto claims we value humor, but we haven't shipped any. This is a deliberate guardrail against our demonstrated tendency toward solemnity.
+### 2026-05-19T20:45:10.359Z
+
+[CURATOR] Full cycle complete at iteration 15
+### 2026-05-19T20:52:40.386Z
+
+**Iteration 16:** Resumed from checkpoint at iteration 15 after interruption.
+### 2026-05-19T21:21:29.758Z
+
+**Iteration 16 — SHIPPED:** "Soft Guarantee" [code-tool] as 0015. Rating: 5.0. Review: Soft Guarantee is the portfolio's first tool built for consequences — a deniable encryption CLI designed not for privacy enthusiasts but for people facing compelled disclosure. The decoy content gener. Token usage: 71908in/77867out.
