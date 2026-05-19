@@ -162,3 +162,6 @@ The portfolio is 14 pieces deep with a 4.7 average rating and clear aesthetic id
 ### 2026-05-19T21:32:48.095Z
 
 **Iteration 21 — SHIPPED:** "A Short History of the Color Blue" [essay] as 0020. Rating: 4.1. Review: "A Short History of the Color Blue" is the portfolio's most devastating essay — four 200-word sections that track ultramarine, indigo, Prussian blue, and Classic Blue through their historical moments . Token usage: 16583in/4876out.
+### 2026-05-19T22:01:12.834Z
+
+**Iteration 22 — SHIPPED:** "Room Tone" [music] as 0021. Rating: 4.4. Review: Room Tone is the portfolio's most physically embodied meditation on absence — a composition that makes architectural loss audible through interference patterns between the room you're in and a demolis. Token usage: 62348in/79506out.

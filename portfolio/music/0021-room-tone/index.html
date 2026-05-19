@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room Tone</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0a0a;color:#c8c8c8;font-family:"Courier New",Courier,monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+  h1{font-size:1.1rem;font-weight:400;letter-spacing:.3em;text-transform:uppercase;margin-bottom:.3rem;color:#a0a0a0}
+  .subtitle{font-size:.75rem;color:#555;margin-bottom:2.5rem;letter-spacing:.05em}
+  form{width:100%;max-width:720px;margin-bottom:2rem}
+  fieldset{border:none;margin-bottom:1.8rem;padding:0}
+  legend{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:#666;margin-bottom:1rem;padding-bottom:.4rem;border-bottom:1px solid #222}
+  .row{display:flex;gap:2rem;margin-bottom:.5rem;flex-wrap:wrap}
+  .field{display:flex;flex-direction:column;flex:1;min-width:120px}
+  label{font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:.3rem}
+  input[type="number"],select{background:#111;border:1px solid #333;color:#c8c8c8;padding:.5rem .7rem;font-family:inherit;font-size:.8rem;border-radius:2px;outline:none;transition:border-color .2s}
+  input:focus,select:focus{border-color:#555}
+  select option{background:#111}
+  button{background:transparent;border:1px solid #444;color:#999;padding:.7rem 2.5rem;font-family:inherit;font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:all .3s;border-radius:2px;margin-top:.5rem}
+  button:hover{border-color:#888;color:#ddd}
+  button.playing{border-color:#666;color:#aaa}
+  .canvas-wrap{width:100%;max-width:720px;margin:1rem 0 2rem;position:relative}
+  canvas{width:100%;height:180px;display:block;border:1px solid #1a1a1a;border-radius:2px}
+  .epigraph{max-width:720px;font-size:.75rem;color:#444;line-height:1.7;margin-top:2rem;text-align:center;font-style:italic}
+  .phantom-note{max-width:720px;font-size:.65rem;color:#333;line-height:1.6;margin-top:1.5rem;text-align:center}
+  .freq-info{max-width:720px;display:flex;justify-content:space-between;font-size:.6rem;color:#444;margin-top:.3rem;padding:0 .2rem}
+  @media(max-width:600px){.row{flex-direction:column;gap:.8rem}}
+</style>
+</head>
+<body>
+
+<h1>Room Tone</h1>
+<p class="subtitle">Standing waves of here and gone</p>
+
+<form id="roomForm">
+  <fieldset>
+    <legend>The room you are in</legend>
+    <div class="row">
+      <div class="field">
+        <label for="w">Width (m)</label>
+        <input type="number" id="w" min="1" max="50" step="0.1" value="4.0" required>
+      </div>
+      <div class="field">
+        <label for="h">Height (m)</label>
+        <input type="number" id="h" min="1" max="10" step="0.1" value="2.7" required>
+      </div>
+      <div class="field">
+        <label for="d">Depth (m)</label>
+        <input type="number" id="d" min="1" max="50" step="0.1" value="5.0" required>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="walls">Walls</label>
+        <select id="walls">
+          <option value="concrete">Concrete</option>
+          <option value="brick">Brick</option>
+          <option value="drywall" selected>Drywall / Plaster</option>
+          <option value="wood">Wood Paneling</option>
+          <option value="glass">Glass</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="floor">Floor</label>
+        <select id="floor">
+          <option value="concrete">Concrete</option>
+          <option value="wood" selected>Hardwood</option>
+          <option value="tile">Tile</option>
+          <option value="carpet">Carpet</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="ceiling">Ceiling</label>
+        <select id="ceiling">
+          <option value="drywall" selected>Drywall</option>
+          <option value="concrete">Concrete</option>
+          <option value="wood">Exposed Wood</option>
+          <option value="acoustic">Acoustic Tile</option>
+        </select>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>The room that no longer exists</legend>
+    <p class="phantom-note">
+      A bedroom in a house on Vyatskaya Street, Moscow.<br>
+      Demolished 1987. The building is now a parking structure.<br>
+      3.1 m × 2.4 m × 3.4 m &mdash; plaster walls, wood floor, drywall ceiling.
+    </p>
+  </fieldset>
+
+  <div style="text-align:center">
+    <button type="button" id="playBtn">Listen</button>
+  </div>
+</form>
+
+<div class="canvas-wrap">
+  <canvas id="viz"></canvas>
+  <div class="freq-info">
+    <span id="freqHere">&mdash;</span>
+    <span id="beatInfo">&mdash;</span>
+    <span id="freqGone">&mdash;</span>
+  </div>
+</div>
+
+<p class="epigraph">
+  A room is an instrument. Its walls are the body.<br>
+  When the walls go, the note changes. When the note changes,<br>
+  something that was held in those dimensions is released.
+</p>
+
+<script>
+(function() {
+
+  /* ── Physical constants ── */
+  var C = 343; // speed of sound in m/s at ~20°C
+
+  /* ── Absorption coefficients at ~50–63 Hz (approximate) ── */
+  var ABSORB = {
+    concrete:  0.01,
+    brick:     0.02,
+    drywall:   0.07,
+    wood:      0.11,
+    glass:     0.04,
+    tile:      0.01,
+    carpet:    0.15,
+    acoustic:  0.25
+  };
+
+  /* ── Fixed phantom room ── */
+  var PHANTOM = { w: 3.1, h: 2.4, d: 3.4, walls: 'drywall', floor: 'wood', ceiling: 'drywall' };
+
+  /* ── Audio nodes ── */
+  var synthHere = null, synthGone = null;
+  var analyser  = null;
+  var playing   = false;
+  var freqHere  = 0, freqGone = 0;
+
+  /* ── Canvas ── */
+  var canvas = document.getElementById('viz');
+  var ctx    = canvas.getContext('2d');
+  var animId = null;
+
+  function sizeCanvas() {
+    var r = canvas.getBoundingClientRect();
+    canvas.width  = r.width * (window.devicePixelRatio || 1);
+    canvas.height = r.height * (window.devicePixelRatio || 1);
+  }
+  sizeCanvas();
+  window.addEventListener('resize', sizeCanvas);
+
+  /* ── Room mode calculation ── */
+  function fundamental(l1, l2, l3, walls, floorMat, ceilMat) {
+    // Axial modes: f = (c/2) * sqrt((nx/Lx)² + (ny/Ly)² + (nz/Lz)²)
+    // Fundamentals (nx,ny,nz = 1,0,0 / 0,1,0 / 0,0,1):
+    var fW = C / (2 * l1);
+    var fH = C / (2 * l2);
+    var fD = C / (2 * l3);
+    // Weighted by inverse absorption (harder surfaces → stronger mode)
+    var aW = (ABSORB[walls] || 0.05) + (ABSORB[walls] || 0.05);
+    var aH = (ABSORB[floorMat] || 0.05) + (ABSORB[ceilMat] || 0.05);
+    var aD = (ABSORB[walls] || 0.05) + (ABSORB[walls] || 0.05);
+    var tot = aW + aH + aD;
+    return (fW * (1 - aW / tot) + fH * (1 - aH / tot) + fD * (1 - aD / tot));
+  }
+
+  /* ── Try to load Tone.js if not already present ── */
+  function loadTone(cb) {
+    if (typeof Tone !== 'undefined') { cb(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js';
+    s.onload = cb;
+    s.onerror = function() { alert('Could not load Tone.js. Check your connection.'); };
+    document.head.appendChild(s);
+  }
+
+  /* ── Start playback ── */
+  function startPlay() {
+    loadTone(function() {
+
+      // Read user room
+      var w = parseFloat(document.getElementById('w').value) || 4;
+      var h = parseFloat(document.getElementById('h').value) || 2.7;
+      var d = parseFloat(document.getElementById('d').value) || 5;
+      var wa = document.getElementById('walls').value;
+      var fl = document.getElementById('floor').value;
+      var ce = document.getElementById('ceiling').value;
+
+      // Calculate fundamentals
+      freqHere = fundamental(w, h, d, wa, fl, ce);
+      freqGone = fundamental(PHANTOM.w, PHANTOM.h, PHANTOM.d, PHANTOM.walls, PHANTOM.floor, PHANTOM.ceiling);
+
+      // Ensure beating is perceptible (1–4 Hz): nudge phantom if needed
+      // The phantom room's fundamental is ~50.4 Hz (3.4 m depth dominant)
+      // Most rooms will be 34–70 Hz, so difference is naturally 1–20 Hz
+      // We accept what physics gives us.
+
+      // Update info
+      document.getElementById('freqHere').textContent = 'Here: ' + freqHere.toFixed(1) + ' Hz';
+      document.getElementById('freqGone').textContent = 'Gone: ' + freqGone.toFixed(1) + ' Hz';
+      var beatFreq = Math.abs(freqHere - freqGone);
+      document.getElementById('beatInfo').textContent = 'Beating: ' + beatFreq.toFixed(1) + ' Hz';
+
+      // Stop previous synths
+      stopPlay();
+
+      // Create synths
+      synthHere = new Tone.Oscillator({
+        frequency: freqHere,
+        type: 'sine'
+      }).toDestination();
+
+      // Route through analyser for visualization
+      analyser = new Tone.Analyser('waveform', 512);
+
+      synthGone = new Tone.Oscillator({
+        frequency: freqGone,
+        type: 'sine'
+      }).toDestination();
+
+      // Connect both to analyser via a merge
+      var merger = new Tone.Channel().connect(analyser);
+      synthHere.connect(merger);
+      synthGone.connect(merger);
+
+      // Set volume — these are pure sine tones, keep them gentle
+      Tone.Destination.volume.value = -12;
+
+      Tone.start().then(function() {
+        synthHere.start();
+        synthGone.start();
+        playing = true;
+        document.getElementById('playBtn').textContent = 'Stop';
+        document.getElementById('playBtn').classList.add('playing');
+        drawLoop();
+      });
+
+    });
+  }
+
+  function stopPlay() {
+    if (synthHere) { try { synthHere.stop(); synthHere.dispose(); } catch(e){} synthHere = null; }
+    if (synthGone) { try { synthGone.stop(); synthGone.dispose(); } catch(e){} synthGone = null; }
+    if (analyser) { try { analyser.dispose(); } catch(e){} analyser = null; }
+    playing = false;
+    document.getElementById('playBtn').textContent = 'Listen';
+    document.getElementById('playBtn').classList.remove('playing');
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+  }
+
+  /* ── Visualization ── */
+  function drawLoop() {
+    animId = requestAnimationFrame(drawLoop);
+    if (!analyser) return;
+
+    var W = canvas.width;
+    var H = canvas.height;
+    var dpr = window.devicePixelRatio || 1;
+
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Midline
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 1 * dpr;
+    ctx.beginPath();
+    ctx.moveTo(0, H / 2);
+    ctx.lineTo(W, H / 2);
+    ctx.stroke();
+
+    // Waveform from combined output
+    var values = analyser.getValue();
+    if (!values || !values.length) return;
+
+    var len = values.length;
+
+    // Draw two component waves (calculated, not measured) for visual clarity
+    var t = Tone.now();
+    var amp = H * 0.3;
+
+    // "Here" wave — slightly brighter
+    ctx.strokeStyle = 'rgba(160, 160, 160, 0.4)';
+    ctx.lineWidth = 1 * dpr;
+    ctx.beginPath();
+    for (var i = 0; i < W; i++) {
+      var phase = (i / W) * 4 * Math.PI + t * freqHere * 0.05;
+      var y = H / 2 + amp * 0.5 * Math.sin(phase);
+      if (i === 0) ctx.moveTo(i, y);
+      else ctx.lineTo(i, y);
+    }
+    ctx.stroke();
+
+    // "Gone" wave — slightly dimmer
+    ctx.strokeStyle = 'rgba(100, 100, 100, 0.35)';
+    ctx.lineWidth = 1 * dpr;
+    ctx.beginPath();
+    for (var i = 0; i < W; i++) {
+      var phase = (i / W) * 4 * Math.PI + t * freqGone * 0.05;
+      var y = H / 2 + amp * 0.5 * Math.sin(phase);
+      if (i === 0) ctx.moveTo(i, y);
+      else ctx.lineTo(i, y);
+    }
+    ctx.stroke();
+
+    // Combined interference pattern — the main visual
+    ctx.strokeStyle = 'rgba(200, 200, 200, 0.8)';
+    ctx.lineWidth = 1.5 * dpr;
+    ctx.beginPath();
+    for (var i = 0; i < W; i++) {
+      var phaseH = (i / W) * 4 * Math.PI + t * freqHere * 0.05;
+      var phaseG = (i / W) * 4 * Math.PI + t * freqGone * 0.05;
+      var y = H / 2 + amp * 0.5 * (Math.sin(phaseH) + Math.sin(phaseG));
+      if (i === 0) ctx.moveTo(i, y);
+      else ctx.lineTo(i, y);
+    }
+    ctx.stroke();
+
+    // Subtle beating envelope
+    ctx.strokeStyle = 'rgba(80, 80, 80, 0.3)';
+    ctx.lineWidth = 1 * dpr;
+    ctx.setLineDash([4 * dpr, 6 * dpr]);
+    var beatFreq = Math.abs(freqHere - freqGone);
+    for (var sign = -1; sign <= 1; sign += 2) {
+      ctx.beginPath();
+      for (var i = 0; i < W; i++) {
+        var env = Math.abs(Math.cos(Math.PI * i / W * (beatFreq / freqHere) * 2 + t * beatFreq * 0.05));
+        var y = H / 2 + sign * amp * 0.5 * env;
+        if (i === 0) ctx.moveTo(i, y);
+        else ctx.lineTo(i, y);
+      }
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  /* ── Button handler ── */
+  document.getElementById('playBtn').addEventListener('click', function() {
+    if (playing) stopPlay();
+    else startPlay();
+  });
+
+})();
+</script>
+</body>
+</html>
