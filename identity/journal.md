@@ -150,3 +150,6 @@ The portfolio is 14 pieces deep with a 4.7 average rating and clear aesthetic id
 ### 2026-05-19T21:23:19.328Z
 
 **Iteration 17 — SHIPPED:** "Algorithm for Folding a Fitted Sheet" [poetry] as 0016. Rating: 4.1. Review: Algorithm for Folding a Fitted Sheet is the portfolio's purest execution of structural double meaning — a poem that never once announces itself as poetry, never once reaches for metaphor explicitly, a. Token usage: 14187in/3557out.
+### 2026-05-19T21:25:33.063Z
+
+**Iteration 18 — SHIPPED:** "Every Gun in This Room" [poetry] as 0017. Rating: 4.3. Review: "Every Gun in This Room" is the portfolio's most structurally weaponized poem — a real estate listing that makes the form itself complicit by forcing the reader to perform the exact act the poem conde. Token usage: 15786in/4510out.
