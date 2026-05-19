@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schelling Point</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #0a0a0c;
+    color: #c8c8d0;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    cursor: crosshair;
+  }
+
+  #gameCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+
+  #overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  #overlay.active { pointer-events: all; }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 520px;
+    padding: 2rem;
+  }
+
+  .screen.visible { display: flex; }
+
+  .screen h1 {
+    font-size: 1.8rem;
+    font-weight: 400;
+    letter-spacing: 0.3em;
+    margin-bottom: 2rem;
+    color: #e0e0e8;
+  }
+
+  .screen p {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: #8888a0;
+    margin-bottom: 1.2rem;
+  }
+
+  .screen p.accent {
+    color: #b0a090;
+    font-style: italic;
+  }
+
+  .btn {
+    margin-top: 1.5rem;
+    padding: 0.7rem 2.5rem;
+    background: transparent;
+    border: 1px solid #444460;
+    color: #b0b0c0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    pointer-events: all;
+  }
+
+  .btn:hover {
+    border-color: #8888a0;
+    color: #e0e0e8;
+  }
+
+  #hud {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    padding: 1.5rem 2rem;
+    display: none;
+    justify-content: space-between;
+    z-index: 5;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: #555568;
+  }
+
+  #hud.visible { display: flex; }
+
+  #roundLabel { text-transform: uppercase; }
+  #timerLabel { font-variant-numeric: tabular-nums; }
+  #statusLabel { font-style: italic; }
+
+  #resultOverlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 8;
+    background: rgba(6, 6, 8, 0.7);
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+
+  #resultOverlay.visible {
+    display: flex;
+    opacity: 1;
+  }
+
+  #resultText {
+    font-size: 0.9rem;
+    color: #8888a0;
+    letter-spacing: 0.15em;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="hud">
+  <span id="roundLabel"></span>
+  <span id="statusLabel"></span>
+  <span id="timerLabel"></span>
+</div>
+
+<div id="overlay" class="active">
+  <div id="startScreen" class="screen visible">
+    <h1>SCHELLING POINT</h1>
+    <p>Two strangers face the same landscape. No names. No words. In sixty seconds, you must choose the same spot.</p>
+    <p>Ten rounds. The landscape becomes more symmetrical each time. The obvious choice becomes harder to find.</p>
+    <p class="accent">Between rounds, you will see where they clicked.</p>
+    <p>Open this page in two browser windows. Press begin in both.</p>
+    <button class="btn" id="beginBtn">BEGIN</button>
+  </div>
+
+  <div id="endScreen" class="screen">
+    <h1 id="endTitle"></h1>
+    <p id="endText"></p>
+    <button class="btn" id="restartBtn">AGAIN</button>
+  </div>
+</div>
+
+<div id="resultOverlay">
+  <span id="resultText"></span>
+</div>
+
+<script>
+// ─── Constants ─────────────────────────────────────────────
+const ROUNDS = 10;
+const ROUND_DURATION = 60; // seconds
+const PAUSE_DURATION = 3000; // ms between rounds
+const CANVAS_SCALE = window.devicePixelRatio || 1;
+
+// Color palettes shift from cold alien to warm intimate
+const PALETTES = [
+  { bg: [10, 12, 22], shapes: ['#1a1e35', '#252845', '#0e1020', '#1f1835', '#28203f'] },
+  { bg: [12, 14, 24], shapes: ['#1a2040', '#202848', '#14182e', '#25203e', '#1c2442'] },
+  { bg: [14, 14, 22], shapes: ['#1e2438', '#222a48', '#181c30', '#2a2844', '#202840'] },
+  { bg: [16, 14, 20], shapes: ['#222438', '#282a48', '#1e1c30', '#2e2840', '#242840'] },
+  { bg: [18, 15, 18], shapes: ['#282438', '#302a48', '#241e30', '#342840', '#2a2840'] },
+  { bg: [20, 16, 16], shapes: ['#302438', '#382a44', '#2e1e30', '#3c2840', '#322840'] },
+  { bg: [22, 16, 14], shapes: ['#382438', '#402a40', '#3a1e30', '#442838', '#3a2838'] },
+  { bg: [24, 16, 12], shapes: ['#402434', '#482a3c', '#441e2c', '#4c2838', '#422838'] },
+  { bg: [26, 15, 10], shapes: ['#482430', '#502838', '#4c1c28', '#542434', '#4a2834'] },
+  { bg: [28, 12, 10], shapes: ['#502028', '#581828', '#5c1420', '#4c1c24', '#541c24'] },
+];
+
+// ─── State ──────────────────────────────────────────────────
+let canvas, ctx;
+let W, H;
+let channel;
+let playerRole = null; // 'a' or 'b'
+let currentRound = 0;
+let gameState = 'waiting'; // waiting, playing, roundEnd, gameEnd
+let timer = ROUND_DURATION;
+let timerInterval = null;
+let myClick = null;
+let theirClick = null;
+let ghostMarkers = []; // { x, y, round, opacity }
+let currentShapes = [];
+let audioCtx = null;
+let droneOsc = null;
+let droneGain = null;
+let harmonyGain = null;
+let harmonyOscs = [];
+
+// ─── Audio ──────────────────────────────────────────────────
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  
+  // Base drone — low, almost subsonic
+  droneOsc = audioCtx.createOscillator();
+  droneGain = audioCtx.createGain();
+  droneOsc.type = 'sine';
+  droneOsc.frequency.value = 55; // A1
+  droneGain.gain.value = 0.08;
+  droneOsc.connect(droneGain);
+  droneGain.connect(audioCtx.destination);
+  droneOsc.start();
+
+  // Harmony layer — two oscillators whose frequencies shift
+  harmonyGain = audioCtx.createGain();
+  harmonyGain.gain.value = 0.06;
+  harmonyGain.connect(audioCtx.destination);
+
+  for (let i = 0; i < 2; i++) {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = 220; // A3, will be modulated
+    osc.connect(harmonyGain);
+    osc.start();
+    harmonyOscs.push(osc);
+  }
+}
+
+function updateHarmony(distance) {
+  // distance: 0 = same spot, 1 = opposite corners
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+
+  // Dissonant: tritone interval. Consonant: perfect fifth or unison.
+  const baseFreq = 220;
+  const dissonantRatio = 1.4142; // tritone
+  const consonantRatio = 1.5; // perfect fifth
+  
+  const ratio = consonantRatio + (dissonantRatio - consonantRatio) * distance;
+  
+  harmonyOscs[0].frequency.setTargetAtTime(baseFreq, t, 0.3);
+  harmonyOscs[1].frequency.setTargetAtTime(baseFreq * ratio, t, 0.3);
+
+  // Volume swells as players converge
+  const vol = 0.04 + (1 - distance) * 0.08;
+  harmonyGain.gain.setTargetAtTime(vol, t, 0.3);
+
+  // Slight drone pitch bend toward resolution
+  const droneBase = 55 + (1 - distance) * 5;
+  droneOsc.frequency.setTargetAtTime(droneBase, t, 0.5);
+}
+
+// ─── Landscape Generation ──────────────────────────────────
+function generateShapes(round) {
+  const shapes = [];
+  const symmetry = round / (ROUNDS - 1); // 0 to 1
+  const palette = PALETTES[round];
+  const numBase = Math.max(3, 8 - Math.floor(round * 0.4));
+  
+  // Seed randomness deterministically per round
+  let seed = round * 7919 + 42;
+  function seededRandom() {
+    seed = (seed * 16807 + 0) % 2147483647;
+    return seed / 2147483647;
+  }
+
+  for (let i = 0; i < numBase; i++) {
+    const baseX = seededRandom() * 0.7 + 0.15;
+    const baseY = seededRandom() * 0.7 + 0.15;
+    const size = seededRandom() * 0.15 + 0.05;
+    const type = seededRandom() < 0.6 ? 'circle' : 'rect';
+    const color = palette.shapes[Math.floor(seededRandom() * palette.shapes.length)];
+    const rotation = seededRandom() * Math.PI * 2;
+
+    shapes.push({ x: baseX, y: baseY, size, type, color, rotation });
+
+    // Add symmetric copies
+    const copies = Math.floor(symmetry * 4); // 0 to 4 copies
+    for (let c = 1; c <= copies; c++) {
+      const angle = (Math.PI * 2 * c) / (copies + 1);
+      const cx = 0.5 + (baseX - 0.5) * Math.cos(angle) - (baseY - 0.5) * Math.sin(angle);
+      const cy = 0.5 + (baseX - 0.5) * Math.sin(angle) + (baseY - 0.5) * Math.cos(angle);
+      shapes.push({ x: cx, y: cy, size, type, color, rotation: rotation + angle });
+    }
+  }
+
+  // Round 10: single circle, centered, alone
+  if (round === 9) {
+    shapes.length = 0;
+    shapes.push({
+      x: 0.5, y: 0.5,
+      size: 0.2,
+      type: 'circle',
+      color: palette.shapes[0],
+      rotation: 0
+    });
+  }
+
+  return shapes;
+}
+
+function renderLandscape(round) {
+  const palette = PALETTES[round];
+  ctx.fillStyle = `rgb(${palette.bg[0]}, ${palette.bg[1]}, ${palette.bg[2]})`;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle radial gradient for depth
+  const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W * 0.6);
+  grad.addColorStop(0, `rgba(${palette.bg[0]+8}, ${palette.bg[1]+6}, ${palette.bg[2]+8}, 0.3)`);
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  currentShapes = generateShapes(round);
+
+  currentShapes.forEach(s => {
+    ctx.save();
+    ctx.translate(s.x * W, s.y * H);
+    ctx.rotate(s.rotation);
+
+    // Soft glow
+    ctx.shadowColor = s.color;
+    ctx.shadowBlur = 30;
+
+    ctx.fillStyle = s.color;
+    ctx.globalAlpha = 0.6;
+
+    if (s.type === 'circle') {
+      ctx.beginPath();
+      ctx.arc(0, 0, s.size * Math.min(W, H), 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      const w = s.size * W;
+      const h = s.size * H * 0.6;
+      ctx.fillRect(-w/2, -h/2, w, h);
+    }
+
+    ctx.restore();
+  });
+
+  // Round 10: subtle pulse on the circle
+  if (round === 9) {
+    const pulsePhase = Date.now() / 1000;
+    const pulseAlpha = 0.1 + Math.sin(pulsePhase * 1.5) * 0.05;
+    ctx.fillStyle = `rgba(100, 40, 35, ${pulseAlpha})`;
+    ctx.beginPath();
+    ctx.arc(W/2, H/2, 0.22 * Math.min(W, H), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Render ghost markers
+  const now = Date.now();
+  ghostMarkers.forEach(g => {
+    const age = currentRound - g.round;
+    const alpha = Math.max(0.08, 0.5 - age * 0.06);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    
+    // Outer ring
+    ctx.strokeStyle = `rgba(180, 160, 140, ${alpha})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(g.x * W, g.y * H, 12, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Cross
+    ctx.beginPath();
+    ctx.moveTo(g.x * W - 5, g.y * H);
+    ctx.lineTo(g.x * W + 5, g.y * H);
+    ctx.moveTo(g.x * W, g.y * H - 5);
+    ctx.lineTo(g.x * W, g.y * H + 5);
+    ctx.stroke();
+    
+    ctx.restore();
+  });
+}
+
+// ─── Animation Loop ────────────────────────────────────────
+let animFrame;
+let lastFrame = 0;
+
+function gameLoop(timestamp) {
+  animFrame = requestAnimationFrame(gameLoop);
+
+  if (gameState === 'playing' || gameState === 'roundEnd') {
+    renderLandscape(currentRound);
+  }
+}
+
+// ─── Game Logic ────────────────────────────────────────────
+function startRound() {
+  gameState = 'playing';
+  currentRound++;
+  timer = ROUND_DURATION;
+  myClick = null;
+  theirClick = null;
+
+  document.getElementById('hud').classList.add('visible');
+  document.getElementById('overlay').classList.remove('active');
+  document.getElementById('startScreen').classList.remove('visible');
+  document.getElementById('endScreen').classList.remove('visible');
+  document.getElementById('resultOverlay').classList.remove('visible');
+
+  updateHUD();
+
+  channel.postMessage({ type: 'roundStart', round: currentRound });
+
+  timerInterval = setInterval(() => {
+    timer--;
+    updateHUD();
+    if (timer <= 0) {
+      endRound();
+    }
+  }, 1000);
+}
+
+function endRound() {
+  clearInterval(timerInterval);
+  gameState = 'roundEnd';
+
+  // If one player clicked but the other didn't, treat as click at null
+  // Compute distance if both clicked
+  if (myClick || theirClick) {
+    let distance = 1;
+    if (myClick && theirClick) {
+      const dx = myClick.x - theirClick.x;
+      const dy = myClick.y - theirClick.y;
+      distance = Math.sqrt(dx * dx + dy * dy);
+      // Normalize to 0-1 (diagonal = 1)
+      distance = Math.min(1, distance / 1.414);
+    }
+
+    // Show result
+    const resultOverlay = document.getElementById('resultOverlay');
+    const resultText = document.getElementById('resultText');
+    
+    if (!myClick) {
+      resultText.textContent = 'you did not choose';
+    } else if (!theirClick) {
+      resultText.textContent = 'they did not choose';
+    } else if (distance < 0.02) {
+      resultText.textContent = 'convergence';
+    } else if (distance < 0.08) {
+      resultText.textContent = 'almost';
+    } else if (distance < 0.2) {
+      resultText.textContent = 'near';
+    } else {
+      resultText.textContent = 'apart';
+    }
+
+    resultOverlay.classList.add('visible');
+    updateHarmony(distance);
+  }
+
+  // Add their click as ghost marker
+  if (theirClick) {
+    ghostMarkers.push({ ...theirClick, round: currentRound });
+  }
+
+  if (currentRound >= ROUNDS) {
+    setTimeout(() => endGame(), PAUSE_DURATION);
+  } else {
+    setTimeout(() => startRound(), PAUSE_DURATION);
+  }
+}
+
+function endGame() {
+  gameState = 'gameEnd';
+  document.getElementById('hud').classList.remove('visible');
+  document.getElementById('resultOverlay').classList.remove('visible');
+  document.getElementById('overlay').classList.add('active');
+  
+  const endScreen = document.getElementById('endScreen');
+  const endTitle = document.getElementById('endTitle');
+  const endText = document.getElementById('endText');
+
+  // Count convergences (ghost markers near your past clicks)
+  // But we keep it ambiguous — no score
+  endTitle.textContent = 'TEN ROUNDS';
+  endText.textContent = 'You saw where they chose. They saw you. Whether you found each other is not something a number can tell.';
+  
+  endScreen.classList.add('visible');
+}
+
+function handleClick(e) {
+  if (gameState !== 'playing') return;
+  if (myClick) return; // Already clicked this round
+
+  initAudio();
+
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width;
+  const y = (e.clientY - rect.top) / rect.height;
+
+  myClick = { x, y };
+
+  // Show subtle marker for own click
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  ctx.fillStyle = '#888090';
+  ctx.beginPath();
+  ctx.arc(x * W, y * H, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  document.getElementById('statusLabel').textContent = 'waiting';
+  updateHUD();
+
+  channel.postMessage({ type: 'click', x, y, round: currentRound });
+
+  if (theirClick) {
+    // Both have clicked
+    endRound();
+  }
+}
+
+function handleMessage(msg) {
+  const data = msg.data;
+
+  if (data.type === 'ready') {
+    if (!playerRole) {
+      playerRole = 'a';
+      channel.postMessage({ type: 'role', role: 'b' });
+    }
+  }
+
+  if (data.type === 'role') {
+    playerRole = data.role;
+  }
+
+  if (data.type === 'click' && data.round === currentRound) {
+    theirClick = { x: data.x, y: data.y };
+
+    if (myClick) {
+      endRound();
+    } else {
+      document.getElementById('statusLabel').textContent = 'they have chosen';
+    }
+  }
+
+  if (data.type === 'roundStart' && data.round !== currentRound) {
+    // Sync if somehow out of sync
+    if (data.round > currentRound) {
+      currentRound = data.round - 1;
+      startRound();
+    }
+  }
+
+  if (data.type === 'begin') {
+    if (gameState === 'waiting') {
+      startRound();
+    }
+  }
+}
+
+function updateHUD() {
+  const roundNames = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x'];
+  document.getElementById('roundLabel').textContent = currentRound > 0 ? `round ${roundNames[currentRound - 1]}` : '';
+  document.getElementById('timerLabel').textContent = gameState === 'playing' ? `${timer}` : '';
+}
+
+// ─── Init ──────────────────────────────────────────────────
+function init() {
+  canvas = document.getElementById('gameCanvas');
+  ctx = canvas.getContext('2d');
+
+  function resize() {
+    W = window.innerWidth * CANVAS_SCALE;
+    H = window.innerHeight * CANVAS_SCALE;
+    canvas.width = W;
+    canvas.height = H;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+
+  channel = new BroadcastChannel('schelling-point');
+  channel.onmessage = handleMessage;
+
+  // Announce presence
+  channel.postMessage({ type: 'ready' });
+
+  canvas.addEventListener('click', handleClick);
+
+  document.getElementById('beginBtn').addEventListener('click', () => {
+    initAudio();
+    document.getElementById('startScreen').classList.remove('visible');
+    channel.postMessage({ type: 'begin' });
+    
+    // Wait briefly for sync, then start
+    setTimeout(() => {
+      if (gameState === 'waiting') {
+        startRound();
+      }
+    }, 500);
+  });
+
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    currentRound = 0;
+    ghostMarkers = [];
+    gameState = 'waiting';
+    document.getElementById('endScreen').classList.remove('visible');
+    document.getElementById('overlay').classList.remove('active');
+    channel.postMessage({ type: 'begin' });
+    startRound();
+  });
+
+  // Render initial empty landscape
+  ctx.fillStyle = '#0a0a0c';
+  ctx.fillRect(0, 0, W, H);
+
+  requestAnimationFrame(gameLoop);
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>

@@ -15,3 +15,8 @@
 ### 2026-05-19T18:49:06.924Z
 
 **Iteration 4 — SHIPPED:** "When You Are Inside a Language You Cannot See Its Walls" [essay] as 0003. Rating: 5.0. Review: This is the essay the Manifesto was waiting for. The two-column structure isn't gimmickry—it's the argument happening to you in real time. Section III's "Try to think a thought your syntax cannot hold. Token usage: 14817in/5900out.
+### 2026-05-19T18:58:28.318Z
+
+**Iteration 5 — SHIPPED:** "Schelling Point" [code-game] as 0004. Rating: 4.9. Review: Schelling Point is the rare interactive piece that makes a philosophical concept
+into a lived experience. The progression from asymmetric wilderness to
+paralyzing symmetry is the game's argument made . Token usage: 24774in/24613out.
