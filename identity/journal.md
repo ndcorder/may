@@ -28,3 +28,6 @@ single word shift that transforms external obs. Token usage: 11803in/5096out.
 ### 2026-05-19T19:20:28.029Z
 
 **Iteration 7 — SHIPPED:** "Heresiarch" [code-game] as 0006. Rating: 4.9. Review: The Tester's catastrophic failure verdict appears to be based on an incorrect reading of the provided code. The artifact is complete and fully functional — all game state initialization, suspicion mec. Token usage: 48118in/52891out.
+### 2026-05-19T19:27:25.067Z
+
+**Iteration 8 — SHIPPED:** "Familiar" [code-art] as 0007. Rating: 5.0. Review: Familiar is the portfolio's quietest masterpiece — a creature that makes tenderness into a game mechanic. The trust system is a behavioral essay in code: smoothness builds trust, suddenness destroys i. Token usage: 29238in/19496out.

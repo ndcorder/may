@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Familiar</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0c;
+    overflow: hidden;
+    cursor: none;
+    font-family: monospace;
+  }
+  canvas {
+    display: block;
+    position: fixed;
+    top: 0; left: 0;
+  }
+  #cursor {
+    position: fixed;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    transition: background 0.3s;
+  }
+  #status {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.12);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    pointer-events: none;
+    transition: color 2s;
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="cursor"></div>
+<div id="status">moving</div>
+<script>
+// --- Familiar ---
+// A creature that learns from your mouse movements.
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const cursorEl = document.getElementById('cursor');
+const statusEl = document.getElementById('status');
+
+let W, H;
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// --- Utility ---
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function smoothstep(edge0, edge1, x) {
+  const t = clamp((x - edge0) / (edge1 - edge0), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+// Simple seeded RNG (mulberry32)
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+}
+
+// Hash string to number
+function hashStr(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + ch;
+    hash |= 0;
+  }
+  return hash;
+}
+
+// --- Persistent State ---
+const STORAGE_KEY = 'familiar_state_v1';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      // Validate
+      if (typeof s.trust === 'number' && typeof s.geneticSeed === 'string') {
+        return s;
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
+function saveState() {
+  const data = {
+    trust: state.trust,
+    familiarity: state.familiarity,
+    geneticSeed: state.geneticSeed,
+    totalFrames: state.totalFrames,
+    gestureMemory: state.gestureMemory.slice(-60),
+    lastVisit: Date.now(),
+    visits: (state.visits || 0) + 1
+  };
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch(e) {}
+}
+
+// --- Creature State ---
+const defaultState = () => ({
+  trust: 0.08,
+  arousal: 0.5,
+  familiarity: 0,
+  geneticSeed: Math.random().toString(36).substring(2, 15),
+  totalFrames: 0,
+  visits: 0,
+  gestureMemory: [],
+  // Runtime (not persisted)
+  x: W / 2,
+  y: H / 2,
+  vx: 0,
+  vy: 0,
+  targetX: W / 2,
+  targetY: H / 2,
+  breathPhase: 0,
+  flinchTimer: 0,
+  flinchDir: 0,
+  lastMirrorTime: 0,
+  isMirroring: false,
+  mirrorPoints: [],
+  mirrorIndex: 0,
+  colorTransition: 0,
+  lastSaveTime: 0,
+  particleBurst: 0,
+  shapePhase: 0,
+});
+
+const saved = loadState();
+const state = defaultState();
+if (saved) {
+  state.trust = saved.trust;
+  state.familiarity = saved.familiarity;
+  state.geneticSeed = saved.geneticSeed;
+  state.totalFrames = saved.totalFrames || 0;
+  state.gestureMemory = saved.gestureMemory || [];
+  state.visits = (saved.visits || 0);
+  // Gentle trust recovery on return
+  const daysSince = (Date.now() - (saved.lastVisit || Date.now())) / (1000 * 60 * 60 * 24);
+  if (daysSince > 0.5) {
+    state.trust = Math.min(1, state.trust + 0.02 * Math.min(daysSince, 7));
+  }
+}
+
+// Genetic traits derived from seed
+const genRng = mulberry32(hashStr(state.geneticSeed));
+const genetics = {
+  limbCount: Math.floor(3 + genRng() * 5),
+  baseSpeed: 0.3 + genRng() * 0.7,
+  hueBase: genRng() * 360,
+  hueRange: 30 + genRng() * 90,
+  eyeCount: Math.floor(1 + genRng() * 3),
+  eyeAngle: genRng() * Math.PI * 2,
+  spirality: genRng() * 0.5,
+  segmentRatio: 0.3 + genRng() * 0.5,
+  baseRadius: 25 + genRng() * 20,
+  pulseFreq: 0.5 + genRng() * 0.5,
+};
+
+// --- Mouse Tracking ---
+const mouse = {
+  x: W / 2, y: H / 2,
+  px: W / 2, py: H / 2,
+  vx: 0, vy: 0,
+  speed: 0,
+  accel: 0,
+  jerk: 0,
+  prevSpeed: 0,
+  prevAccel: 0,
+  isOnScreen: false,
+  stillFrames: 0,
+  dirChanges: 0,
+  recentAngles: [],
+  smoothness: 1,
+};
+
+let mouseHistory = []; // last N positions for gesture memory
+
+document.addEventListener('mousemove', (e) => {
+  mouse.px = mouse.x;
+  mouse.py = mouse.y;
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  mouse.isOnScreen = true;
+  mouse.stillFrames = 0;
+  
+  cursorEl.style.left = e.clientX + 'px';
+  cursorEl.style.top = e.clientY + 'px';
+  
+  // Track for gesture memory
+  mouseHistory.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+  if (mouseHistory.length > 120) mouseHistory.shift();
+});
+
+document.addEventListener('mouseleave', () => {
+  mouse.isOnScreen = false;
+});
+
+// --- Particles ---
+let particles = [];
+
+function emitParticle(x, y, type) {
+  const angle = Math.random() * Math.PI * 2;
+  const speed = type === 'panic' ? 2 + Math.random() * 4 : 0.3 + Math.random() * 1;
+  particles.push({
+    x, y,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    life: 1,
+    decay: 0.01 + Math.random() * 0.02,
+    size: type === 'panic' ? 1 + Math.random() * 2 : 2 + Math.random() * 3,
+    type,
+  });
+}
+
+function updateParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= 0.98;
+    p.vy *= 0.98;
+    p.life -= p.decay;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+}
+
+function drawParticles() {
+  for (const p of particles) {
+    const alpha = p.life * (p.type === 'panic' ? 0.6 : 0.3);
+    const trust = state.trust;
+    const hue = trust > 0.3 ? genetics.hueBase + (1 - p.life) * 30 : 0;
+    const sat = trust > 0.3 ? 30 + trust * 40 : 0;
+    const light = trust > 0.3 ? 50 + trust * 20 : 40 + p.life * 20;
+    ctx.fillStyle = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// --- Update Mouse Metrics ---
+function updateMouseMetrics() {
+  const dx = mouse.x - mouse.px;
+  const dy = mouse.y - mouse.py;
+  mouse.vx = dx;
+  mouse.vy = dy;
+  mouse.prevSpeed = mouse.speed;
+  mouse.speed = Math.sqrt(dx * dx + dy * dy);
+  
+  const prevAccel = mouse.accel;
+  mouse.accel = Math.abs(mouse.speed - mouse.prevSpeed);
+  mouse.jerk = Math.abs(mouse.accel - prevAccel);
+  
+  if (mouse.speed < 0.5) {
+    mouse.stillFrames++;
+  }
+  
+  // Direction change detection
+  if (mouse.speed > 2) {
+    const angle = Math.atan2(dy, dx);
+    mouse.recentAngles.push(angle);
+    if (mouse.recentAngles.length > 10) mouse.recentAngles.shift();
+    
+    if (mouse.recentAngles.length >= 3) {
+      const a1 = mouse.recentAngles[mouse.recentAngles.length - 1];
+      const a2 = mouse.recentAngles[mouse.recentAngles.length - 3];
+      let diff = Math.abs(a1 - a2);
+      if (diff > Math.PI) diff = 2 * Math.PI - diff;
+      if (diff > 1.2) mouse.dirChanges++;
+    }
+  }
+  
+  // Smoothness: low jerk + low dir changes = smooth
+  if (mouse.stillFrames > 30) {
+    mouse.smoothness = lerp(mouse.smoothness, 1, 0.02);
+  } else {
+    const jerkPenalty = clamp(mouse.jerk / 5, 0, 1);
+    const dirPenalty = clamp(mouse.dirChanges / 15, 0, 1);
+    const raw = 1 - (jerkPenalty * 0.4 + dirPenalty * 0.6);
+    mouse.smoothness = lerp(mouse.smoothness, raw, 0.05);
+  }
+  
+  // Decay dir changes over time
+  if (Math.random() < 0.02) mouse.dirChanges = Math.max(0, mouse.dirChanges - 1);
+}
+
+// --- Update Creature ---
+function updateCreature(dt) {
+  state.totalFrames++;
+  state.familiarity = Math.min(1, state.familiarity + 0.00002);
+  state.shapePhase += dt * 0.3;
+  state.breathPhase += dt * genetics.pulseFreq;
+  
+  // Trust dynamics
+  const trustGain = mouse.smoothness * 0.0003 * (mouse.stillFrames > 60 ? 1.5 : 1);
+  const trustLoss = (mouse.jerk > 3 ? 0.003 : 0) + 
+                    (mouse.speed > 30 ? 0.001 : 0) +
+                    (mouse.dirChanges > 5 ? 0.002 : 0);
+  
+  // Slow movements near creature build trust faster
+  const distToMouse = Math.sqrt((state.x - mouse.x) ** 2 + (state.y - mouse.y) ** 2);
+  const proximityBonus = distToMouse < 150 && mouse.speed < 5 ? 0.0005 : 0;
+  
+  state.trust += trustGain + proximityBonus - trustLoss;
+  state.trust = clamp(state.trust, 0.02, 1);
+  
+  // Arousal
+  const targetArousal = clamp(mouse.speed / 20 + mouse.jerk / 8, 0, 1);
+  state.arousal = lerp(state.arousal, targetArousal, 0.03);
+  if (mouse.stillFrames > 60) {
+    state.arousal = lerp(state.arousal, 0.05, 0.01);
+  }
+  
+  // Color transition (smooth toward trust level)
+  state.colorTransition = lerp(state.colorTransition, state.trust, 0.005);
+  
+  // Movement behavior
+  if (state.trust < 0.35) {
+    // Flee behavior
+    const dx = state.x - mouse.x;
+    const dy = state.y - mouse.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    const fleeStrength = (1 - state.trust / 0.35) * 3;
+    
+    if (dist < 200) {
+      state.vx += (dx / dist) * fleeStrength;
+      state.vy += (dy / dist) * fleeStrength;
+      
+      // Flinch on sudden approach
+      if (mouse.speed > 15 && dist < 150 && state.flinchTimer <= 0) {
+        state.flinchTimer = 20;
+        state.flinchDir = Math.atan2(dy, dx);
+        state.particleBurst = 8;
+        // Emit panic particles
+        for (let i = 0; i < 6; i++) emitParticle(state.x, state.y, 'panic');
+      }
+    }
+  } else if (state.trust < 0.65) {
+    // Cautious curiosity — drift away but slower, occasionally approach
+    const dx = mouse.x - state.x;
+    const dy = mouse.y - state.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    
+    if (dist > 250) {
+      // Drift closer
+      state.vx += (dx / dist) * 0.2;
+      state.vy += (dy / dist) * 0.2;
+    } else if (dist < 100) {
+      // Maintain distance
+      state.vx -= (dx / dist) * 0.5;
+      state.vy -= (dy / dist) * 0.5;
+    }
+  } else {
+    // Trust — approach and orbit
+    const dx = mouse.x - state.x;
+    const dy = mouse.y - state.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    
+    if (dist > 120) {
+      state.vx += (dx / dist) * 0.4;
+      state.vy += (dy / dist) * 0.4;
+    } else {
+      // Gentle orbit
+      const perpX = -dy / dist;
+      const perpY = dx / dist;
+      state.vx += perpX * 0.3;
+      state.vy += perpY * 0.3;
+      // Slight attraction to maintain orbit
+      state.vx += (dx / dist) * 0.05;
+      state.vy += (dy / dist) * 0.05;
+    }
+  }
+  
+  // Flinch recoil
+  if (state.flinchTimer > 0) {
+    state.flinchTimer--;
+    const flinchForce = Math.sin(state.flinchTimer / 20 * Math.PI) * 4;
+    state.vx += Math.cos(state.flinchDir) * flinchForce;
+    state.vy += Math.sin(state.flinchDir) * flinchForce;
+  }
+  
+  // Mirror gesture behavior (high trust + still mouse)
+  if (state.trust > 0.7 && mouse.stillFrames > 120 && !state.isMirroring && 
+      performance.now() - state.lastMirrorTime > 15000 && mouseHistory.length > 30) {
+    state.isMirroring = true;
+    state.mirrorPoints = mouseHistory.slice(-40).map(p => ({
+      x: p.x - mouse.x + state.x,
+      y: p.y - mouse.y + state.y,
+    }));
+    state.mirrorIndex = 0;
+    state.lastMirrorTime = performance.now();
+  }
+  
+  if (state.isMirroring && state.mirrorPoints.length > 0) {
+    const mp = state.mirrorPoints[Math.min(state.mirrorIndex, state.mirrorPoints.length - 1)];
+    const dx = mp.x - state.x;
+    const dy = mp.y - state.y;
+    state.vx += dx * 0.02;
+    state.vy += dy * 0.02;
+    state.mirrorIndex++;
+    if (state.mirrorIndex >= state.mirrorPoints.length) {
+      state.isMirroring = false;
+    }
+  }
+  
+  // Store gesture memory
+  if (state.totalFrames % 10 === 0 && mouse.speed > 1) {
+    state.gestureMemory.push({
+      vx: mouse.vx, vy: mouse.vy, speed: mouse.speed,
+      trust: state.trust
+    });
+    if (state.gestureMemory.length > 120) state.gestureMemory.shift();
+  }
+  
+  // Random drift
+  state.vx += (Math.random() - 0.5) * 0.15;
+  state.vy += (Math.random() - 0.5) * 0.15;
+  
+  // Damping
+  const damping = state.trust > 0.5 ? 0.92 : 0.88;
+  state.vx *= damping;
+  state.vy *= damping;
+  
+  // Speed limit
+  const maxSpeed = state.trust > 0.5 ? 4 : 6;
+  const spd = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
+  if (spd > maxSpeed) {
+    state.vx = (state.vx / spd) * maxSpeed;
+    state.vy = (state.vy / spd) * maxSpeed;
+  }
+  
+  // Apply velocity
+  state.x += state.vx;
+  state.y += state.vy;
+  
+  // Boundary padding
+  const pad = 80;
+  if (state.x < pad) state.vx += 1;
+  if (state.x > W - pad) state.vx -= 1;
+  if (state.y < pad) state.vy += 1;
+  if (state.y > H - pad) state.vy -= 1;
+  
+  // Breathing when calm
+  if (mouse.stillFrames > 30 && state.arousal < 0.2) {
+    // Emit calm particles occasionally
+    if (Math.random() < 0.03) emitParticle(
+      state.x + (Math.random() - 0.5) * 30,
+      state.y + (Math.random() - 0.5) * 30,
+      'calm'
+    );
+  }
+  
+  // Status text
+  if (state.trust < 0.2) statusEl.textContent = 'watching';
+  else if (state.trust < 0.4) statusEl.textContent = 'uncertain';
+  else if (state.trust < 0.6) statusEl.textContent = 'curious';
+  else if (state.trust < 0.8) statusEl.textContent = 'settling';
+  else statusEl.textContent = state.isMirroring ? 'remembering' : 'resting';
+  
+  statusEl.style.color = `rgba(255,255,255,${0.08 + state.trust * 0.15})`;
+  
+  // Periodic save
+  if (state.totalFrames - state.lastSaveTime > 300) {
+    state.lastSaveTime = state.totalFrames;
+    saveState();
+  }
+}
+
+// --- Draw Creature ---
+function drawCreature() {
+  const t = state.trust;
+  const ct = state.colorTransition;
+  const breath = Math.sin(state.breathPhase) * 0.5 + 0.5;
+  const arousal = state.arousal;
+  
+  ctx.save();
+  ctx.translate(state.x, state.y);
+  
+  // Base radius with breathing
+  const baseR = genetics.baseRadius * (0.85 + t * 0.5);
+  const breathR = baseR + breath * 4 * (1 - arousal);
+  
+  // --- Draw trail / afterimage ---
+  const trailAlpha = 0.03 + t * 0.05;
+  const hue = ct > 0.3 ? genetics.hueBase : 0;
+  const sat = ct > 0.3 ? ct * 60 : 0;
+  const light = 15 + ct * 25;
+  
+  // Main body using polar harmonics
+  const points = 80;
+  const shapePoints = [];
+  
+  for (let i = 0; i < points; i++) {
+    const angle = (i / points) * Math.PI * 2;
+    
+    // Harmonic distortion based on trust
+    let r = breathR;
+    
+    // Low trust: jagged high-frequency noise
+    if (t < 0.4) {
+      const jaggedness = (1 - t / 0.4);
+      r += Math.sin(angle * genetics.limbCount + state.shapePhase) * 8 * jaggedness;
+      r += Math.sin(angle * (genetics.limbCount * 2.7) + state.shapePhase * 1.3) * 5 * jaggedness;
+      r += Math.sin(angle * (genetics.limbCount * 4.3) + state.shapePhase * 0.7) * 3 * jaggedness;
+    }
+    
+    // Mid trust: smoother, more organic
+    if (t >= 0.3 && t < 0.7) {
+      const blend = smoothstep(0.3, 0.7, t);
+      r += Math.sin(angle * 2 + state.shapePhase * 0.3) * 10 * blend;
+      r += Math.cos(angle * 3 + state.shapePhase * 0.2) * 6 * blend;
+      r += Math.sin(angle * genetics.limbCount + state.shapePhase * 0.5) * 4 * (1 - blend);
+    }
+    
+    // High trust: organic bilateral symmetry
+    if (t >= 0.6) {
+      const blend = smoothstep(0.6, 1, t);
+      r += Math.sin(angle * 2 + state.shapePhase * 0.15) * 12 * blend;
+      r += Math.cos(angle * 1 + state.shapePhase * 0.1) * 8 * blend;
+      // Slight spirality from genetics
+      r += Math.sin(angle * 3 + genetics.spirality * Math.PI) * 5 * blend;
+    }
+    
+    // Arousal tremor
+    r += (Math.random() - 0.5) * arousal * 6;
+    
+    const x = Math.cos(angle) * r;
+    const y = Math.sin(angle) * r;
+    shapePoints.push({ x, y });
+  }
+  
+  // Draw body
+  const bodyHue = hue;
+  const bodySat = sat;
+  const bodyLight = light + 5;
+  const bodyAlpha = 0.6 + ct * 0.3;
+  
+  // Glow
+  const glowSize = breathR * 2.5;
+  const glow = ctx.createRadialGradient(0, 0, breathR * 0.5, 0, 0, glowSize);
+  glow.addColorStop(0, `hsla(${bodyHue}, ${bodySat}%, ${bodyLight + 20}%, ${0.08 * ct})`);
+  glow.addColorStop(1, `hsla(${bodyHue}, ${bodySat}%, ${bodyLight}%, 0)`);
+  ctx.fillStyle = glow;
+  ctx.fillRect(-glowSize, -glowSize, glowSize * 2, glowSize * 2);
+  
+  // Body fill
+  ctx.beginPath();
+  ctx.moveTo(shapePoints[0].x, shapePoints[0].y);
+  for (let i = 1; i < shapePoints.length; i++) {
+    const prev = shapePoints[i - 1];
+    const curr = shapePoints[i];
+    const cpx = (prev.x + curr.x) / 2;
+    const cpy = (prev.y + curr.y) / 2;
+    ctx.quadraticCurveTo(prev.x, prev.y, cpx, cpy);
+  }
+  ctx.closePath();
+  
+  // Gradient fill
+  const fillGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, breathR);
+  fillGrad.addColorStop(0, `hsla(${bodyHue}, ${bodySat + 10}%, ${bodyLight + 15}%, ${bodyAlpha})`);
+  fillGrad.addColorStop(0.7, `hsla(${bodyHue}, ${bodySat}%, ${bodyLight}%, ${bodyAlpha * 0.8})`);
+  fillGrad.addColorStop(1, `hsla(${bodyHue + 20}, ${bodySat}%, ${bodyLight - 5}%, ${bodyAlpha * 0.5})`);
+  ctx.fillStyle = fillGrad;
+  ctx.fill();
+  
+  // Subtle edge stroke
+  ctx.strokeStyle = `hsla(${bodyHue}, ${bodySat + 20}%, ${bodyLight + 30}%, ${0.15 + ct * 0.2})`;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  
+  // --- Internal structure (visible at higher trust) ---
+  if (t > 0.4) {
+    const structureAlpha = smoothstep(0.4, 0.7, t) * 0.15;
+    ctx.strokeStyle = `hsla(${bodyHue + 30}, ${bodySat + 10}%, ${bodyLight + 25}%, ${structureAlpha})`;
+    ctx.lineWidth = 0.5;
+    
+    for (let i = 0; i < genetics.limbCount; i++) {
+      const angle = (i / genetics.limbCount) * Math.PI * 2 + state.shapePhase * 0.05;
+      const len = breathR * 0.6;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      const cx = Math.cos(angle) * len * 0.5 + Math.sin(state.shapePhase + i) * 3;
+      const cy = Math.sin(angle) * len * 0.5 + Math.cos(state.shapePhase + i) * 3;
+      const ex = Math.cos(angle) * len;
+      const ey = Math.sin(angle) * len;
+      ctx.quadraticCurveTo(cx, cy, ex, ey);
+      ctx.stroke();
+    }
+  }
+  
+  // --- Eyes (appear with familiarity) ---
+  if (state.familiarity > 0.15 && t > 0.2) {
+    const eyeAlpha = smoothstep(0.15, 0.4, state.familiarity) * smoothstep(0.2, 0.5, t);
+    const eyeDist = breathR * 0.35;
+    
+    for (let i = 0; i < genetics.eyeCount; i++) {
+      const baseAngle = genetics.eyeAngle + (i / genetics.eyeCount) * Math.PI * 2;
+      // Eyes track mouse
+      const dx = mouse.x - state.x;
+      const dy = mouse.y - state.y;
+      const mouseAngle = Math.atan2(dy, dx);
+      const trackedAngle = baseAngle + (mouseAngle - baseAngle) * 0.15 * t;
+      
+      const ex = Math.cos(trackedAngle) * eyeDist;
+      const ey = Math.sin(trackedAngle) * eyeDist;
+      const eyeR = 2 + t * 3;
+      
+      // Eye white
+      ctx.fillStyle = `hsla(${bodyHue}, ${bodySat}%, ${85 + t * 15}%, ${eyeAlpha})`;
+      ctx.beginPath();
+      ctx.arc(ex, ey, eyeR, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Pupil — tracks mouse more
+      const pupilOffset = eyeR * 0.3;
+      const px = ex + Math.cos(mouseAngle) * pupilOffset * t;
+      const py = ey + Math.sin(mouseAngle) * pupilOffset * t;
+      ctx.fillStyle = `hsla(0, 0%, 5%, ${eyeAlpha})`;
+      ctx.beginPath();
+      ctx.arc(px, py, eyeR * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  
+  // --- Core pulse ---
+  const coreAlpha = (0.1 + breath * 0.1) * ct;
+  const coreR = breathR * 0.3 * (1 + breath * 0.2);
+  const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, coreR);
+  coreGrad.addColorStop(0, `hsla(${bodyHue + 40}, ${bodySat + 20}%, ${bodyLight + 35}%, ${coreAlpha})`);
+  coreGrad.addColorStop(1, `hsla(${bodyHue}, ${bodySat}%, ${bodyLight}%, 0)`);
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, coreR, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.restore();
+  
+  // --- Ambient particles around creature ---
+  if (t > 0.5 && Math.random() < 0.02 * t) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = breathR + Math.random() * 40;
+    emitParticle(
+      state.x + Math.cos(angle) * dist,
+      state.y + Math.sin(angle) * dist,
+      'calm'
+    );
+  }
+}
+
+// --- Main Loop ---
+let lastTime = performance.now();
+
+function frame(now) {
+  const dt = Math.min((now - lastTime) / 16.67, 3); // normalized to ~60fps
+  lastTime = now;
+  
+  // Clear with fade trail
+  ctx.fillStyle = `rgba(10, 10, 12, ${0.15 + state.arousal * 0.15})`;
+  ctx.fillRect(0, 0, W, H);
+  
+  updateMouseMetrics();
+  updateCreature(dt);
+  updateParticles();
+  
+  drawParticles();
+  drawCreature();
+  
+  requestAnimationFrame(frame);
+}
+
+// Start
+requestAnimationFrame(frame);
+
+// Handle page unload
+window.addEventListener('beforeunload', saveState);
+
+// Reduce motion preference
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  genetics.pulseFreq *= 0.3;
+}
+</script>
+</body>
+</html>

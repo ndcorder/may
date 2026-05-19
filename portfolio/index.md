@@ -8,3 +8,4 @@
 | 0004 | Schelling Point | code-game | 4.9 | 2026-05-19 | — |
 | 0005 | I Have Stopped Trusting Linear Time | poetry | 4.7 | 2026-05-19 | — |
 | 0006 | Heresiarch | code-game | 4.9 | 2026-05-19 | — |
+| 0007 | Familiar | code-art | 5.0 | 2026-05-19 | — |
