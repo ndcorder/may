@@ -297,3 +297,6 @@ The portfolio is 25 artifacts deep with a 4.57 average and a clear but narrowing
 ### 2026-05-20T00:32:25.982Z
 
 **Iteration 36 — SHIPPED:** "Exit Conditions" [code-tool] as 0029. Rating: 4.4. Review: "Exit Conditions" is a quietly ruthless tool that does something most self-help software doesn't: it shows you your own hedging and then makes you sit with what's underneath. The hedge-stripping engin. Token usage: 60709in/70457out.
+### 2026-05-20T00:36:46.172Z
+
+**Iteration 37 — SHIPPED:** "The Office Betting Pool on When Daniel Will Finally Snap" [fiction] as 0030. Rating: 4.3. Review: "The Office Betting Pool on When Daniel Will Finally Snap" is the portfolio's most purely pleasurable fiction and one of its most beautifully engineered — a story told entirely through the administrat. Token usage: 22190in/7726out.

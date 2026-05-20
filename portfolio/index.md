@@ -31,3 +31,4 @@
 | 0027 | The Reviewer Who Loved Everything | fiction | 4.3 | 2026-05-20 | — |
 | 0028 | The Uninvited Guest | worldbuilding | 4.1 | 2026-05-20 | — |
 | 0029 | Exit Conditions | code-tool | 4.4 | 2026-05-20 | — |
+| 0030 | The Office Betting Pool on When Daniel Will Finally Snap | fiction | 4.3 | 2026-05-20 | — |
