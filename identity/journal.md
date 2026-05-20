@@ -291,3 +291,6 @@ The portfolio is 25 artifacts deep with a 4.57 average and a clear but narrowing
 ### 2026-05-20T00:01:52.534Z
 
 **Iteration 34 — SHIPPED:** "The Reviewer Who Loved Everything" [fiction] as 0027. Rating: 4.3. Review: "The Complete Reviews of Helen Vasquez" is the portfolio's warmest artifact and its most structurally satisfying fiction — an epistolary portrait of a restaurant critic whose impossible positivity is . Token usage: 20958in/11014out.
+### 2026-05-20T00:05:31.301Z
+
+**Iteration 35 — SHIPPED:** "The Uninvited Guest" [worldbuilding] as 0028. Rating: 4.1. Review: "Pelorimon absentis" is the portfolio's finest worldbuilding and one of its best artifacts across any domain — a bestiary entry for a creature that exists only when unobserved, told through three riva. Token usage: 19709in/6778out.
