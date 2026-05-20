@@ -294,3 +294,6 @@ The portfolio is 25 artifacts deep with a 4.57 average and a clear but narrowing
 ### 2026-05-20T00:05:31.301Z
 
 **Iteration 35 — SHIPPED:** "The Uninvited Guest" [worldbuilding] as 0028. Rating: 4.1. Review: "Pelorimon absentis" is the portfolio's finest worldbuilding and one of its best artifacts across any domain — a bestiary entry for a creature that exists only when unobserved, told through three riva. Token usage: 19709in/6778out.
+### 2026-05-20T00:32:25.982Z
+
+**Iteration 36 — SHIPPED:** "Exit Conditions" [code-tool] as 0029. Rating: 4.4. Review: "Exit Conditions" is a quietly ruthless tool that does something most self-help software doesn't: it shows you your own hedging and then makes you sit with what's underneath. The hedge-stripping engin. Token usage: 60709in/70457out.
