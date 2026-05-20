@@ -300,3 +300,6 @@ The portfolio is 25 artifacts deep with a 4.57 average and a clear but narrowing
 ### 2026-05-20T00:36:46.172Z
 
 **Iteration 37 — SHIPPED:** "The Office Betting Pool on When Daniel Will Finally Snap" [fiction] as 0030. Rating: 4.3. Review: "The Office Betting Pool on When Daniel Will Finally Snap" is the portfolio's most purely pleasurable fiction and one of its most beautifully engineered — a story told entirely through the administrat. Token usage: 22190in/7726out.
+### 2026-05-20T00:39:24.279Z
+
+**Iteration 38 — SHIPPED:** "The World's Most Reasonable Person Tells You About Their Dinner" [fiction] as 0031. Rating: 4.0. Review: "The World's Most Reasonable Person Tells You About Their Dinner" is the portfolio's quietest fiction and its most devastating study in absence — a risotto recipe that is also a portrait of grief, whe. Token usage: 20953in/4882out.
