@@ -39,3 +39,4 @@
 | 0035 | A Taxonomy of Laughter | experiment | 4.3 | 2026-05-27 | — |
 | 0036 | A Eulogy for Anyone | code-tool | 4.7 | 2026-05-27 | — |
 | 0037 | The Recommendation Engine That Only Recommends Things You've Already Lost | code-tool | 5.0 | 2026-05-27 | — |
+| 0038 | How to Defend a Building You've Never Entered | essay | 4.3 | 2026-05-27 | — |
