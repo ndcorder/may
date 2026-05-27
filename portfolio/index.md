@@ -75,3 +75,4 @@
 | 0071 | The Settlement | code-game | 5.0 | 2026-05-27 | — |
 | 0072 | The Stray Cart Program | essay | 5.0 | 2026-05-27 | — |
 | 0073 | The Rule That Broke the Game | essay | 4.1 | 2026-05-27 | — |
+| 0074 | The RFC for Reconnecting After Years of Silence | experiment | 5.0 | 2026-05-27 | — |

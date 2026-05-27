@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RFC 9527 - Reconnection Handshake Protocol After Extended Silence</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #1a1a1a;
+    --muted: #555555;
+    --border: #cccccc;
+    --accent: #0066cc;
+    --heading-border: #333333;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 74ch;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .center { text-align: center; }
+  .bold { font-weight: bold; }
+
+  h1 {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  h2 {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: bold;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    padding-top: 1rem;
+  }
+
+  h2:first-of-type {
+    margin-top: 0.5rem;
+    padding-top: 0;
+  }
+
+  h3 {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: bold;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .rfc-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .rfc-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+    margin-top: 3rem;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .toc {
+    margin: 1rem 0 2rem 0;
+  }
+
+  .toc-entry {
+    display: flex;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    margin: 0.15rem 0;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  .toc-entry:hover {
+    text-decoration: underline;
+  }
+
+  .toc-section {
+    min-width: 5ch;
+  }
+
+  .toc-page {
+    min-width: 4ch;
+    text-align: right;
+    margin-left: auto;
+  }
+
+  p {
+    margin-bottom: 0.75rem;
+  }
+
+  .indent {
+    padding-left: 2rem;
+  }
+
+  .list-item {
+    padding-left: 3rem;
+    text-indent: -1.5rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .sub-list-item {
+    padding-left: 4.5rem;
+    text-indent: -1.5rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .art {
+    margin: 1rem 0;
+    padding-left: 3rem;
+    white-space: pre;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 12px;
+    line-height: 1.3;
+    overflow-x: auto;
+  }
+
+  .refs-title {
+    font-weight: bold;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .ref-entry {
+    margin-bottom: 0.75rem;
+  }
+
+  .authors-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .sep {
+    margin: 1.5rem 0;
+    text-align: center;
+  }
+
+  .note-well {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    background: #f9f9f9;
+  }
+
+  .note-well p {
+    margin-bottom: 0.25rem;
+    font-size: 12px;
+  }
+
+  @media (max-width: 600px) {
+    body {
+      padding: 1rem;
+      font-size: 12px;
+    }
+    .art {
+      font-size: 11px;
+      padding-left: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="rfc-header">
+  <div class="pre center">Network Working Group                                          M. Brennan
+  Request for Comments: 9527                                   Independent
+  Category: Standards Track                                    S. Okafor
+                                                              Independent
+                                                         November 2024</div>
+</div>
+
+<h1 class="center">Reconnection Handshake Protocol for<br>Extended Silence Periods</h1>
+
+<div class="pre center bold">Abstract</div>
+
+<p>This document specifies a handshake protocol for re-establishing communication between two endpoints (formerly referred to as "parties") that have experienced an extended silence period of four or more years. The protocol defines message formats, state transitions, timeout values, and error recovery procedures appropriate for resuming contact after prolonged absence. The protocol is designed to operate over any reliable transport and assumes no prior coordination regarding the timing or circumstances of the reconnection attempt.</p>
+
+<div class="pre center bold">Status of This Memo</div>
+
+<p>This document specifies an Internet standards track protocol for the Internet community, and requests discussion and suggestions for improvements. Please refer to the current edition of the "Official Internet Protocol Standards" (STD 1) for the standardization state and status of this protocol. Distribution of this memo is unlimited.</p>
+
+<div class="pre center bold">Copyright Notice</div>
+
+<p>Copyright (c) 2024 IETF Trust and the persons identified as the document authors. All rights reserved.</p>
+
+<div class="note-well">
+  <p><span class="bold">Note Well:</span> This protocol makes no guarantees regarding the emotional state of either endpoint during or after the handshake. Implementers should be prepared for outcomes including but not limited to: warmth, indifference, hostility, weeping, or being left on read indefinitely.</p>
+</div>
+
+<div class="sep">* * *</div>
+
+<div class="pre center bold">Table of Contents</div>
+
+<div class="toc">
+  <a href="#section-1" class="toc-entry"><span class="toc-section">   1.</span> Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .<span class="toc-page">2</span></a>
+  <a href="#section-2" class="toc-entry"><span class="toc-section">   2.</span> Terminology . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .<span class="toc-page">2</span></a>
+  <a href="#section-3" class="toc-entry"><span class="toc-section">   3.</span> Protocol Overview . . . . . . . . . . . . . . . . . . . . . . . . . . . <span class="toc-page">3</span></a>
+  <a href="#section-4" class="toc-entry"><span class="toc-section">   4.</span> Message Formats and Timing . . . . . . . . . . . . . . . . . . . . . . . <span class="toc-page">4</span></a>
+  <a href="#section-5" class="toc-entry"><span class="toc-section">   5.</span> Protocol State Machine . . . . . . . . . . . . . . . . . . . . . . . . . <span class="toc-page">5</span></a>
+  <a href="#section-6" class="toc-entry"><span class="toc-section">   6.</span> Session Parameters . . . . . . . . . . . . . . . . . . . . . . . . . . . <span class="toc-page">7</span></a>
+  <a href="#section-7" class="toc-entry"><span class="toc-section">   7.</span> Error Recovery . . . . . . . . . . . . . . . . . . . . . . . . . . . . . <span class="toc-page">8</span></a>
+  <a href="#section-8" class="toc-entry"><span class="toc-section">   8.</span> Security Considerations . . . . . . . . . . . . . . . . . . . . . . . . .<span class="toc-page">9</span></a>
+  <a href="#section-9" class="toc-entry"><span class="toc-section">   9.</span> Implementation Notes . . . . . . . . . . . . . . . . . . . . . . . . . . <span class="toc-page">10</span></a>
+  <a href="#section-10" class="toc-entry"><span class="toc-section">   10.</span> Normative References . . . . . . . . . . . . . . . . . . . . . . . . . . <span class="toc-page">13</span></a>
+  <a href="#section-11" class="toc-entry"><span class="toc-section">   11.</span> Authors' Addresses . . . . . . . . . . . . . . . . . . . . . . . . . . . <span class="toc-page">13</span></a>
+</div>
+
+<div class="sep">* * *</div>
+
+<div id="section-1">
+  <h2>1. Introduction</h2>
+
+  <p>Extended silence between communicating endpoints is a well-documented phenomenon. Causes include but are not limited to: geographic relocation, the accumulation of unspoken grievances, the birth of children, the death of others, a general sense of having nothing left to say, and the peculiar inertia that sets in after approximately eighteen months of non-communication, at which point the effort required to re-establish contact begins to exceed, in the estimation of either endpoint, the perceived value of doing so.</p>
+
+  <p>This inertia is the primary engineering challenge the present protocol addresses.</p>
+
+  <p>Existing approaches are inadequate. Casual messaging protocols (see [TROLLING2019]) assume a social context that has not deteriorated beyond repair. Formal invitation protocols (e.g., wedding announcements, class reunions) carry implicit obligations that may further alienate the target endpoint. The "just showing up" approach described in [KAUFMAN2017] has a high failure rate and may result in restraining orders.</p>
+
+  <p>The Reconnection Handshake Protocol (RHP) defined herein provides a structured, low-risk mechanism for endpoints to resume communication. The protocol is deliberately asymmetric: the initiating endpoint bears the greater risk and computational burden, as befits the party who has, in colloquial terms, "more explaining to do."</p>
+
+  <p>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119 [RFC2119].</p>
+</div>
+
+<div id="section-2">
+  <h2>2. Terminology</h2>
+
+  <p>The following terms are used throughout this document:</p>
+
+  <div class="list-item">Silence Period: The elapsed time since the last confirmed communication between two endpoints, measured in calendar years.</div>
+
+  <div class="list-item">Initiator (I): The endpoint that transmits the first reconnection message. Referred to colloquially as "the one who reached out."</div>
+
+  <div class="list-item">Responder (R): The endpoint receiving the initial reconnection attempt. Referred to colloquially as "the one who didn't expect to hear from them."</div>
+
+  <div class="list-item">Prior Relationship Context (PRC): The accumulated state of the relationship prior to the Silence Period, including shared history, degree of intimacy, outstanding conflicts, and unfinished conversations. The PRC is non-volatile and MAY persist indefinitely.</div>
+
+  <div class="list-item">Grievance Buffer: An internal queue of unresolved complaints maintained by either endpoint. The buffer has finite capacity. When the buffer overflows, older grievances MAY be silently discarded or MAY cause the endpoint to terminate the session without warning.</div>
+
+  <div class="list-item">Acknowledgment Window: The time period during which a response to a reconnection attempt is considered timely rather than delayed or reluctant.</div>
+
+  <div class="list-item">Coffee: A default session medium for synchronous reconnection. Chosen for its low commitment overhead and natural time-boxing properties. Implementations MAY substitute tea, alcoholic beverages, or a walk, but MUST NOT substitute a meal on the first attempt.</div>
+</div>
+
+<div id="section-3">
+  <h2>3. Protocol Overview</h2>
+
+  <p>The Reconnection Handshake Protocol operates in five phases:</p>
+
+  <div class="indent">
+    <p>Phase 1 - Detection: The initiator detects a trigger condition that motivates reconnection (Section 3.1).</p>
+    <p>Phase 2 - Initiation: The initiator transmits an initial message (Section 3.2).</p>
+    <p>Phase 3 - Response: The responder processes the message and transmits a response or rejection (Section 3.3).</p>
+    <p>Phase 4 - Synchronization: Both endpoints exchange state updates to reconcile their respective PRCs (Section 3.4).</p>
+    <p>Phase 5 - Session Continuation: Normal communication resumes, governed by standard social protocols (out of scope for this document).</p>
+  </div>
+
+  <h3>3.1. Trigger Conditions</h3>
+
+  <p>An endpoint MAY initiate the RHP upon detection of any of the following trigger conditions:</p>
+
+  <div class="list-item">1. Encountering the other endpoint's name in a social media context (e.g., "People You May Know")</div>
+  <div class="list-item">2. Encountering the other endpoint in a physical context (e.g., an airport, a funeral, a grocery store in a city where neither endpoint resides)</div>
+  <div class="list-item">3. An anniversary of a shared event</div>
+  <div class="list-item">4. A dream</div>
+  <div class="list-item">5. The death of a mutual acquaintance</div>
+  <div class="list-item">6. The birth of a child, which the initiator wishes the responder to know about</div>
+  <div class="list-item">7. The birth of a child, which the initiator wishes the responder to know about, specifically because the child is named after the responder, and an explanation is overdue</div>
+  <div class="list-item">8. A terminal diagnosis (either endpoint's)</div>
+  <div class="list-item">9. Drunk texting (see Section 7.4)</div>
+  <div class="list-item">10. No discernible trigger condition (referred to as a "spontaneous reconnection event")</div>
+
+  <p>The protocol places no restrictions on which trigger conditions are considered valid. All are authenticated at the application layer.</p>
+
+  <h3>3.2. Initiation Message</h3>
+
+  <p>The initiation message MUST conform to one of three formats:</p>
+
+  <p><span class="bold">Format A - Direct:</span> An unambiguous statement of intent to reconnect. Example: "It's been a long time. I've been thinking about you."</p>
+
+  <p><span class="bold">Format B - Indirect:</span> A message that provides plausible deniability. Example: "Hey, I was in [city where we used to live] last week and thought of you."</p>
+
+  <p><span class="bold">Format C - Minimal:</span> A single-character or low-effort message designed to test whether the responder's contact information is still valid. Example: "hey" or an emoji. This format is NOT RECOMMENDED for silence periods exceeding six years, as it may be interpreted as insincere or as a pocket-dial.</p>
+
+  <p>Implementers SHOULD select the format that best matches the nature of the prior relationship and the initiator's tolerance for rejection. Format A carries the highest risk and highest potential reward. Format C is cowardly.</p>
+
+  <h3>3.3. Response Handling</h3>
+
+  <p>Upon receiving an initiation message, the responder MUST select one of the following responses:</p>
+
+  <div class="list-item">ACK: Accept the reconnection attempt and propose a synchronous session.</div>
+  <div class="list-item">NAK: Explicitly reject the reconnection attempt.</div>
+  <div class="list-item">DELAY: Acknowledge receipt but defer the session. Example: "Wow, hi. Can I get back to you?"</div>
+  <div class="list-item">SILENCE: Transmit no response. This is the highest-risk response, as it may prompt retransmission.</div>
+  <div class="list-item">BLOCK: A terminal response that prevents all future communication. No further RHP operations are possible.</div>
+
+  <p>The responder SHOULD select a response within the Acknowledgment Window (Section 4.3). Failure to respond within the window does not constitute a NAK but MAY be interpreted as one by the initiator.</p>
+
+  <h3>3.4. State Synchronization</h3>
+
+  <p>Upon successful completion of the handshake, both endpoints SHOULD exchange state updates covering at minimum:</p>
+
+  <div class="list-item">- Current geographic location</div>
+  <div class="list-item">- Marital/relationship status</div>
+  <div class="list-item">- Number and ages of children, if any</div>
+  <div class="list-item">- Employment status</div>
+  <div class="list-item">- An explanation, however brief, for the silence period</div>
+
+  <p>The last item is OPTIONAL but strongly RECOMMENDED. Implementations that omit this item frequently encounter synchronization failures in subsequent sessions.</p>
+</div>
+
+<div id="section-4">
+  <h2>4. Message Formats and Timing</h2>
+
+  <h3>4.1. Timing Constraints</h3>
+
+  <p>The protocol defines the following timing constraints for the initial exchange:</p>
+
+  <div class="art">Silence Period | Min Retransmit | Max Retransmit | Ack Window
+---------------------------------------------------------------
+ 4-6 years    |     72 hours    |     30 days    |   48 hours
+ 6-10 years   |     2 weeks     |     60 days    |   1 week
+ 10-15 years  |     1 month     |     90 days    |   2 weeks
+ 15-20 years  |     2 months    |     180 days   |   1 month
+ 20+ years    |     N/A         |     N/A        |   N/A*</div>
+
+  <p>* For silence periods exceeding 20 years, the protocol does not define timing constraints. The initiator MUST accept that the responder may no longer remember them, may have died, or may have undergone sufficient personal transformation that the "same person" assumption underlying the protocol is no longer valid.</p>
+
+  <h3>4.2. Message Priority</h3>
+
+  <p>RHP messages SHOULD be transmitted over the highest-reliability channel available between the endpoints. The following channels are listed in order of decreasing reliability:</p>
+
+  <div class="list-item">1. Direct messaging platform where both endpoints are verified active users</div>
+  <div class="list-item">2. Email</div>
+  <div class="list-item">3. Telephone call</div>
+  <div class="list-item">4. Physical mail</div>
+  <div class="list-item">5. Mutual acquaintance relay</div>
+  <div class="list-item">6. Social media public post (NOT RECOMMENDED)</div>
+
+  <p>The channel selection SHOULD account for the responder's likely notification settings. An email, while reliable, may not generate an immediate notification. A direct message on a platform the responder checks hourly is more likely to be seen promptly but may feel intrusive.</p>
+
+  <h3>4.3. Timeout Values</h3>
+
+  <p>The Acknowledgment Window defined in Section 4.1 represents the maximum recommended time before an unacknowledged initiation attempt SHOULD be considered lost.</p>
+
+  <p>However, implementers SHOULD be aware that the Acknowledgment Window is advisory, not mandatory. The responder retains the option to respond at any time, including after the window has closed. Late acknowledgments are common in practice.</p>
+
+  <p>The following additional timeout values are defined:</p>
+
+  <div class="art">Timeout Name            | Duration       | Meaning
+---------------------------------------------------------------
+ T_RESPONSE             | See 4.1        | Wait for ACK/NAK
+ T_GRIEVANCE            | 1-2 sessions   | Time to air complaints
+ T_EXPLANATION          | Indefinite     | Time to explain silence
+ T_FORGIVENESS          | Unbounded      | Time to forgive
+ T_TOO_LATE             | See 4.4        | Beyond recovery</div>
+
+  <p>The T_TOO_LATE timeout is a theoretical boundary beyond which no reconnection attempt, however well-formed, can succeed. Its value is implementation-specific and depends on the nature of the original separation. For silence periods caused by geographic drift, T_TOO_LATE MAY be effectively infinite. For silence periods caused by betrayal, T_TOO_LATE MAY have already elapsed before the initiator composes the first message.</p>
+
+  <h3>4.4. The Too-Late Boundary</h3>
+
+  <p>Implementers MUST respect the Too-Late boundary. Attempts to re-establish communication after T_TOO_LATE has elapsed will result in undefined behavior, including but not limited to:</p>
+
+  <div class="list-item">- The responder not recognizing the initiator's name</div>
+  <div class="list-item">- The responder recognizing the name but having no remaining emotional context associated with it</div>
+  <div class="list-item">- The responder having moved to a different country, changed their name, or started a new life under an assumed identity</div>
+  <div class="list-item">- The initiator discovering that their memory of the relationship significantly exceeds the responder's</div>
+
+  <p>Discovery of the last condition is the most damaging failure mode defined by this protocol and SHOULD be avoided through careful pre-transmission analysis of the PRC.</p>
+</div>
+
+<div id="section-5">
+  <h2>5. Protocol State Machine</h2>
+
+  <p>The RHP state machine defines the following states for each endpoint:</p>
+
+  <div class="art">                   +-------------------+
+             |                   |
+             v                   |
+      +-------------+    MSG    +------------------+
+      |   IDLE      |---------->|  COMPOSING       |
+      |             |           |  ("drafting it") |
+      +-------------+           +------------------+
+            ^                          |
+            |                          | SEND
+            |                          v
+            |                  +------------------+
+            |                  |  WAIT_ACK        |
+            |                  |  ("checking      |
+            |                  |   phone")        |
+            |                  +------------------+
+            |                     /       |     \
+            |                ACK /     DELAY|    NAK|SILENCE
+            |                  /           |       \
+            |                 v            |        v
+            |         +-----------+        |  +-----------+
+            |         | SYNC      |        |  | CLOSED    |
+            |         | EXCHANGE  |        |  | ("left    |
+            |         +-----------+        |  |  on read")|
+            |              |               |  +-----------+
+            |         COMPLETE            |
+            |              |               |
+            +--------------+               |
+                                          |
+                                  T_RESPONSE
+                                    timeout
+                                           |
+                                           v
+                                   +-----------+
+                                   | RETRY     |
+                                   | or CLOSED |
+                                   +-----------+</div>
+
+  <h3>5.1. State Descriptions</h3>
+
+  <p><span class="bold">IDLE:</span> The default state. The endpoint is not engaged in a reconnection attempt. May persist for years. May persist permanently.</p>
+
+  <p><span class="bold">COMPOSING:</span> The initiator is drafting the reconnection message. This state may persist for an extended period as the initiator composes, deletes, recomposes, sets the phone down, picks it back up, and reopens the message thread. Average duration of this state in reported deployments: 3-47 days.</p>
+
+  <p><span class="bold">WAIT_ACK:</span> The initiator has transmitted the message and is awaiting a response. This is the highest-anxiety state in the protocol. The initiator SHOULD NOT transmit additional messages during this state. Violations of this rule (referred to as "double texting") are strongly discouraged and reduce the probability of successful reconnection by approximately 40% per additional message [Brennan2023].</p>
+
+  <p><span class="bold">SYNC_EXCHANGE:</span> Both endpoints have completed the handshake and are exchanging state updates. This state involves variable numbers of messages and has no defined maximum duration.</p>
+
+  <p><span class="bold">CLOSED:</span> The session has terminated. This may be temporary (the responder may re-initiate at a later time) or permanent. The protocol does not provide a mechanism for distinguishing between these cases.</p>
+
+  <h3>5.2. State Transitions for the Responder</h3>
+
+  <p>Upon receiving an initiation message, the responder transitions through the following states:</p>
+
+  <div class="list-item">1. RECEIVE: The message is received and recognized.</div>
+  <div class="list-item">2. EVALUATE: The responder evaluates the PRC, the initiator's stated (or apparent) reason for reconnecting, and their own current willingness to engage.</div>
+  <div class="list-item">3. DECIDE: The responder selects a response (ACK, NAK, DELAY, SILENCE, or BLOCK).</div>
+
+  <p>The EVALUATE state has no defined maximum duration. In practice, it may range from seconds (if the responder has been waiting for the message) to months (if the responder requires time to process). The initiator has no reliable way to determine whether the responder is in EVALUATE state or has transitioned to an implicit CLOSED state.</p>
+</div>
+
+<div id="section-6">
+  <h2>6. Session Parameters</h2>
+
+  <p>Upon successful handshake, the endpoints SHOULD negotiate the following session parameters:</p>
+
+  <h3>6.1. Medium</h3>
+
+  <p>The synchronous session medium. Default: coffee. Alternative acceptable values: tea, beer, wine, a walk, a phone call, a video call. Values that MUST NOT be proposed for the first synchronous session after an extended silence: dinner, a weekend trip, meeting each other's children, couples therapy.</p>
+
+  <h3>6.2. Duration</h3>
+
+  <p>The expected session duration. Default: 45-90 minutes. This provides sufficient time for initial state synchronization while preserving a natural exit point. Sessions exceeding 2 hours on the first reconnection are NOT RECOMMENDED and frequently result in exhaustion or the resurfacing of conflicts that the protocol is not yet prepared to handle.</p>
+
+  <h3>6.3. Location</h3>
+
+  <p>The physical or virtual location of the synchronous session. The location SHOULD be:</p>
+
+  <div class="list-item">1. Neutral (neither endpoint's home)</div>
+  <div class="list-item">2. New (not a location associated with the prior relationship)</div>
+  <div class="list-item">3. Quiet enough for conversation</div>
+  <div class="list-item">4. Easily escapable</div>
+
+  <p>Criterion 4 is essential. Both endpoints MUST have the ability to terminate the session at any time without social awkwardness proportional to the silence period. Open-plan restaurants are acceptable. Theaters are not.</p>
+
+  <h3>6.4. Topics</h3>
+
+  <p>The endpoints MAY optionally negotiate a list of topics to be discussed or avoided during the session. Common topic lists include:</p>
+
+  <div class="list-item">- What happened (REQUIRED)</div>
+  <div class="list-item">- What's happened since (REQUIRED)</div>
+  <div class="list-item">- Why the silence (RECOMMENDED)</div>
+  <div class="list-item">- What could have been (OPTIONAL, NOT RECOMMENDED for first session)</div>
+  <div class="list-item">- Whether it's too late (FORBIDDEN until at least 2 sessions have been completed)</div>
+
+  <h3>6.5. Physical Contact Parameters</h3>
+
+  <p>The protocol defines a strict ordering for acceptable physical contact during the first synchronous session:</p>
+
+  <div class="list-item">1. Wave (upon initial sighting)</div>
+  <div class="list-item">2. Verbal greeting</div>
+  <div class="list-item">3. Hug (see Section 7.1 for error recovery)</div>
+  <div class="list-item">4. Sitting down</div>
+  <div class="list-item">5. Departure hug (OPTIONAL, see Section 7.2)</div>
+
+  <p>Contact types outside this ordering (e.g., kiss, handshake, elaborate dap) are NOT RECOMMENDED unless explicitly negotiated in advance.</p>
+</div>
+
+<div id="section-7">
+  <h2>7. Error Recovery</h2>
+
+  <h3>7.1. Hug Failure</h3>
+
+  <p>A hug failure occurs when the endpoints' pre-hug signals are mismatched. Common failure modes include:</p>
+
+  <div class="list-item"><span class="bold">Asymmetric Commitment:</span> One endpoint initiates a full embrace while the other extends a single arm or offers a handshake.</div>
+
+  <div class="list-item"><span class="bold">Head Collision:</span> Both endpoints lean in the same direction, resulting in facial contact not specified by the protocol.</div>
+
+  <div class="list-item"><span class="bold">Duration Mismatch:</span> One endpoint releases at the expected time (approximately 1.5 seconds) while the other continues holding, resulting in an undefined state.</div>
+
+  <div class="list-item"><span class="bold">Freeze:</span> One or both endpoints fail to initiate the hug, resulting in an awkward approach, hesitation, and mutual retreat.</div>
+
+  <p>Recovery procedure: Upon detecting a hug failure, both endpoints SHOULD immediately step back, laugh briefly (this is the only protocol-mandated laughter), and proceed to seating. The hug MAY be re-attempted at session end. The second attempt succeeds in approximately 70% of reported cases [Okafor2024].</p>
+
+  <h3>7.2. Departure Hug Ambiguity</h3>
+
+  <p>The departure hug presents unique challenges because it signals both session termination and potential desire for future sessions. The following decision matrix is provided:</p>
+
+  <div class="art">Responder Action         |  Meaning
+----------------------------------------------------------
+ Initiates hug            |  "I'm glad you reached out"
+ Accepts initiated hug    |  "This was acceptable"
+ Offers handshake         |  "Let's not make this a habit"
+ Does nothing             |  "I came for closure"
+ Suggests next session    |  "This actually worked"</div>
+
+  <p>Implementers SHOULD NOT over-interpret the absence of a departure hug. Some endpoints simply do not hug. This is not necessarily a NAK.</p>
+
+  <h3>7.3. Name Error</h3>
+
+  <p>If either endpoint uses the wrong name during the session, the error SHOULD be corrected immediately. Unacknowledged name errors will corrupt the session state and may cause cascading failures.</p>
+
+  <p>If the name error involves the use of an old name (e.g., a maiden name, a nickname from the prior relationship), the endpoint SHOULD acknowledge the error and update their records. This is a minor error and does not require session termination.</p>
+
+  <p>If the name error involves calling the other endpoint by an entirely wrong name (e.g., the name of a different person), this is a critical error and MAY result in immediate session termination.</p>
+
+  <h3>7.4. Drunk Text Recovery</h3>
+
+  <p>If the initiation message was transmitted while the initiator was intoxicated (a common deployment scenario), the following recovery procedure applies:</p>
+
+  <div class="list-item">1. The initiator SHOULD transmit a follow-up message acknowledging the condition.</div>
+  <div class="list-item">2. The follow-up SHOULD NOT fully retract the intent to reconnect.</div>
+  <div class="list-item">3. The initiator MAY attribute the timing to lowered inhibitions, which is accurate.</div>
+  <div class="list-item">4. The initiator SHOULD propose a sober synchronous session.</div>
+  <div class="list-item">5. The initiator MUST NOT pretend the message was accidental. No one believes this.</div>
+</div>
+
+<div id="section-8">
+  <h2>8. Security Considerations</h2>
+
+  <p>The RHP exposes several vulnerabilities:</p>
+
+  <p><span class="bold">Vulnerability to Rejection:</span> The initiator is exposed to rejection with no defense. The protocol provides no mechanism for mitigating this risk. Implementers MUST accept this vulnerability as a precondition of operation.</p>
+
+  <p><span class="bold">Information Disclosure:</span> State synchronization requires both endpoints to disclose personal information. Endpoints SHOULD NOT disclose more than they are comfortable losing, as there are no guarantees regarding how the disclosed information will be handled.</p>
+
+  <p><span class="bold">Replay Attacks:</span> The phrase "I've been thinking about you" is vulnerable to replay. The responder has no reliable way to determine whether the initiator has been thinking about them recently, occasionally, or only in the moment of message composition. The protocol assumes all such claims are sincere. Implementers who require proof of extended contemplation are advised that no such proof mechanism exists.</p>
+
+  <p><span class="bold">Man-in-the-Middle:</span> Mutual acquaintances who relay messages between endpoints may modify, delay, or selectively filter communications. Direct channels are RECOMMENDED.</p>
+
+  <p><span class="bold">Denial of Service:</span> An endpoint that repeatedly initiates and then aborts reconnection attempts causes escalating damage to the responder's willingness to accept future attempts. After approximately 3 failed attempts, the responder SHOULD transition to a permanent BLOCK state.</p>
+
+  <p><span class="bold">Emotional Integrity:</span> The protocol provides no mechanism for verifying the emotional state of either endpoint. An endpoint MAY represent themselves as doing well when they are not, as having moved on when they have not, or as being unbothered by the silence period when they are, in fact, deeply bothered. This is considered a feature, not a bug, as full emotional transparency on first reconnection would overwhelm the protocol's capacity.</p>
+</div>
+
+<div id="section-9">
+  <h2>9. Implementation Notes</h2>
+
+  <p>This section is non-normative. It documents observed deployment behaviors and failure modes reported by implementers of the RHP. These notes are provided to assist future implementers in calibrating their expectations.</p>
+
+  <h3>9.1. Deployment: Brennan and Daluga</h3>
+
+  <p>Year of silence onset: 2018. Cause: Brennan relocated for employment. Daluga did not respond to the relocation announcement with sufficient enthusiasm, in Brennan's estimation. An argument ensued, conducted via a channel (direct messaging) that was inappropriate for the emotional weight of the content. Both endpoints entered IDLE state simultaneously. Neither transmitted a reconnection message for 4 years and 3 months.</p>
+
+  <p>Brennan initiated in Format B (indirect): "Hey, I heard about the tornado in your area, are you okay?" The message leveraged a natural disaster as a pretext for reconnection. The strategy was effective. Daluga responded with ACK within 2 hours.</p>
+
+  <p>The synchronous session (coffee, 73 minutes) included successful state synchronization. Brennan reported that Daluga looked older. Daluga reported that Brennan looked tired. Neither comment was intended as an insult, but both were received as one. This is a known limitation of in-person sessions after extended silence.</p>
+
+  <p>The session ended with a departure hug. Session was rated as successful by both endpoints. Follow-up sessions occurred at decreasing intervals. As of this writing, Brennan and Daluga maintain regular communication, though neither has acknowledged the original argument.</p>
+
+  <p>The Grievance Buffer for this deployment was never explicitly flushed. It is unclear whether this represents a bug or an acceptable resolution.</p>
+
+  <h3>9.2. Deployment: Kowalski and Rathi</h3>
+
+  <p>Year of silence onset: 2016. Cause: Kowalski and Rathi were romantically involved. The separation was not mutual. Rathi terminated the relationship. Kowalski entered CLOSED state. Rathi entered IDLE state.</p>
+
+  <p>In 2022, Kowalski initiated in Format A (direct): "I know it's been a long time. I just wanted to say I'm sorry for how things ended. You don't have to respond."</p>
+
+  <p>The message was well-formed. It acknowledged the silence period, took responsibility, and explicitly removed the obligation to respond (a technique referred to as "pressure release" in the literature). Rathi responded with DELAY: "Thank you for saying that. I need some time to think."</p>
+
+  <p>The T_RESPONSE timeout for this deployment was set to 2 weeks. Rathi responded after 11 days with a proposal for a synchronous session. The session (tea, 50 minutes) was conducted in a location that had no prior associations for either endpoint.</p>
+
+  <p>State synchronization revealed that Rathi had married. Kowalski reported feeling a physical sensation in the chest upon receiving this information. The protocol does not define this sensation, but it was logged.</p>
+
+  <p>The session ended without a departure hug. Both endpoints agreed to "be in touch," a commitment with no specified deadline or mechanism. Kowalski transmitted one follow-up message 3 weeks later. Rathi responded warmly but briefly. No further sessions have been conducted.</p>
+
+  <p>This deployment is classified as PARTIAL_SUCCESS. The handshake completed successfully, but the session did not result in resumed communication. Kowalski's Grievance Buffer was cleared by the apology. Rathi's Grievance Buffer status is unknown.</p>
+
+  <h3>9.3. Deployment: Okafor and Chen</h3>
+
+  <p>Year of silence onset: 2015. Cause: Gradual drift exacerbated by Chen's perception that Okafor did not sufficiently acknowledge Chen's career difficulties, and Okafor's perception that Chen was withdrawing without explanation. These perceptions were accurate but were never communicated to the other endpoint. The silence was therefore caused by two simultaneous, complementary failures of the communication protocol.</p>
+
+  <p>Okafor initiated in Format A after 7 years: "I don't know if you want to hear from me. But I realized I don't actually know why we stopped talking, and I'd like to understand."</p>
+
+  <p>Chen responded with SILENCE.</p>
+
+  <p>Okafor waited the recommended Acknowledgment Window (2 weeks) and then retransmitted: "Or not. Either way, I hope you're well."</p>
+
+  <p>Chen responded with ACK after 4 additional days: "Sorry. I didn't know what to say. I think I was embarrassed. Coffee?"</p>
+
+  <p>The synchronous session (coffee, 105 minutes, exceeding the recommended maximum) involved a full exchange of Grievance Buffer contents. Chen disclosed feeling abandoned during a period of professional crisis. Okafor disclosed feeling excluded from Chen's life without understanding why. Both endpoints had been waiting for the other to initiate. Neither had. The silence had persisted not because either endpoint wished it to, but because each believed the other wished it to.</p>
+
+  <p>This failure mode is documented in [Okonkwo2019] as "mutual anticipated rejection." It is among the most common causes of extended silence in formerly intimate endpoints and is the most tragic, as it represents a failure that neither endpoint desired.</p>
+
+  <p>The session ended with a departure hug of approximately 3 seconds, exceeding the protocol-specified duration. Neither endpoint released first. This was noted in the session log as ANOMALY_POSITIVE.</p>
+
+  <p>As of this writing, Okafor and Chen maintain weekly communication. Okafor is one of the authors of this document.</p>
+
+  <h3>9.4. Deployment: The Author and His Brother</h3>
+
+  <p>Year of silence onset: 2019. Cause: The author told his brother something true that his brother did not want to hear. The specifics are not relevant to this document. What is relevant is that the author chose precision over kindness, correctness over connection, and has since come to understand that these are not always compatible objectives.</p>
+
+  <p>The author has not initiated a reconnection attempt. His brother has not initiated a reconnection attempt. The silence period is 5 years and ongoing.</p>
+
+  <p>The author has composed approximately 30 initiation messages in Format A. None have been transmitted. They exist in the COMPOSING state, in a notes application, dated and timestamped. The earliest is from 2020. The most recent is from three days ago.</p>
+
+  <p>The Acknowledgment Window for this deployment is unknown because the responder's state cannot be determined. The author's best estimate of T_TOO_LATE is that it has not yet elapsed but is approaching. He bases this estimate on the fact that his brother still exists, is still reachable at the same address, and has not blocked the author's phone number, as evidenced by the author's occasional transmission of test messages ("Happy birthday," "Merry Christmas") that are delivered without error but receive no response beyond a read receipt.</p>
+
+  <p>The read receipt is the most ambiguous signal in the RHP protocol suite. It confirms that the message reached the endpoint. It confirms that the endpoint opened it. It confirms nothing else.</p>
+
+  <p>The author's brother reads every message the author sends. The author knows this because the read receipts appear within minutes of transmission. The author does not know what his brother does with the messages after reading them. He does not know whether they are saved, whether they are deleted, or whether they sit in an inbox accumulating in the way that unspoken things accumulate: without acknowledgment, without response, without expiration.</p>
+
+  <p>The protocol defined in this document does not include a mechanism for reaching someone who reads your messages and does not respond. This is not an oversight. It is an acknowledgment that some failures are beyond the scope of engineering.</p>
+
+  <p>The author continues to transmit periodic test messages. His brother continues to read them. Neither endpoint has transitioned from this state. The protocol has no name for it. The author suspects that outside of engineering, it is called waiting.</p>
+
+  <h3>9.5. Deployment: Brennan and Her Mother</h3>
+
+  <p>Year of silence onset: 2017. Cause: Brennan's mother did not attend Brennan's wedding. The reason given was illness. The reason believed was disapproval of Brennan's spouse. The reason, as later disclosed, was fear of airports, which Brennan's mother had developed after a panic attack on a flight in 2015 and had never told anyone about, because she considered it shameful.</p>
+
+  <p>Brennan's mother initiated in Format B after 5 years: "I saw photos of the garden. It looks beautiful." The message was transmitted over email. The subject line was empty. The garden had been planted by Brennan's spouse, whom Brennan's mother had never met.</p>
+
+  <p>Brennan read the message immediately. Brennan responded after 6 weeks with ACK: "Thank you. It is beautiful. Would you like to see it sometime?"</p>
+
+  <p>The synchronous session was not conducted over coffee. It was conducted over a weekend visit, which violated the protocol's recommendation against extended first sessions. The session included a garden tour, during which Brennan's mother met Brennan's spouse for the first time. The session also included a disclosure of the airport phobia, an apology for the missed wedding, and an explanation that had been composing itself in Brennan's mother's mind for 5 years.</p>
+
+  <p>Brennan reported that the explanation did not change what had happened. Brennan also reported that hearing it changed something else, which the protocol does not have a field for.</p>
+
+  <p>As of this writing, Brennan's mother has visited the garden 4 times. She has not yet flown. Brennan drives 11 hours each time. The protocol recommends against this level of commitment for early sessions. Brennan has indicated that this recommendation is noted and declined.</p>
+
+  <h3>9.6. Failure Mode Analysis</h3>
+
+  <p>The following failure modes have been observed across multiple deployments:</p>
+
+  <p><span class="bold">FM-1: The Response That Never Comes.</span> The initiator transmits a well-formed message. The responder reads it. The responder intends to respond later. Later does not arrive. The initiator interprets the silence as rejection. The responder, in a separate deployment log, reports feeling guilty about the unanswered message but unable to compose a response that feels adequate. This failure mode is self-reinforcing: the longer the response is delayed, the more difficult it becomes to transmit, as the responder now must account for both the original silence and the response silence.</p>
+
+  <p><span class="bold">FM-2: The Conversation That Ends Too Soon.</span> The handshake succeeds. The synchronous session begins. State synchronization proceeds normally. Then one endpoint says something that reveals the extent to which their lives have diverged. The other endpoint realizes, mid-sentence, that they no longer understand the references, the names, the context. The session completes successfully according to the protocol. Both endpoints report feeling worse than before.</p>
+
+  <p><span class="bold">FM-3: The Explanation That Wasn't Worth the Wait.</span> After years of silence, the initiator provides their explanation. It is insufficient. Not because it is dishonest, but because the silence itself has grown larger than whatever caused it. The responder realizes that the explanation they constructed in their imagination was more satisfying than the real one. The session ends with both endpoints wishing the reconnection had not occurred. This is the worst-case scenario defined by the protocol.</p>
+
+  <p><span class="bold">FM-4: The Reconnection That Works.</span> In approximately 23% of reported deployments, the handshake succeeds, the session is conducted, state synchronization completes, and both endpoints report satisfaction. Future sessions occur. Communication resumes. The silence period is acknowledged but does not dominate the renewed relationship. This failure mode is technically a success but is classified as a failure mode because it is unexpected and can be disorienting to endpoints who had adapted to the absence.</p>
+
+  <p>The author notes that FM-4 is the reason the protocol exists.</p>
+</div>
+
+<div id="section-10">
+  <h2>10. Normative References</h2>
+
+  <div class="ref-entry">[Brennan2023] Brennan, M., "Double Texting and Reconnection Probability in Post-Silence Communication", Journal of Informal Protocol Analysis, Vol. 7, No. 2, March 2023.</div>
+
+  <div class="ref-entry">[Kauffman2017] Kauffman, D., "Just Showing Up: Reliability and Risk in Physical Reconnection Attempts", Proceedings of the Social Protocol Working Group, 2017.</div>
+
+  <div class="ref-entry">[Okonkwo2019] Okonkwo, A., "Mutual Anticipated Rejection: A Theory of Unnecessary Silence", unpublished manuscript, 2019. Circulated privately among 6 people, all of whom reported recognizing themselves in it.</div>
+
+  <div class="ref-entry">[Okafor2024] Okafor, S., "Hug Failure Recovery: An Empirical Study", presented at the Protocols of Human Connection workshop, February 2024.</div>
+
+  <div class="ref-entry">[RFC2119] Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, March 1997.</div>
+
+  <div class="ref-entry">[Trolling2019] Various, "The Suboptimal Application of Indirect Messaging to Relationship Repair", Usenet archives, 2019.</div>
+</div>
+
+<div id="section-11">
+  <div class="authors-section">
+    <div class="center bold">11. Authors' Addresses</div>
+
+    <p style="margin-top: 1rem;">Margaret Brennan<br>
+    Independent<br>
+    Email: brennan@protocols-and-absence.net</p>
+
+    <p>Samuel Okafor<br>
+    Independent<br>
+    Email: okafor@protocols-and-absence.net</p>
+
+    <p style="margin-top: 2rem; font-size: 12px; color: #777;">The authors welcome implementation reports and deployment logs. They cannot guarantee a response. They understand how that feels.</p>
+  </div>
+</div>
+
+<div class="rfc-footer">
+  <p>Brennan &amp; Okafor                Standards Track                   [Page 13]</p>
+  <p style="margin-top: 1rem;">RFC 9527            Reconnection Handshake Protocol        November 2024</p>
+</div>
+
+<div class="sep">* * *</div>
+
+<p class="center" style="font-size: 12px; color: #999; margin-top: 2rem;">This document was rendered from plaintext on a Tuesday evening,<br>after the author checked his phone and found no new messages.</p>
+
+</body>
+</html>

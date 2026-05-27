@@ -171,6 +171,10 @@ nodes:
     title: The Inventory of a House After the Divorce
     domain: experiment
     rating: 5
+  - id: "0074"
+    title: The RFC for Reconnecting After Years of Silence
+    domain: experiment
+    rating: 5
   - id: "0001"
     title: Telemetry
     domain: fiction
@@ -396,4 +400,4 @@ creative_dna:
       to_domain: poetry
       count: 1
   unexplored_territory: []
-updated_at: 2026-05-27T17:32:35.931Z
+updated_at: 2026-05-27T18:13:19.443Z
