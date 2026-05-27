@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Eulogy for Anyone</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #FAF6F1;
+            --bg-deep: #F0EBE3;
+            --text: #2C2416;
+            --text-muted: #7A6E5D;
+            --accent: #8B4513;
+            --accent-light: #A0522D;
+            --border: #D4C5B0;
+            --card: #FFFDF9;
+            --shadow: rgba(44, 36, 22, 0.08);
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 1.5rem 6rem;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 680px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.4rem;
+            color: var(--text);
+        }
+
+        .subtitle {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            font-style: italic;
+        }
+
+        .form-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2rem 2rem 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 12px var(--shadow);
+        }
+
+        fieldset {
+            border: none;
+            margin-bottom: 1.4rem;
+        }
+
+        fieldset:last-of-type {
+            margin-bottom: 0;
+        }
+
+        legend {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-family: sans-serif;
+        }
+
+        label {
+            display: block;
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+            font-family: sans-serif;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            font-size: 1rem;
+            font-family: 'Georgia', serif;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--bg);
+            color: var(--text);
+            transition: border-color 0.2s;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+        }
+
+        input::placeholder {
+            color: var(--border);
+            font-style: italic;
+        }
+
+        select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A6E5D' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2rem;
+        }
+
+        .adj-row {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .adj-row input { flex: 1; }
+
+        .generate-btn {
+            display: block;
+            width: 100%;
+            margin-top: 1.8rem;
+            padding: 0.85rem 1.5rem;
+            font-size: 1.05rem;
+            font-family: 'Georgia', serif;
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            letter-spacing: 0.03em;
+            transition: background 0.2s;
+        }
+
+        .generate-btn:hover {
+            background: var(--accent-light);
+        }
+
+        .generate-btn:active {
+            transform: scale(0.995);
+        }
+
+        .eulogy-output {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2.5rem 2.5rem 2rem;
+            box-shadow: 0 2px 12px var(--shadow);
+            display: none;
+            animation: fadeEulogy 1.2s ease;
+        }
+
+        .eulogy-output.visible {
+            display: block;
+        }
+
+        @keyframes fadeEulogy {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .eulogy-text {
+            font-size: 1.08rem;
+            line-height: 1.85;
+            margin-bottom: 1.5rem;
+        }
+
+        .eulogy-text p {
+            margin-bottom: 1.2rem;
+            text-indent: 1.5em;
+        }
+
+        .eulogy-text p:first-child {
+            text-indent: 0;
+        }
+
+        .eulogy-text p:first-child::first-letter {
+            font-size: 2.8em;
+            float: left;
+            line-height: 0.85;
+            margin-right: 0.08em;
+            margin-top: 0.05em;
+            color: var(--accent);
+        }
+
+        .delivered-stamp {
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-style: italic;
+            opacity: 0;
+            transition: opacity 0.8s;
+        }
+
+        .delivered-stamp.show { opacity: 1; }
+
+        .actions-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .actions-left {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .copy-btn {
+            padding: 0.45rem 1rem;
+            font-size: 0.85rem;
+            font-family: sans-serif;
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .new-btn {
+            padding: 0.45rem 1rem;
+            font-size: 0.85rem;
+            font-family: sans-serif;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .new-btn:hover {
+            border-color: var(--text-muted);
+        }
+
+        .copied-msg {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-style: italic;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .copied-msg.show { opacity: 1; }
+
+        footer {
+            margin-top: 3rem;
+            text-align: center;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            font-family: sans-serif;
+        }
+
+        .counter {
+            font-weight: 600;
+            font-family: 'Georgia', serif;
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 2rem 1rem 4rem; }
+            h1 { font-size: 1.8rem; }
+            .form-section { padding: 1.5rem 1.25rem 1.25rem; }
+            .adj-row { flex-direction: column; gap: 0.5rem; }
+            .eulogy-output { padding: 1.5rem; }
+            .eulogy-text { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>A Eulogy for Anyone</h1>
+        <p class="subtitle">Speak well of the dead. Or at least speak specifically.</p>
+
+        <form class="form-section" id="eulogyForm">
+            <fieldset>
+                <legend>The Departed</legend>
+                <label for="name">Their name</label>
+                <input type="text" id="name" name="name" placeholder="Margaret, Uncle Duke, Steve" required>
+            </fieldset>
+
+            <fieldset>
+                <legend>Three Adjectives</legend>
+                <label>How would you describe them?</label>
+                <div class="adj-row">
+                    <input type="text" id="adj1" name="adj1" placeholder="stubborn" required>
+                    <input type="text" id="adj2" name="adj2" placeholder="tender" required>
+                    <input type="text" id="adj3" name="adj3" placeholder="impatient" required>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>One Object</legend>
+                <label for="object">Something they owned — the more specific, the better</label>
+                <input type="text" id="object" name="object" placeholder="the green thermos with the dent in it" required>
+            </fieldset>
+
+            <fieldset>
+                <legend>Cause of Death</legend>
+                <label for="death">How did they die?</label>
+                <select id="death" name="death" required>
+                    <option value="" disabled selected>Choose</option>
+                    <option value="peacefully">Peacefully, in their sleep</option>
+                    <option value="suddenly">Suddenly, without warning</option>
+                    <option value="heroically">Heroically, saving others</option>
+                    <option value="stupidly">Stupidly, through their own foolishness</option>
+                    <option value="late">Decades too late</option>
+                </select>
+            </fieldset>
+
+            <button type="submit" class="generate-btn">Deliver the Eulogy</button>
+        </form>
+
+        <div class="eulogy-output" id="eulogyOutput">
+            <div class="eulogy-text" id="eulogyText"></div>
+            <div class="delivered-stamp" id="deliveredStamp">— delivered —</div>
+            <div class="actions-row">
+                <div class="actions-left">
+                    <button class="copy-btn" id="copyBtn">Copy to clipboard</button>
+                    <span class="copied-msg" id="copiedMsg">Copied.</span>
+                </div>
+                <button class="new-btn" id="newBtn">Another</button>
+            </div>
+        </div>
+
+        <footer>
+            <span class="counter" id="counterDisplay">2,847</span> eulogies delivered
+        </footer>
+    </div>
+
+    <script>
+        // ─── Counter Logic ──────────────────────────────────────────
+        var eulogyCount = parseInt(localStorage.getItem('eulogyCount') || '2847', 10);
+
+        function updateCounterDisplay() {
+            document.getElementById('counterDisplay').textContent = eulogyCount.toLocaleString();
+        }
+
+        function incrementCounter() {
+            eulogyCount += 1;
+            localStorage.setItem('eulogyCount', String(eulogyCount));
+            updateCounterDisplay();
+        }
+
+        // ─── Utility ────────────────────────────────────────────────
+        function pick(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function shuffle(arr) {
+            var copy = arr.slice();
+            for (var i = copy.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var tmp = copy[i];
+                copy[i] = copy[j];
+                copy[j] = tmp;
+            }
+            return copy;
+        }
+
+        // ─── Adjective → Action Translation ─────────────────────────
+        function adjToAction(adj) {
+            var a = adj.toLowerCase().trim();
+            var map = {
+                'stubborn': 'planted their feet and refused to budge an inch',
+                'kind': 'stopped whatever they were doing to listen — really listen',
+                'funny': 'found the absurdity in any room they walked into',
+                'generous': 'gave without thinking about it, the way most people breathe',
+                'loud': 'filled a room before their body even crossed the threshold',
+                'quiet': 'listened with an intensity that made you hear your own words differently',
+                'tough': 'absorbed things that would have broken anyone else without ever mentioning it',
+                'gentle': 'held fragile things — ideas, feelings, mugs, infants — like they mattered',
+                'smart': 'understood things two sentences before the rest of us caught up',
+                'brave': 'walked toward things the rest of us were backing away from',
+                'warm': 'made you feel like the room had gotten several degrees cozier',
+                'cold': 'kept people at a distance with the kind of precision that looked like art',
+                'creative': 'saw something in the raw materials that no one else could find',
+                'impatient': 'drummed their fingers on every surface God ever made',
+                'loyal': 'showed up. Every time. Even the times you told them not to.',
+                'strange': 'saw the world at an angle the rest of us couldn\'t quite manage',
+                'beautiful': 'walked into rooms and rearranged the attention of everyone inside',
+                'angry': 'cared out loud, with the volume turned all the way up',
+                'tender': 'unpeeled themselves in small moments, when they thought nobody was watching',
+                'wise': 'said less than they knew and let you arrive at the answer yourself',
+                'chaotic': 'arrived five minutes late with a story that made lateness feel like a gift',
+                'careful': 'measured twice, thought three times, and still worried they\'d missed something',
+                'reckless': 'leapt, and figured the net would sort itself out on the way down',
+                'patient': 'waited with the calm of someone who understood that most things arrive',
+                'cruel': 'cut close to the bone, and knew exactly what they were doing',
+                'curious': 'asked questions that made you realize you\'d stopped looking',
+                'proud': 'carried something upright in them that nothing could bend',
+                'sweet': 'remembered your birthday, your dog\'s name, and the way you liked your coffee',
+                'strict': 'held the line, and made you better for having stood on the other side of it',
+                'tired': 'carried on anyway, with a grace that made exhaustion look like dignity',
+            };
+            if (map[a]) return map[a];
+
+            var fallbacks = [
+                'carried their ' + adj + 'ness the way some people carry a tune — quietly, stubbornly, and in a key only they could hear',
+                'was ' + adj + ' in the way that mattered: consistently, without apology, and often when it was inconvenient',
+                'let their ' + adj + ' nature show in small, private ways that most people missed entirely',
+                'wore their ' + adj + 'ness like a coat they\'d owned so long they forgot they had it on',
+            ];
+            return pick(fallbacks);
+        }
+
+        // ─── Opening Lines ───────────────────────────────────────────
+        function getOpening(name, death) {
+            var openings = {
+                peacefully: [
+                    name + ' left us the way most people hope to — quietly, between one breath and the next, as if Someone had simply whispered that it was time.',
+                    'They say ' + name + ' went gently. I believe it. They had been practicing gentleness for years.',
+                    name + ' died in their sleep, which is how they did most things — on their own terms, with the television still on.',
+                ],
+                suddenly: [
+                    name + ' was here, and then they weren\'t. There is no preparation for that kind of sentence.',
+                    'We didn\'t get to say goodbye. ' + name + ' would have hated the fuss anyway.',
+                    name + ' left the way a light leaves when the power cuts — instantly, and leaving everyone blinking in a room they thought they knew.',
+                ],
+                heroically: [
+                    'In the end, ' + name + ' did what they\'d been doing their whole life — put someone else first.',
+                    name + ' died the way they lived: in motion, thinking of others, probably annoyed there wasn\'t time to finish what they started.',
+                    'We\'re not supposed to say this in a eulogy, but I think ' + name + ' would have been quietly pleased with how they went out.',
+                ],
+                stupidly: [
+                    name + ' would want us to be honest. So: the manner of their passing was absurd, preventable, and entirely in character.',
+                    'In retrospect, there were signs. There were always signs. ' + name + ' had a gift for ignoring every single one of them.',
+                    name + ' left us doing something they loved, which is a polite way of saying they died doing something no reasonable person would attempt.',
+                    'We are here to remember ' + name + '. How they lived deserves remembering. How they died... we will get to that.',
+                ],
+                late: [
+                    name + ' lived long enough to see the world change and then change back again. Twice.',
+                    'We gather to remember ' + name + ', who outlasted every prediction, most of their doctors, and at least two historical epochs.',
+                    name + ' stayed so long that the youngest among us assumed they were permanent — like the building, or the sky.',
+                    'There are people in this room who have never known a world without ' + name + ' in it. Until three days ago, that included ' + name + '.',
+                ],
+            };
+            return pick(openings[death]);
+        }
+
+        // ─── Object Scene ────────────────────────────────────────────
+        function getObjectScene(name, obj, death) {
+            var templates = [
+                'Think of ' + obj + '. It is still sitting exactly where they left it, in the same spot, at the same angle. Nobody has the heart to move it. Nobody has the heart to use it, either. It has become, without anyone\'s permission, a small altar.',
+                'I keep thinking about ' + obj + '. How they loved that thing. Not because it was valuable — it wasn\'t. Not because it worked — it barely did. They loved it because it was theirs, and they had decided, in some private chamber of their heart, that it mattered.',
+                'Someone will find ' + obj + ' in the coming weeks. They will hold it for a moment and feel something they can\'t name. That\'s grief, I think. Or love. At a certain point they\'re the same temperature.',
+                obj + '. If you knew ' + name + ', you knew about it. It appeared in stories, in arguments, in the background of photographs spanning decades. They carried it everywhere, like a talisman, or a promise they made to themselves and never explained.',
+                'There is ' + obj + ', still holding the shape of their hands. Someone will clean it out eventually. Someone will throw it away or keep it in a box. But right now, in this room, it is the most important object in the world, because it was the last thing they touched that didn\'t know they were gone.',
+                'After the service, someone will go back to the house and see ' + obj + ' and the grief will arrive properly, the way it always does — not at the funeral, but later, alone, in the presence of some small, ordinary thing that has no idea it is evidence.',
+            ];
+            return pick(templates);
+        }
+
+        // ─── Adjective Scenes ────────────────────────────────────────
+        function getAdjScenes(name, adjs) {
+            var actions = adjs.map(adjToAction);
+            var connectors = [
+                'To know ' + name + ' was to watch them in small, unguarded moments. You saw it when they ' + actions[0] + '. You saw it when they ' + actions[1] + '. And God help you, you saw it when they ' + actions[2] + '.',
+                'Three things about ' + name + '. First: they ' + actions[0] + '. Second: they ' + actions[1] + '. Third — and this is the one that stays — they ' + actions[2] + '.',
+                name + ' had their faults, Lord knows. But in the ordinary hours — the ones that actually make up a life — they ' + actions[0] + '. They ' + actions[1] + '. And in the moments when it mattered most, they ' + actions[2] + '.',
+                'Someone once told me that a person is just the sum of their repeated actions. If that\'s true, then ' + name + ' was someone who ' + actions[0] + '; someone who ' + actions[1] + '; and, when the world was watching, someone who ' + actions[2] + '.',
+            ];
+            return pick(connectors);
+        }
+
+        // ─── Middle Reflections ──────────────────────────────────────
+        // These add a transitional paragraph that varies by death type,
+        // giving the eulogy a more natural shape: open, object, character, reflect, close.
+        function getMiddleReflection(name, death) {
+            var reflections = {
+                peacefully: [
+                    'That is the thing about a peaceful death — it makes you think the life was peaceful too. It wasn\'t, of course. No life is. But ' + name + ' earned that ending the way you earn sleep: by being awake for everything that came before.',
+                    'There is a kindness in dying the way ' + name + ' died. Not to themselves — to us. They spared us the worst of it. They left us with a memory of stillness instead of a memory of fear.',
+                ],
+                suddenly: [
+                    'The suddenness is its own kind of violence. Not to them — they never felt it. To us, left holding the jagged edge of a conversation we didn\'t know was the last one.',
+                    'We will spend the rest of our lives thinking of things we didn\'t say. ' + name + ' would tell us to stop. ' + name + ' would be wrong.',
+                ],
+                heroically: [
+                    'Courage is a word people throw around. What ' + name + ' did wasn\'t courage in the abstract. It was a choice made in a fraction of a second, and it cost them everything.',
+                    'They say not all heroes are brave in life. ' + name + ' was. Not because of how they died, but because of every ordinary morning they got up and chose to give a damn.',
+                ],
+                stupidly: [
+                    'We are not here to pretend ' + name + ' was perfect. They would not have tolerated the insult. But there is a difference between a foolish death and a foolish life, and we are here to talk about a life that was, in spite of its ending, genuinely worth living.',
+                    'The truth is, we will never stop being angry about how ' + name + ' left. That anger is just love with nowhere to go. It will find places eventually. It always does.',
+                    'I want to be clear about something: ' + name + ' was not a fool. They were, in fact, one of the sharpest people I ever knew. Which makes the manner of their exit all the more... let us say "on brand."',
+                ],
+                late: [
+                    'There is something exhausting about loving someone for that long. Not the love itself — that was easy. The vigilance. The slow accumulation of decades, each one adding another layer of the unbearable assumption that they would simply always be here.',
+                    'We stopped worrying about losing ' + name + ' years ago. That is what a long life does to the people who love you — it makes your permanence feel like a law of physics. And then one day gravity remembers.',
+                    name + ' watched almost everyone they loved go first. That is the price of staying. You become the one who stays behind at the end of the play, alone on a stage that used to be crowded.',
+                ],
+            };
+            // 55% chance of including a middle reflection — keeps output varied
+            if (Math.random() < 0.55) {
+                return pick(reflections[death]);
+            }
+            return null;
+        }
+
+        // ─── Closing Lines ───────────────────────────────────────────
+        function getClosing(name, death) {
+            var closings = {
+                peacefully: [
+                    name + ' is at rest now. The kind of rest they earned, and the kind the rest of us can only hope for.',
+                    'Go gently, ' + name + '. You always did.',
+                ],
+                suddenly: [
+                    'We didn\'t get enough time. Nobody ever does. But ' + name + ' made the time we had feel like more than it was.',
+                    name + ' is gone and the world is smaller. Not worse, necessarily. Just smaller.',
+                ],
+                heroically: [
+                    name + ' saved something that day. Not just the obvious — something quieter. Something we won\'t fully understand for years.',
+                    'They gave everything. That was always the plan, even if ' + name + ' didn\'t know it.',
+                ],
+                stupidly: [
+                    name + ' would want us to laugh. So let\'s try. And when we can\'t — and we can\'t yet — let\'s sit with the absurdity of loving someone this much and losing them to something so stupid.',
+                    'In lieu of flowers, ' + name + ' would have wanted you to never, ever do what they did.',
+                ],
+                late: [
+                    name + ' finally went somewhere they couldn\'t be late to. I like to think they arrived, looked around, and said, "That took long enough."',
+                    'They had a good run. The longest run. And at the end, they were still here — a fact the rest of us took for granted until, suddenly, we couldn\'t.',
+                    'Rest now, ' + name + '. You have earned it. And if there is an afterlife, I hope they were ready for you, because you were certainly not leaving early.',
+                ],
+            };
+            return pick(closings[death]);
+        }
+
+        // ─── Eulogy Assembly ─────────────────────────────────────────
+        function generateEulogy(name, adj1, adj2, adj3, obj, death) {
+            var adjs = shuffle([adj1, adj2, adj3]);
+            var paragraphs = [];
+
+            paragraphs.push(getOpening(name, death));
+            paragraphs.push(getObjectScene(name, obj, death));
+            paragraphs.push(getAdjScenes(name, adjs));
+
+            var middle = getMiddleReflection(name, death);
+            if (middle) paragraphs.push(middle);
+
+            paragraphs.push(getClosing(name, death));
+
+            return paragraphs.map(function(p) { return '<p>' + p + '</p>'; }).join('');
+        }
+
+        // ─── Form Handling ───────────────────────────────────────────
+        var form = document.getElementById('eulogyForm');
+        var output = document.getElementById('eulogyOutput');
+        var eulogyTextEl = document.getElementById('eulogyText');
+        var deliveredStamp = document.getElementById('deliveredStamp');
+        var copyBtn = document.getElementById('copyBtn');
+        var copiedMsg = document.getElementById('copiedMsg');
+        var newBtn = document.getElementById('newBtn');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var name = document.getElementById('name').value.trim();
+            var adj1 = document.getElementById('adj1').value.trim();
+            var adj2 = document.getElementById('adj2').value.trim();
+            var adj3 = document.getElementById('adj3').value.trim();
+            var obj = document.getElementById('object').value.trim();
+            var death = document.getElementById('death').value;
+
+            if (!name || !adj1 || !adj2 || !adj3 || !obj || !death) return;
+
+            eulogyTextEl.innerHTML = generateEulogy(name, adj1, adj2, adj3, obj, death);
+
+            output.classList.remove('visible');
+            void output.offsetWidth; // force reflow for re-animation
+            output.classList.add('visible');
+
+            deliveredStamp.classList.remove('show');
+            setTimeout(function() {
+                deliveredStamp.classList.add('show');
+            }, 1400);
+
+            incrementCounter();
+
+            setTimeout(function() {
+                output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 200);
+        });
+
+        // ─── Copy Button ────────────────────────────────────────────
+        copyBtn.addEventListener('click', function() {
+            var text = eulogyTextEl.innerText;
+            navigator.clipboard.writeText(text).then(function() {
+                copiedMsg.classList.add('show');
+                copyBtn.textContent = 'Copied';
+                setTimeout(function() {
+                    copiedMsg.classList.remove('show');
+                    copyBtn.textContent = 'Copy to clipboard';
+                }, 2000);
+            });
+        });
+
+        // ─── New Eulogy Button ───────────────────────────────────────
+        newBtn.addEventListener('click', function() {
+            output.classList.remove('visible');
+            deliveredStamp.classList.remove('show');
+            form.reset();
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('name').focus();
+        });
+
+        // ─── Init ───────────────────────────────────────────────────
+        updateCounterDisplay();
+    </script>
+</body>
+</html>

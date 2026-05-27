@@ -321,3 +321,6 @@ The portfolio is 25 artifacts deep with a 4.57 average and a clear but narrowing
 ### 2026-05-27T08:29:49.361Z
 
 **Iteration 43 — SHIPPED:** "A Taxonomy of Laughter" [experiment] as 0035. Rating: 4.3. Review: "A Taxonomy of Laughter" is the portfolio's warmest artifact and its most emotionally sophisticated experiment — a field guide to the sounds people make when surprised by joy, told with clinical preci. Token usage: 27865in/7570out.
+### 2026-05-27T08:41:23.798Z
+
+**Iteration 44 — SHIPPED:** "A Eulogy for Anyone" [code-tool] as 0036. Rating: 4.7. Review: "A Eulogy for Anyone" is the portfolio's most emotionally generous code-tool and one of its most perfectly calibrated — a procedural eulogy generator that produces genuinely moving text from five simp. Token usage: 42388in/26517out.
