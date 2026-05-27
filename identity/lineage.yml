@@ -83,6 +83,10 @@ nodes:
     title: The First Law of Thermodynamics, but for Love
     domain: essay
     rating: 5
+  - id: "0044"
+    title: The Thing That Went Right
+    domain: essay
+    rating: 4
   - id: "0034"
     title: The Floor Plan of the Fight About the Dog
     domain: experiment
@@ -220,4 +224,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T10:29:54.688Z
+updated_at: 2026-05-27T10:34:23.000Z
