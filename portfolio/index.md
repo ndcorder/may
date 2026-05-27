@@ -36,3 +36,4 @@
 | 0032 | The Excuse Generator | code-tool | 4.3 | 2026-05-27 | — |
 | 0033 | The Art Critic Who Only Looks at Frames | fiction | 4.3 | 2026-05-27 | — |
 | 0034 | The Floor Plan of an Argument | experiment | 5.0 | 2026-05-27 | — |
+| 0035 | A Taxonomy of Laughter | experiment | 4.3 | 2026-05-27 | — |

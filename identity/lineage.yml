@@ -63,6 +63,10 @@ nodes:
     title: The Floor Plan of the Fight About the Dog
     domain: experiment
     rating: 5
+  - id: "0035"
+    title: A Taxonomy of Laughter
+    domain: experiment
+    rating: 4.3
   - id: "0001"
     title: Telemetry
     domain: fiction
@@ -172,4 +176,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T08:24:56.448Z
+updated_at: 2026-05-27T08:29:49.386Z

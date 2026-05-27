@@ -1,17 +1,17 @@
 axes:
-  exploratory: 0.595
-  playful: 0.397
+  exploratory: 0.599
+  playful: 0.399
   restless: 0
   bold: 0
-  collaborative: -0.496
+  collaborative: -0.499
 dominant_mood: exploratory, independent, and playful
 creative_nudge: Make something whimsical and self-contained — a playful standalone piece.
 influences:
-  - factor: 7 distinct domains in window
+  - factor: 8 distinct domains in window
     axis: exploratory
     direction: 0.6
     weight: 0.7
-  - factor: 5 light-domain ships
+  - factor: 6 light-domain ships
     axis: playful
     direction: 0.4
     weight: 0.5
@@ -19,5 +19,5 @@ influences:
     axis: collaborative
     direction: -0.5
     weight: 0.6
-iteration: 42
-updated_at: 2026-05-27T08:07:30.855Z
+iteration: 43
+updated_at: 2026-05-27T08:25:00.717Z
