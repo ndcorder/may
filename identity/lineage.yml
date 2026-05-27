@@ -155,6 +155,10 @@ nodes:
     title: The Optimization
     domain: fiction
     rating: 4.3
+  - id: "0051"
+    title: The Overnight Desk
+    domain: fiction
+    rating: 4.1
   - id: "0009"
     title: The Last Voicemail of Someone Who Believed They Were a Simulation
     domain: music
@@ -248,4 +252,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T11:48:42.949Z
+updated_at: 2026-05-27T11:51:43.028Z
