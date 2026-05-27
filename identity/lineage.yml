@@ -179,6 +179,10 @@ nodes:
     title: The Conjugation
     domain: poetry
     rating: 4.3
+  - id: "0047"
+    title: Four Things My Therapist Said That I Wrote Down Wrong
+    domain: poetry
+    rating: 4.3
   - id: "0028"
     title: The Uninvited Guest
     domain: worldbuilding
@@ -232,4 +236,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T10:50:38.337Z
+updated_at: 2026-05-27T10:52:59.426Z
