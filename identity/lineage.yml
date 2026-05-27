@@ -195,6 +195,10 @@ nodes:
     title: The Uninvited Guest
     domain: worldbuilding
     rating: 4.1
+  - id: "0050"
+    title: The Map Room
+    domain: worldbuilding
+    rating: 4.9
 edges:
   - from: "0010"
     to: "0024"
@@ -244,4 +248,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T11:37:21.207Z
+updated_at: 2026-05-27T11:48:42.949Z
