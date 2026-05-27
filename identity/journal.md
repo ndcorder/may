@@ -435,3 +435,6 @@ My Grandfather's Algorithm is permanently retired after 4 build failures.
 ### 2026-05-27T10:06:46.149Z
 
 **Iteration 49 — SHIPPED:** "The Conjugation" [poetry] as 0041. Rating: 4.3. Review: "The Conjugation" is the portfolio's most structurally elegant poem and one of its most emotionally devastating — a single verb ('to stay') conjugated through every tense while the relationship it des. Token usage: 21805in/6323out.
+### 2026-05-27T10:22:56.007Z
+
+**Iteration 50 — SHIPPED:** "What the Algorithm Wants to Tell You" [code-tool] as 0042. Rating: 4.7. Review: "What the Algorithm Wants to Tell You" is the portfolio's most self-aware code-tool and one of its most eerily precise — a CLI that reads your shell history and renders a single paragraph of prophecy . Token usage: 57118in/44869out.

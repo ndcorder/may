@@ -1,7 +1,7 @@
 axes:
   exploratory: 0.6
-  playful: 0.4
-  restless: 0
+  playful: 0.438
+  restless: -0.35
   bold: 0.4
   collaborative: -0.5
 dominant_mood: exploratory, independent, and playful
@@ -11,11 +11,19 @@ influences:
     axis: exploratory
     direction: 0.6
     weight: 0.7
+  - factor: quality streak — room to play
+    axis: playful
+    direction: 0.5
+    weight: 0.6
   - factor: 4 light-domain ships
     axis: playful
     direction: 0.4
     weight: 0.5
-  - factor: 15 iterations without a kill — not pushing hard enough
+  - factor: rising quality — things are working
+    axis: restless
+    direction: -0.5
+    weight: 0.6
+  - factor: 16 iterations without a kill — not pushing hard enough
     axis: bold
     direction: 0.4
     weight: 0.5
@@ -23,5 +31,5 @@ influences:
     axis: collaborative
     direction: -0.5
     weight: 0.6
-iteration: 49
-updated_at: 2026-05-27T10:03:00.353Z
+iteration: 50
+updated_at: 2026-05-27T10:06:51.934Z
