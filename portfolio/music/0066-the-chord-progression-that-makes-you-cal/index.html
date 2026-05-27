@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Chord Progression That Makes You Call Someone</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0a0c;color:#c8c8d0;font-family:'Courier New',monospace;min-height:100vh;overflow-x:hidden}
+  #start-overlay{position:fixed;inset:0;z-index:100;background:#0a0a0c;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;transition:opacity 0.8s}
+  #start-overlay.hidden{opacity:0;pointer-events:none}
+  #start-overlay h1{font-size:clamp(1.2rem,3vw,2rem);font-weight:400;letter-spacing:0.1em;text-align:center;max-width:600px;line-height:1.6;margin-bottom:2rem;color:#e0e0e8}
+  #start-overlay p{font-size:0.8rem;color:#555;letter-spacing:0.15em;text-transform:uppercase}
+  #progress-bar{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#334,#889);width:0%;transition:width 0.3s linear;z-index:50}
+  #score{max-width:720px;margin:0 auto;padding:80px 24px 200px}
+  .section{opacity:0;transform:translateY(20px);transition:opacity 1s,transform 1s;margin-bottom:60px}
+  .section.visible{opacity:1;transform:translateY(0)}
+  .section.active .label{color:#e8e8f0}
+  .label{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:#3a3a44;margin-bottom:8px;transition:color 0.5s}
+  .behavior{font-size:clamp(1rem,2.5vw,1.35rem);line-height:1.7;color:#8888a0;margin-bottom:12px;font-style:italic;min-height:1.7em}
+  .chords{font-size:0.85rem;color:#2a2a34;letter-spacing:0.15em;font-family:monospace}
+  .final-section .behavior{color:#c0c0d8}
+  .final-section .song-title{font-size:0.75rem;color:#444;letter-spacing:0.1em;margin:2px 0}
+  .pile{max-height:0;overflow:hidden;transition:max-height 3s ease-out}
+  .pile.open{max-height:2000px}
+  .cursor-blink{display:inline-block;width:2px;height:1em;background:#556;animation:blink 1s infinite;margin-left:4px;vertical-align:text-bottom}
+  @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+</style>
+</head>
+<body>
+<div id="start-overlay">
+  <h1>The Chord Progression<br>That Makes You Call Someone</h1>
+  <p>Click anywhere to begin</p>
+</div>
+<div id="progress-bar"></div>
+<div id="score"></div>
+
+<script src="https://unpkg.com/strudel.js"></script>
+<script>
+/* ── Section definitions ── */
+const sections = [
+  {
+    label: "Section I — 11:47 PM",
+    behavior: "the phone feels warmer than it should",
+    chords: "Cmaj7 — Gsus4",
+    mini: "<[C3,E3,G3,B3] [G2,C3,D3,G3]>"
+  },
+  {
+    label: "Section II — scrolling past their name",
+    behavior: "thumb hovering",
+    chords: "Am9 — FM7",
+    mini: "<[A2,C3,E3,G3,B3] [F2,A3,C3,E3,A3]>"
+  },
+  {
+    label: "Section III — muscle memory",
+    behavior: "the apology composed entirely in the shower, three times now",
+    chords: "Dm9 — G7b9 — Cmaj7",
+    mini: "<[D3,F3,A3,C3,E3] [G2,B2,D3,F3,Ab3] [C3,E3,G3,B3]>"
+  },
+  {
+    label: "Section IV — the thread",
+    behavior: "re-reading a conversation from March, looking for the exact turn",
+    chords: "Em7b5 — A7b9 — Dm7 — G7b13",
+    mini: "<[E3,G3,Bb3,D3] [A2,Db3,E3,G3,Bb3] [D3,F3,A3,C3] [G2,B3,D3,E3,F3]>"
+  },
+  {
+    label: "Section V — the indicator",
+    behavior: "watching the typing indicator appear and disappear",
+    chords: "Bm7b5 — E7b9 — Am9 — Dm7 — G7#5 — Cmaj9",
+    mini: "<[B2,D3,F3,A3] [E2,G2,Bb2,Db3,F3] [A2,C3,E3,G3,B3] [D3,F3,A3,C3] [G2,B2,D3,F3,Ab3] [C3,E3,G3,B3,D3]>"
+  },
+  {
+    label: "Section VI — almost",
+    behavior: "already composing the message in notes app. not even close to sending.",
+    chords: "Fm6 — C/E — Ebmaj7 — Dm7b5 — G7b9 — Cmaj7#11",
+    mini: "<[F2,Ab2,C3,D3] [C3,E3,G3,B3] [Eb2,G2,Bb2,D3,G3] [D3,F3,Ab3,C3] [G2,B2,D3,F3,Ab3] [C3,E3,G3,B3,F#3]>"
+  },
+  {
+    label: "Section VII — the history",
+    behavior: "every song that ever made you think of them used these four chords",
+    chords: "I — IV — vi — V",
+    mini: "<[C3,E3,G3,C4] [F3,A3,C3,F4] [A3,C3,E3,A3] [G3,B3,D3,G3]>",
+    isFinal: true
+  }
+];
+
+const songTitles = [
+  "Let It Be",
+  "Someone Like You",
+  "With or Without You",
+  "I'm Yours",
+  "No Woman No Cry",
+  "Don't Stop Believin'",
+  "Despacito",
+  "Someone You Loved",
+  "All of Me",
+  "Can You Feel the Love Tonight",
+  "Graduation (Friends Forever)",
+  "Jolene",
+  "Africa",
+  "Every Breath You Take",
+  "Stand By Me",
+  "Lean on Me",
+  "Beast of Burden",
+  "Creep",
+  "Fallin'",
+  "No Scrubs",
+  "If I Ain't Got You",
+  "Zombie"
+];
+
+/* ── Build DOM ── */
+const scoreEl = document.getElementById('score');
+const overlay = document.getElementById('start-overlay');
+const progressBar = document.getElementById('progress-bar');
+
+sections.forEach((sec, i) => {
+  const div = document.createElement('div');
+  div.className = 'section' + (sec.isFinal ? ' final-section' : '');
+  div.id = 'section-' + i;
+  div.innerHTML =
+    '<div class="label">' + sec.label + '</div>' +
+    '<div class="behavior" id="behavior-' + i + '"></div>' +
+    '<div class="chords">' + sec.chords + '</div>' +
+    (sec.isFinal ? '<div class="pile" id="pile"></div>' : '');
+  scoreEl.appendChild(div);
+});
+
+/* ── Typewriter effect ── */
+function typeText(el, text, speed) {
+  return new Promise(resolve => {
+    let idx = 0;
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor-blink';
+    el.appendChild(cursor);
+    const iv = setInterval(() => {
+      if (idx < text.length) {
+        el.insertBefore(document.createTextNode(text[idx]), cursor);
+        idx++;
+      } else {
+        clearInterval(iv);
+        setTimeout(() => { cursor.remove(); resolve(); }, speed);
+      }
+    }, speed);
+  });
+}
+
+/* ── Audio engine: play a Strudel pattern for N seconds ── */
+async function playPattern(miniNotation, durationSec, amp) {
+  try {
+    const pat = note(miniNotation)
+      .slow(2)
+      .s('sawtooth')
+      .attack(0.08)
+      .release(2.5)
+      .decay(0.3)
+      .sustain(0)
+      .cutoff(600)
+      .resonance(4)
+      .amp(amp || 0.15)
+      .room(0.4);
+    await pat.play();
+    setTimeout(() => { pat.stop(); }, (durationSec + 0.5) * 1000);
+  } catch (e) {
+    console.warn('Audio skipped:', e.message);
+  }
+}
+
+/* ── Main sequence ── */
+async function runSequence() {
+  /* Section durations in seconds. 2 beats per chord at 72bpm = ~3.3s per
+     two-beat cell. Longer sections for deeper emotional states. */
+  const durations = [8, 8, 12, 16, 20, 20, 28];
+  const total = durations.reduce((a, b) => a + b, 0);
+  let elapsed = 0;
+
+  for (let i = 0; i < sections.length; i++) {
+    const sec = sections[i];
+    const secEl = document.getElementById('section-' + i);
+    secEl.classList.add('visible', 'active');
+    secEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    /* Play audio for this section */
+    playPattern(sec.mini, durations[i], 0.15);
+
+    /* Type the behavioral text */
+    const behEl = document.getElementById('behavior-' + i);
+    await typeText(behEl, sec.behavior, sec.isFinal ? 45 : 55);
+
+    /* Final section: cascade of song titles */
+    if (sec.isFinal) {
+      const pile = document.getElementById('pile');
+      pile.classList.add('open');
+      for (let j = 0; j < songTitles.length; j++) {
+        const t = document.createElement('div');
+        t.className = 'song-title';
+        t.textContent = '"' + songTitles[j] + '"';
+        t.style.opacity = '0';
+        t.style.transition = 'opacity 0.5s';
+        pile.appendChild(t);
+        await new Promise(r => setTimeout(r, 150));
+        t.style.opacity = '1';
+      }
+      await new Promise(r => setTimeout(r, 3000));
+
+      /* Quiet coda — thesis delivered through form, not statement */
+      const after = document.createElement('div');
+      after.className = 'behavior';
+      after.style.marginTop = '20px';
+      after.style.color = '#555';
+      secEl.appendChild(after);
+      await typeText(after,
+        "the feeling was already there. the chords just gave it a room.", 60);
+    }
+
+    /* Hold, then dim */
+    await new Promise(r => setTimeout(r, sec.isFinal ? 2000 : 1500));
+    secEl.classList.remove('active');
+
+    elapsed += durations[i];
+    progressBar.style.width = Math.min(100, elapsed / total * 100) + '%';
+  }
+}
+
+/* ── Start on click ── */
+overlay.addEventListener('click', () => {
+  overlay.classList.add('hidden');
+  runSequence();
+});
+</script>
+</body>
+</html>

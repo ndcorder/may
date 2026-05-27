@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Weighted Blanket of These Conversations</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #050508; cursor: none; }
+  canvas { display: block; position: fixed; top: 0; left: 0; }
+  #cursor {
+    position: fixed; pointer-events: none; z-index: 100;
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.1);
+    transform: translate(-50%, -50%);
+    transition: opacity 0.4s;
+  }
+  #cursor-halo {
+    position: fixed; pointer-events: none; z-index: 99;
+    width: 140px; height: 140px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.02);
+    transform: translate(-50%, -50%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #cursor, #cursor-halo { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-halo"></div>
+<canvas id="canvas"></canvas>
+<script>
+/* =========================================================
+   THE WEIGHTED BLANKET OF THESE CONVERSATIONS
+   Sedimentation, memory, and the compression of words
+   into abstract geology.
+   ========================================================= */
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const cursorEl = document.getElementById('cursor');
+const cursorHalo = document.getElementById('cursor-halo');
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// --- Constants ---
+const GRAVITY = 0.005;
+const DAMPING = 0.988;
+const MAX_PARTICLES = 60;
+const SPAWN_INTERVAL = prefersReducedMotion ? 1500 : 2200;
+const DISTORTION_RADIUS = 120;
+const GROUND_PERCENT = 8; // bottom 8% reserved
+const COMPRESS_RATE = 0.0008;
+const COMPRESS_START_SECONDS = 60; // compression begins after 1 minute
+const COMPRESS_FULL_SECONDS = 240; // fully compressed by 4 minutes
+const AMBIENT_SPEED = 0.0003;
+
+// --- Emotional Registers ---
+const REGISTERS = [
+  { name: 'tenderness', rgb: [232, 176, 104], weight: 200, size: 15, style: 'italic', alpha: 0.82 },
+  { name: 'longing',    rgb: [155, 135, 175], weight: 155, size: 15, style: 'italic', alpha: 0.7  },
+  { name: 'conflict',   rgb: [175, 118, 118], weight: 235, size: 11, style: 'normal', alpha: 0.48 },
+  { name: 'mundane',    rgb: [128, 138, 124], weight: 170, size: 12, style: 'normal', alpha: 0.36 },
+  { name: 'grief',      rgb: [145, 148, 168], weight: 255, size: 15, style: 'normal', alpha: 0.52 },
+  { name: 'joy',        rgb: [252, 210, 128], weight: 150, size: 15, style: 'normal', alpha: 0.85 },
+  { name: 'silence',    rgb: [112, 132, 158], weight: 190, size: 13, style: 'normal', alpha: 0.28 },
+];
+
+// --- Conversation Fragments (50 specific half-sentences) ---
+const FRAGMENTS = [
+  // Tenderness (0)
+  { text: "and you just kept breathing like nothing was wrong", r: 0 },
+  { text: "your hand found mine without looking", r: 0 },
+  { text: "I made your coffee the way you like", r: 0 },
+  { text: "you said my name softly from the other room", r: 0 },
+  { text: "we stayed like that for a long time", r: 0 },
+  { text: "the cat slept between us like a small forgiveness", r: 0 },
+  { text: "I saved the last piece for you", r: 0 },
+  { text: "your voice sounds different at three a.m.", r: 0 },
+
+  // Longing (1)
+  { text: "I still look for you in crowds", r: 1 },
+  { text: "your sweater still smells like", r: 1 },
+  { text: "I almost called you last night", r: 1 },
+  { text: "sometimes I still set two places at the table", r: 1 },
+  { text: "the bed remembers a shape I can't", r: 1 },
+  { text: "I kept your number in my phone", r: 1 },
+  { text: "the song you loved came on and I couldn't move", r: 1 },
+  { text: "I dreamt we were still speaking", r: 1 },
+
+  // Conflict (2)
+  { text: "don't tell me you understand", r: 2 },
+  { text: "that's not what I said and you know it", r: 2 },
+  { text: "fine. fine. walk away then.", r: 2 },
+  { text: "I can't keep having this same conversation", r: 2 },
+  { text: "you're not listening you're waiting to speak", r: 2 },
+  { text: "why do you always", r: 2 },
+  { text: "I don't know how to be sorry enough", r: 2 },
+  { text: "we were just standing in the kitchen and", r: 2 },
+
+  // Mundane (3)
+  { text: "I think the milk has expired", r: 3 },
+  { text: "did you take out the recycling", r: 3 },
+  { text: "the lightbulb in the hallway needs", r: 3 },
+  { text: "I'll pick up the dry cleaning on Tuesday", r: 3 },
+  { text: "we need more paper towels", r: 3 },
+  { text: "the subway was delayed again", r: 3 },
+  { text: "remember to call the dentist", r: 3 },
+  { text: "I left the keys under the mat", r: 3 },
+
+  // Grief (4)
+  { text: "I didn't know it was the last time", r: 4 },
+  { text: "the chair where you used to sit", r: 4 },
+  { text: "your voicemail is still saved", r: 4 },
+  { text: "I can still hear you saying", r: 4 },
+  { text: "the weight of an empty house", r: 4 },
+  { text: "some mornings I forget you're gone", r: 4 },
+  { text: "I reread our last conversation", r: 4 },
+  { text: "the calendar keeps turning anyway", r: 4 },
+
+  // Joy (5)
+  { text: "remember when we laughed so hard we couldn't breathe", r: 5 },
+  { text: "the light that afternoon was perfect", r: 5 },
+  { text: "you danced in the kitchen with no music", r: 5 },
+  { text: "I want to remember this exactly as it is", r: 5 },
+  { text: "tell me the story again about how we", r: 5 },
+  { text: "everything smelled like rain and cut grass", r: 5 },
+  { text: "we were so young and didn't know it", r: 5 },
+  { text: "the night we stayed up talking until four", r: 5 },
+
+  // Silence (6)
+  { text: "...", r: 6 },
+  { text: "we sat in silence for twenty minutes", r: 6 },
+  { text: "nothing was wrong exactly", r: 6 },
+  { text: "we ran out of things to say around November", r: 6 },
+  { text: "I watched you read the whole newspaper", r: 6 },
+  { text: "the rain said what we couldn't", r: 6 },
+  { text: "some conversations end in doorways", r: 6 },
+  { text: "neither of us called back", r: 6 },
+  { text: "the silence after the door closed", r: 6 },
+  { text: "we stopped texting and never acknowledged it", r: 6 },
+];
+
+// --- State ---
+const particles = [];
+const strata = [];
+let startTime = null;
+let lastSpawnTime = 0;
+let lastTime = 0;
+let nextId = 0;
+// Track cumulative settled height so new particles stack properly
+let settledStackHeight = 0;
+
+// Mouse
+const mouse = { x: null, y: null, inside: false };
+
+document.addEventListener('mousemove', (e) => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  mouse.inside = true;
+  cursorEl.style.left = e.clientX + 'px';
+  cursorEl.style.top = e.clientY + 'px';
+  cursorHalo.style.left = e.clientX + 'px';
+  cursorHalo.style.top = e.clientY + 'px';
+});
+document.addEventListener('mouseleave', () => { mouse.inside = false; });
+document.addEventListener('mouseenter', () => { mouse.inside = true; });
+
+document.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  mouse.x = t.clientX;
+  mouse.y = t.clientY;
+  mouse.inside = true;
+}, { passive: false });
+document.addEventListener('touchend', () => { mouse.inside = false; });
+
+// --- Utilities ---
+function pseudoNoise(t, seed) {
+  return Math.sin(t * 1.7 + seed) * 0.5
+       + Math.sin(t * 3.1 + seed * 2.3) * 0.25
+       + Math.sin(t * 5.8 + seed * 0.7) * 0.125;
+}
+
+function pickRegister() {
+  const total = REGISTERS.reduce((s, r) => s + r.weight, 0);
+  let rand = Math.random() * total;
+  for (let i = 0; i < REGISTERS.length; i++) {
+    rand -= REGISTERS[i].weight;
+    if (rand <= 0) return i;
+  }
+  return REGISTERS.length - 1;
+}
+
+function regColorStr(idx, a) {
+  const c = REGISTERS[idx].rgb;
+  return `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+}
+
+// --- The base "ground" Y position ---
+function baseGroundY() {
+  return canvas.height * (1 - GROUND_PERCENT / 100);
+}
+
+// --- The effective ceiling of accumulated material ---
+function accumulationCeiling() {
+  return baseGroundY() - settledStackHeight;
+}
+
+// --- Spawn ---
+function spawnParticle(now) {
+  const regIdx = pickRegister();
+  const candidates = FRAGMENTS.filter(f => f.r === regIdx);
+  const frag = candidates[Math.floor(Math.random() * candidates.length)];
+  const reg = REGISTERS[regIdx];
+
+  const x = 40 + Math.random() * (canvas.width - 160);
+  const y = -20 - Math.random() * 100;
+
+  particles.push({
+    id: nextId++,
+    x, y,
+    vx: (Math.random() - 0.5) * 0.25,
+    vy: 0.15 + Math.random() * 0.2,
+    text: frag.text,
+    regIdx,
+    fontSize: reg.size + (Math.random() - 0.5) * 2,
+    opacity: 0,
+    targetOpacity: reg.alpha,
+    settled: false,
+    settledTime: null,
+    compression: 0,
+    seed: Math.random() * 1000,
+    rotation: (Math.random() - 0.5) * 0.03,
+    driftX: 0,
+    elHeight: 20,
+    elWidth: 0,
+    measured: false,
+    compressed: false,
+    fadeOut: 1,
+    settledY: 0, // the Y where it settled
+  });
+}
+
+// --- Measure text ---
+function measureText(p) {
+  const reg = REGISTERS[p.regIdx];
+  const fs = p.fontSize;
+  const fStr = (reg.style === 'italic' ? 'italic ' : '') + fs + "px Georgia, 'Palatino Linotype', 'Book Antiqua', serif";
+  ctx.font = fStr;
+  const m = ctx.measureText(p.text);
+  p.elWidth = m.width;
+  p.elHeight = fs * 1.45;
+  p.measured = true;
+}
+
+// --- Update ---
+function updateParticles(dt, now) {
+  const elapsed = (now - startTime) / 1000;
+  const ceil = accumulationCeiling();
+
+  // Compression factor: 0 at COMPRESS_START_SECONDS, 1 at COMPRESS_FULL_SECONDS
+  const compressFactor = Math.max(0, Math.min(1,
+    (elapsed - COMPRESS_START_SECONDS) / (COMPRESS_FULL_SECONDS - COMPRESS_START_SECONDS)
+  ));
+
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    if (p.compressed) continue;
+
+    // Fade in
+    if (p.opacity < p.targetOpacity) {
+      p.opacity = Math.min(p.opacity + dt * 0.35, p.targetOpacity);
+    }
+
+    if (p.settled) {
+      // Ambient drift
+      p.driftX = pseudoNoise(now * AMBIENT_SPEED, p.seed) * 6;
+      p.rotation = Math.sin(now * 0.0003 + p.seed) * 0.012;
+
+      // Compression
+      if (compressFactor > 0) {
+        const settledAge = (now - p.settledTime) / 1000;
+        // Older settled particles compress more
+        const ageFactor = Math.min(1, settledAge / 80);
+        p.compression += COMPRESS_RATE * compressFactor * ageFactor * dt * 60;
+        p.compression = Math.min(p.compression, 1);
+      }
+
+      // Fully compressed -> convert to stratum
+      if (p.compression >= 0.98) {
+        p.compressed = true;
+        const reg = REGISTERS[p.regIdx];
+        const sh = 1.5 + Math.random() * 3;
+        strata.push({
+          regIdx: p.regIdx,
+          rgb: reg.rgb,
+          alpha: reg.alpha * 0.65,
+          height: sh,
+          width: Math.min(p.elWidth + 40 + Math.random() * 80, canvas.width),
+          xOff: Math.max(0, Math.min(p.x - 20 - Math.random() * 40, canvas.width - p.elWidth - 60)),
+          born: now,
+        });
+        settledStackHeight += sh;
+      }
+    } else {
+      // Physics for unsettled particles
+      const weightFactor = REGISTERS[p.regIdx].weight / 160;
+
+      // Gravity
+      p.vy += GRAVITY * weightFactor * dt * 60;
+
+      // Mouse repulsion
+      if (mouse.inside && mouse.x !== null) {
+        const dx = (p.x + (p.elWidth || 50) * 0.5) - mouse.x;
+        const dy = (p.y + (p.elHeight || 15) * 0.5) - mouse.y;
+        const distSq = dx * dx + dy * dy;
+        const dist = Math.sqrt(distSq);
+        const range = DISTORTION_RADIUS * 1.6;
+
+        if (dist < range && dist > 0.5) {
+          const strength = (range - dist) / range;
+          const force = strength * strength * 2.2;
+          p.vx += (dx / dist) * force * dt * 60 * 0.02;
+          p.vy += (dy / dist) * force * dt * 60 * 0.015;
+        }
+      }
+
+      // Ambient horizontal drift
+      p.vx += pseudoNoise(now * 0.0008, p.seed) * 0.015;
+
+      // Apply velocity
+      p.x += p.vx * dt * 60;
+      p.y += p.vy * dt * 60;
+
+      // Damping
+      p.vx *= DAMPING;
+      p.vy *= DAMPING;
+
+      // Terminal velocity
+      p.vy = Math.min(p.vy, 2.8);
+
+      // Collision with accumulation ceiling
+      if (p.y >= ceil - p.elHeight * 0.5) {
+        p.y = ceil - p.elHeight * 0.5;
+        p.settled = true;
+        p.settledTime = now;
+        p.settledY = p.y;
+        p.vy = 0;
+        p.vx *= 0.2;
+        settledStackHeight += p.elHeight * 0.55; // contribution to stack
+      }
+
+      // Walls
+      if (p.x < 5) { p.x = 5; p.vx = Math.abs(p.vx) * 0.4; }
+      if (p.x + (p.elWidth || 60) > canvas.width - 5) {
+        p.x = canvas.width - (p.elWidth || 60) - 5;
+        p.vx = -Math.abs(p.vx) * 0.4;
+      }
+    }
+  }
+
+  // Remove compressed particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    if (particles[i].compressed) particles.splice(i, 1);
+  }
+
+  // Cap particles
+  while (particles.length > MAX_PARTICLES) {
+    const oldest = particles.reduce((best, p, idx) =>
+      p.settled && (best === -1 || p.settledTime < particles[best].settledTime) ? idx : best, -1);
+    if (oldest >= 0) particles.splice(oldest, 1);
+    else particles.shift();
+  }
+}
+
+// --- Render ---
+function render(now) {
+  const elapsed = (now - startTime) / 1000;
+  const bgWarm = Math.min(elapsed / 500, 1) * 4;
+
+  ctx.fillStyle = `rgb(${5 + bgWarm},${5 + bgWarm * 0.4},${8 + bgWarm * 0.2})`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Faint atmospheric bands
+  if (!prefersReducedMotion) {
+    for (let i = 0; i < 3; i++) {
+      const bandY = canvas.height * (0.25 + i * 0.22) + Math.sin(now * 0.00004 + i * 2.1) * 25;
+      const grad = ctx.createLinearGradient(0, bandY - 50, 0, bandY + 50);
+      grad.addColorStop(0, 'rgba(0,0,0,0)');
+      grad.addColorStop(0.5, 'rgba(255,255,255,0.004)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, bandY - 50, canvas.width, 100);
+    }
+  }
+
+  // Strata
+  drawStrata(now, elapsed);
+
+  // Particles
+  drawParticles(now, elapsed);
+
+  // Subtle mouse influence indicator
+  if (mouse.inside && mouse.x !== null) {
+    const grad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, DISTORTION_RADIUS * 0.8);
+    grad.addColorStop(0, 'rgba(255,255,255,0.006)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(mouse.x, mouse.y, DISTORTION_RADIUS * 0.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawStrata(now, elapsed) {
+  const baseY = baseGroundY();
+  let y = baseY;
+
+  for (let i = strata.length - 1; i >= 0; i--) {
+    const s = strata[i];
+    y -= s.height;
+
+    ctx.globalAlpha = s.alpha;
+    ctx.fillStyle = `rgb(${s.rgb[0]},${s.rgb[1]},${s.rgb[2]})`;
+    ctx.fillRect(s.xOff, y, s.width, s.height);
+
+    // Glow edge
+    ctx.globalAlpha = s.alpha * 0.25;
+    ctx.fillRect(s.xOff, y - 1, s.width, 1);
+
+    // Noise texture within band
+    ctx.globalAlpha = s.alpha * 0.35;
+    for (let nx = 0; nx < s.width; nx += 18) {
+      if (Math.random() > 0.6) continue;
+      const nh = Math.random() * s.height * 0.8;
+      const ny = y + Math.random() * (s.height - nh);
+      ctx.fillRect(s.xOff + nx, ny, 1 + Math.random() * 6, Math.max(nh, 0.5));
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // Blend gradient at top of strata
+  if (strata.length > 0 && y < baseY) {
+    const bgWarm = Math.min(elapsed / 500, 1) * 4;
+    const blendGrad = ctx.createLinearGradient(0, y - 50, 0, y + 8);
+    blendGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    blendGrad.addColorStop(1, `rgba(${5 + bgWarm},${5 + bgWarm * 0.4},${8 + bgWarm * 0.2},0.6)`);
+    ctx.fillStyle = blendGrad;
+    ctx.fillRect(0, y - 50, canvas.width, 58);
+  }
+}
+
+function drawParticles(now, elapsed) {
+  // Sort: unsettled on top, settled below, more compressed drawn first
+  const sorted = particles.slice().sort((a, b) => {
+    if (a.settled !== b.settled) return a.settled ? -1 : 1;
+    return b.compression - a.compression;
+  });
+
+  for (const p of sorted) {
+    if (p.compressed) continue;
+    if (!p.measured) measureText(p);
+
+    const reg = REGISTERS[p.regIdx];
+    const effAlpha = p.opacity * p.fadeOut;
+    if (effAlpha <= 0.01) continue;
+
+    ctx.save();
+
+    const drawX = p.x + (p.settled ? p.driftX : 0);
+    const drawY = p.y;
+
+    const compressedScale = 1 - p.compression * 0.93;
+    const compressedAlpha = 1 - p.compression * 0.75;
+    ctx.globalAlpha = effAlpha * Math.max(compressedAlpha, 0.05);
+
+    const cx = drawX + p.elWidth * 0.5;
+    const cy = drawY + p.elHeight * 0.5;
+
+    ctx.translate(cx, cy);
+    ctx.rotate(p.rotation);
+    ctx.scale(1, Math.max(compressedScale, 0.04));
+    ctx.translate(-cx, -cy);
+
+    const fs = p.fontSize;
+    const fStr = (reg.style === 'italic' ? 'italic ' : '') + fs + "px Georgia, 'Palatino Linotype', 'Book Antiqua', serif";
+    ctx.font = fStr;
+
+    // Skip very short text when heavily compressed
+    if (p.compression > 0.5 && p.text.trim().length <= 4) {
+      ctx.restore();
+      continue;
+    }
+
+    // Manual blur simulation for compression: draw text at reduced alpha
+    // in multiple offsets instead of using ctx.filter (performance)
+    if (p.compression > 0.2) {
+      const blurAmount = p.compression * 2.5;
+      ctx.globalAlpha = effAlpha * compressedAlpha * 0.25;
+      ctx.fillStyle = `rgb(${reg.rgb[0]},${reg.rgb[1]},${reg.rgb[2]})`;
+      for (let bx = -1; bx <= 1; bx++) {
+        for (let by = -1; by <= 1; by++) {
+          if (bx === 0 && by === 0) continue;
+          ctx.fillText(p.text, drawX + bx * blurAmount, drawY + p.elHeight * 0.75 + by * blurAmount);
+        }
+      }
+      ctx.globalAlpha = effAlpha * compressedAlpha * 0.6;
+    }
+
+    ctx.fillStyle = `rgb(${reg.rgb[0]},${reg.rgb[1]},${reg.rgb[2]})`;
+    ctx.fillText(p.text, drawX, drawY + p.elHeight * 0.75);
+
+    ctx.restore();
+  }
+}
+
+// --- Main Loop ---
+function loop(timestamp) {
+  if (!startTime) startTime = timestamp;
+  const rawDt = (timestamp - (lastTime || timestamp)) / 16.667;
+  const dt = Math.min(rawDt, 3);
+  lastTime = timestamp;
+
+  // Spawn
+  if (timestamp - lastSpawnTime > SPAWN_INTERVAL && particles.length < MAX_PARTICLES) {
+    spawnParticle(timestamp);
+    lastSpawnTime = timestamp;
+  }
+
+  updateParticles(dt, timestamp);
+  render(timestamp);
+
+  requestAnimationFrame(loop);
+}
+
+// --- Init ---
+function init() {
+  startTime = performance.now();
+  lastSpawnTime = startTime;
+  lastTime = startTime;
+
+  // Initial fragments
+  for (let i = 0; i < 4; i++) {
+    spawnParticle(startTime + i * 200);
+    const p = particles[particles.length - 1];
+    p.y = -30 - i * 55;
+    p.vy = 0.15 + Math.random() * 0.25;
+  }
+
+  requestAnimationFrame(loop);
+}
+
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(init);
+} else {
+  setTimeout(init, 300);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) lastTime = performance.now();
+});
+</script>
+</body>
+</html>

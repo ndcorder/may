@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Chore Wheel</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1a1714;
+    --fg: #e8e0d4;
+    --muted: #8a7e6f;
+    --accent: #d4915c;
+    --card: #252019;
+    --border: #3a332a;
+    --danger: #c45c5c;
+    --whisper: #5a9e6f;
+  }
+
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(212, 145, 92, 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(196, 92, 92, 0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(90, 158, 111, 0.03) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  header h1 {
+    font-size: 2.2rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--fg);
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-style: italic;
+  }
+
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .main-layout { grid-template-columns: 1fr; }
+    .wheel-container { width: 300px !important; height: 300px !important; }
+    #wheelCanvas { width: 300px !important; height: 300px !important; }
+  }
+
+  .wheel-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .wheel-container {
+    position: relative;
+    width: 340px;
+    height: 340px;
+  }
+
+  #wheelCanvas {
+    width: 340px;
+    height: 340px;
+    cursor: pointer;
+    transition: filter 0.3s;
+  }
+
+  #wheelCanvas:hover { filter: brightness(1.05); }
+
+  .wheel-pointer {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 28px solid var(--accent);
+    filter: drop-shadow(0 2px 6px rgba(212, 145, 92, 0.5));
+    z-index: 10;
+  }
+
+  .spin-btn {
+    background: linear-gradient(135deg, var(--accent), #b87a4a);
+    color: var(--bg);
+    border: none;
+    padding: 0.8rem 2.5rem;
+    font-size: 1.1rem;
+    font-family: inherit;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 4px 16px rgba(212, 145, 92, 0.3);
+  }
+
+  .spin-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(212, 145, 92, 0.45);
+  }
+
+  .spin-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(212, 145, 92, 0.3);
+  }
+
+  .spin-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .log-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    min-height: 400px;
+  }
+
+  .log-section h2 {
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .log-entries {
+    max-height: 500px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .log-entries::-webkit-scrollbar { width: 6px; }
+  .log-entries::-webkit-scrollbar-track { background: transparent; }
+  .log-entries::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .log-entry {
+    padding: 0.7rem 0;
+    border-bottom: 1px solid rgba(58, 51, 42, 0.5);
+    animation: fadeSlideIn 0.4s ease-out;
+  }
+
+  .log-entry:last-child { border-bottom: none; }
+
+  .log-entry .spin-count {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .log-entry .chore-name {
+    font-size: 1.05rem;
+    color: var(--fg);
+    margin: 0.2rem 0;
+  }
+
+  .log-entry .chore-flavor {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.45;
+  }
+
+  .log-entry.whisper .chore-flavor { color: var(--whisper); }
+  .log-entry.confession .chore-name { color: var(--danger); }
+  .log-entry.confession .chore-flavor { color: rgba(196, 92, 92, 0.75); }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .ambient-bar {
+    margin-top: 2rem;
+    text-align: center;
+    min-height: 2rem;
+  }
+
+  .ambient-msg {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+    line-height: 1.5;
+  }
+
+  .ambient-msg.visible { opacity: 1; }
+  .ambient-msg.whisper-text { color: var(--whisper); opacity: 0.75; }
+  .ambient-msg.confession-text { color: var(--danger); opacity: 0.8; }
+
+  .session-info {
+    text-align: center;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+
+  .reset-link {
+    display: inline-block;
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    opacity: 0.4;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: opacity 0.3s;
+    user-select: none;
+  }
+
+  .reset-link:hover { opacity: 0.8; }
+
+  @keyframes subtleFlicker {
+    0%, 90%, 100% { opacity: 1; }
+    93% { opacity: 0.82; }
+    95% { opacity: 0.97; }
+  }
+
+  body.late-stage #wheelCanvas {
+    animation: subtleFlicker 5s infinite;
+  }
+
+  body.late-stage header h1 {
+    animation: subtleFlicker 7s infinite;
+  }
+
+  .final-message {
+    display: none;
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--danger);
+    font-size: 0.95rem;
+    line-height: 1.8;
+    max-width: 520px;
+    margin: 0 auto;
+    opacity: 0;
+    transition: opacity 4s ease;
+  }
+
+  .final-message.visible {
+    display: block;
+  }
+
+  .final-message.faded-in {
+    opacity: 1;
+  }
+
+  .final-message .coda {
+    display: block;
+    margin-top: 1.5rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>The Chore Wheel</h1>
+      <p>Fair is fair.</p>
+    </header>
+
+    <div class="main-layout">
+      <section class="wheel-section" aria-label="Chore wheel">
+        <div class="wheel-container">
+          <div class="wheel-pointer" aria-hidden="true"></div>
+          <canvas id="wheelCanvas" width="680" height="680" role="img" aria-label="Spinning chore wheel"></canvas>
+        </div>
+        <button class="spin-btn" id="spinBtn">Spin</button>
+        <div class="session-info" id="sessionInfo" aria-live="polite"></div>
+      </section>
+
+      <section class="log-section" aria-label="Assignment log">
+        <h2>Assignment Log</h2>
+        <div class="log-entries" id="logEntries" aria-live="polite" aria-relevant="additions">
+          <div style="color: var(--muted); font-size: 0.9rem; font-style: italic; padding: 1rem 0;">
+            No chores assigned yet. Spin the wheel.
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="ambient-bar" aria-live="polite">
+      <div class="ambient-msg" id="ambientMsg"></div>
+    </div>
+
+    <div style="text-align:center;">
+      <span class="reset-link" id="resetLink" role="button" tabindex="0" aria-label="Reset all progress">start over</span>
+    </div>
+
+    <div class="final-message" id="finalMessage">
+      The wheel doesn't assign chores anymore.<br>
+      It never did.<br><br>
+      Every task you avoided, every time you spun again<br>
+      hoping for something easier — the wheel remembered.<br><br>
+      It was never random.
+      <span class="coda">There is no winning this. There never was.</span>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    /* ========================================
+       CHORE DATABASE
+       Each chore escalates through flavors
+       as it's assigned repeatedly. Late-game
+       chores unlock after enough spins.
+       Confession chores never leave the wheel.
+       ======================================== */
+
+    var CHORES = [
+      {
+        name: 'Take out trash',
+        flavors: [
+          'The bag is heavy tonight.',
+          'The neighbors saw you carry it out. They always see.',
+          'It was Tuesday. You know what Tuesday means.',
+          'Take out what you\'s been collecting. Not the trash. The other thing.'
+        ]
+      },
+      {
+        name: 'Do the dishes',
+        flavors: [
+          'Someone left a mug with lipstick on the rim.',
+          'There\'s a plate that\'s been soaking for three days. You know whose.',
+          'The dish you\'re avoiding has nothing to do with food.',
+          'Wash what you can. Some stains don\'t come out.'
+        ]
+      },
+      {
+        name: 'Vacuum living room',
+        flavors: [
+          'Normal amount of crumbs.',
+          'You missed a spot. You always miss the same spot.',
+          'The dust has formed shapes. One looks like an apology.',
+          'Clean the floor. Then tell me what you swept under the rug.'
+        ]
+      },
+      {
+        name: 'Clean bathroom',
+        flavors: [
+          'It\'s your turn. It\'s always your turn.',
+          'Someone used your towel again. You know who.',
+          'The mirror is clearer than you want it to be.',
+          'You\'ve been avoiding this room since October. We both know why.'
+        ]
+      },
+      {
+        name: 'Walk the dog',
+        flavors: [
+          'He\'s been waiting by the door.',
+          'He pulled toward the park again. The one you used to go to together.',
+          'The dog remembers the route you don\'t take anymore.',
+          'Walk until you reach the place you promised you\'d go back to. Keep walking.'
+        ]
+      },
+      {
+        name: 'Cook dinner',
+        flavors: [
+          'Whatever\'s in the fridge.',
+          'You\'re missing an ingredient. You\'ve been missing it for weeks.',
+          'You used to cook for two. When did that change?',
+          'Set the table for everyone who used to live here. Serve what you\'ve been hiding.'
+        ]
+      },
+      {
+        name: 'Water plants',
+        flavors: [
+          'The fern is looking droopy.',
+          'You\'ve been overwatering. Some things drown from too much attention.',
+          'The plant in the bathroom died weeks ago. You kept watering it anyway.',
+          'Nurture something. Anything. Prove you still can.'
+        ]
+      },
+      {
+        name: 'Sort recycling',
+        flavors: [
+          'Paper, plastic, glass. Simple.',
+          'You\'ve been putting things in the wrong bin. Not by accident.',
+          'Sort it. Separate what can be salvaged from what can\'t. Like us.',
+          'Separate your life into categories. Decide what gets another chance.'
+        ]
+      },
+      {
+        name: 'Fix the squeaky door',
+        flavors: [
+          'It\'s been squeaking for a week.',
+          'You said you\'d fix it. You say a lot of things.',
+          'The silence after you fix it will be worse than the squeaking.',
+          'Fix what\'s broken. The door is a start.'
+        ]
+      },
+      {
+        name: 'Fold laundry',
+        flavors: [
+          'There\'s a basket waiting.',
+          'There\'s a shirt in here that isn\'t yours. Hasn\'t been for months.',
+          'You folded her clothes by accident. Habit is a kind of haunting.',
+          'Fold what\'s left. Some things don\'t fit anymore.'
+        ]
+      },
+      {
+        name: 'Buy groceries',
+        flavors: [
+          'We need milk and eggs.',
+          'You forgot the list. You always forget. Or do you remember too well?',
+          'Aisle six. You haven\'t been down aisle six since the diagnosis.',
+          'Bring home what\'s needed. Not what\'s on the list — what\'s actually needed.'
+        ]
+      },
+      {
+        name: 'Mop the kitchen',
+        flavors: [
+          'Someone spilled something sticky.',
+          'The floor is clean where you mop. It\'s the corners you ignore.',
+          'You mop the same path every time. A rut in the linoleum.',
+          'Scrub the kitchen clean. Then explain why it never feels clean.'
+        ]
+      },
+      {
+        name: 'Check the mail',
+        flavors: [
+          'Probably just bills.',
+          'There\'s a letter addressed to someone who doesn\'t live here anymore.',
+          'You\'ve been throwing away her mail. That\'s a crime. And a personal one.',
+          'Read what was sent to you. All of it. Even the things you buried.'
+        ],
+        unlockAt: 5
+      },
+      {
+        name: 'Return the call',
+        flavors: [
+          'Your mother called again.',
+          'She knows something\'s wrong. Mothers always know.',
+          'The last voicemail is forty-seven seconds of silence and a sigh.',
+          'Call back the person you\'ve been ignoring since 2019. They deserve an answer.'
+        ],
+        unlockAt: 8
+      },
+      {
+        name: 'Apologize to someone you lied to in 2019',
+        flavors: [
+          'This wasn\'t on the wheel before.',
+          'It won\'t go away. It will never go away.',
+          'You know exactly who. You\'ve always known.',
+          'Apologize to someone you lied to in 2019.'
+        ],
+        unlockAt: 12,
+        sticky: true,
+        category: 'confession'
+      },
+      {
+        name: 'Say the thing you\'ve been practicing in the car',
+        flavors: [
+          'The acoustics are different out loud.',
+          'You\'ve been rehearsing for months. The script is memorized.',
+          'The car is empty. It\'s been empty. Say it anyway.',
+          'Say the thing you\'ve been practicing in the car.'
+        ],
+        unlockAt: 15,
+        sticky: true,
+        category: 'confession'
+      },
+      {
+        name: 'Forgive yourself for what happened in March',
+        flavors: [
+          'You know which March.',
+          'Everyone else has moved on. Why haven\'t you?',
+          'March was three years ago. The wound is older than some relationships.',
+          'Forgive yourself for what happened in March.'
+        ],
+        unlockAt: 18,
+        sticky: true,
+        category: 'confession'
+      },
+      {
+        name: 'Stop spinning the wheel',
+        flavors: [
+          'You could just\u2026 stop.',
+          'Each spin is a deferral. You know that now.',
+          'The wheel doesn\'t assign anything. It gives you permission to delay.',
+          'Stop spinning the wheel.'
+        ],
+        unlockAt: 22,
+        sticky: true,
+        category: 'confession'
+      },
+      {
+        name: 'Admit that no one else lives here',
+        flavors: [
+          'Has anyone else spun this wheel?',
+          'The other names on the chores. You wrote them. Only you.',
+          'You\'ve been assigning tasks to ghosts.',
+          'Admit that no one else lives here.'
+        ],
+        unlockAt: 26,
+        sticky: true,
+        category: 'confession'
+      }
+    ];
+
+    /* Ambient message pools by escalation phase */
+    var AMBIENT_NORMAL = [
+      'The wheel knows what\'s fair.',
+      'Another day, another chore.',
+      'Someone has to do it.',
+      'The apartment is quiet tonight.',
+      'Fair is fair.',
+      'The wheel decides. That\'s the rule.'
+    ];
+
+    var AMBIENT_UNSETTLING = [
+      'The wheel remembers every spin.',
+      'Have you noticed? It\'s okay if you haven\'t.',
+      'Some chores feel personal, don\'t they?',
+      'The wheel doesn\'t judge. It just assigns.',
+      'You could stop spinning anytime.',
+      'But you won\'t.'
+    ];
+
+    var AMBIENT_WHISPER = [
+      'You\'ve been here before.',
+      'The same chores. The same avoidance.',
+      'What are you actually putting off?',
+      'The wheel is patient. It can wait.',
+      'It\'s learning.',
+      'You didn\'t notice, did you?',
+      'That chore wasn\'t there last time.'
+    ];
+
+    var AMBIENT_CONFESSION = [
+      'This chore won\'t disappear.',
+      'Some tasks can\'t be deferred.',
+      'The wheel isn\'t asking. It\'s telling.',
+      'You can\'t spin past this one.',
+      'Look at what you\'ve been avoiding.',
+      'It was never about the chores.'
+    ];
+
+    /* ========================================
+       PERSISTENT STATE
+       ======================================== */
+
+    var STORAGE_KEY = 'choreWheelState_v3';
+
+    function defaultState() {
+      return {
+        totalSpins: 0,
+        sessionCount: 0,
+        choreHits: {},
+        firstSpinDate: null,
+        lastSpinDate: null,
+        lastSessionDate: null,
+        seenChores: [],
+        escalatedChores: {},
+        unlockedChores: [],
+        confessedChores: [],
+        riggingLevel: 0,
+        finalTriggered: false
+      };
+    }
+
+    function loadState() {
+      try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          var parsed = JSON.parse(saved);
+          // Merge with defaults so new keys are always present
+          var base = defaultState();
+          for (var key in base) {
+            if (base.hasOwnProperty(key) && parsed[key] === undefined) {
+              parsed[key] = base[key];
+            }
+          }
+          return parsed;
+        }
+      } catch (e) { /* corrupted data — start fresh */ }
+      return defaultState();
+    }
+
+    function saveState(s) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) { /* storage full */ }
+    }
+
+    var state = loadState();
+
+    /* Runtime state (not persisted) */
+    var currentRotation = Math.random() * Math.PI * 2;
+    var isSpinning = false;
+    var decelerating = false;
+    var targetAngle = null;
+    var currentDisplayChores = [];
+    var animFrameId = null;
+    var lastTimestamp = 0;
+    var spinStartTime = 0;
+    var ambientTimer = null;
+    var idleInterval = null;
+
+    /* ========================================
+       CANVAS SETUP
+       ======================================== */
+
+    var canvas = document.getElementById('wheelCanvas');
+    var ctx = canvas.getContext('2d');
+    var CX = canvas.width / 2;
+    var CY = canvas.height / 2;
+    var RADIUS = 310;
+
+    var SEGMENT_COLORS = [
+      '#8B6F4E', '#6B7F5E', '#7F6B5E', '#5E737F',
+      '#8B7D6B', '#6B8F71', '#7F6B6B', '#6B6F7F',
+      '#8F826B', '#6B8F7D', '#7D6B6F', '#6B7F6F',
+      '#8B7862', '#628B7F', '#7F6278', '#62787F',
+      '#8F7B68', '#688F7B', '#7B6868', '#687B7F'
+    ];
+
+    var CONFESSION_COLOR = '#6B3A3A';
+
+    /* ========================================
+       CHORE SELECTION & RIGGING
+       ======================================== */
+
+    function getAvailableChores() {
+      var available = [];
+      for (var i = 0; i < CHORES.length; i++) {
+        var chore = CHORES[i];
+        if (chore.unlockAt !== undefined) {
+          if (state.totalSpins >= chore.unlockAt) {
+            if (state.unlockedChores.indexOf(chore.name) === -1) {
+              state.unlockedChores.push(chore.name);
+            }
+            available.push(chore);
+          }
+        } else {
+          available.push(chore);
+        }
+      }
+      return available;
+    }
+
+    function selectSegmentChores() {
+      var available = getAvailableChores();
+      var numSlots = Math.min(12, available.length);
+      var slots = [];
+
+      var confessions = [];
+      var normals = [];
+      for (var i = 0; i < available.length; i++) {
+        if (available[i].category === 'confession') {
+          confessions.push(available[i]);
+        } else {
+          normals.push(available[i]);
+        }
+      }
+
+      /* Always include unlocked confession chores */
+      for (var c = 0; c < confessions.length && slots.length < numSlots; c++) {
+        slots.push(confessions[c]);
+      }
+
+      /* Weighted selection for remaining slots */
+      var remaining = numSlots - slots.length;
+      var weighted = [];
+
+      for (var n = 0; n < normals.length; n++) {
+        var chore = normals[n];
+        var hits = state.choreHits[chore.name] || 0;
+        var weight = 1;
+
+        /* Chores that have been assigned more get heavier with rigging */
+        if (hits > 0) {
+          weight += hits * 0.15 * state.riggingLevel;
+        }
+
+        /* Prefer chores not seen recently, but favor escalated ones */
+        var lastSeen = state.seenChores.lastIndexOf(chore.name);
+        if (lastSeen === -1 || (state.totalSpins - lastSeen) > 3) {
+          weight += 0.3 * state.riggingLevel;
+        }
+
+        weighted.push({ chore: chore, weight: Math.max(weight, 0.5) });
+      }
+
+      for (var s = 0; s < remaining && weighted.length > 0; s++) {
+        var totalWeight = 0;
+        for (var w = 0; w < weighted.length; w++) {
+          totalWeight += weighted[w].weight;
+        }
+
+        var r = Math.random() * totalWeight;
+        var chosen = weighted[weighted.length - 1];
+        for (var j = 0; j < weighted.length; j++) {
+          r -= weighted[j].weight;
+          if (r <= 0) { chosen = weighted[j]; break; }
+        }
+
+        slots.push(chosen.chore);
+        var idx = weighted.indexOf(chosen);
+        if (idx > -1) weighted.splice(idx, 1);
+      }
+
+      /* Shuffle so confession chores aren't always clustered at the start */
+      for (var k = slots.length - 1; k > 0; k--) {
+        var j2 = Math.floor(Math.random() * (k + 1));
+        var temp = slots[k];
+        slots[k] = slots[j2];
+        slots[j2] = temp;
+      }
+
+      return slots.slice(0, numSlots);
+    }
+
+    function determineTargetChore(slots) {
+      /* Rigged spin probability increases with riggingLevel */
+      if (Math.random() < state.riggingLevel * 0.6) {
+        /* Target the most-assigned chore on the wheel */
+        var maxHits = -1;
+        var target = slots[0];
+
+        for (var i = 0; i < slots.length; i++) {
+          var hits = state.choreHits[slots[i].name] || 0;
+          if (hits > maxHits) {
+            maxHits = hits;
+            target = slots[i];
+          }
+        }
+
+        /* Strongly prefer confession chores when available */
+        var confessionOnWheel = null;
+        for (var c = 0; c < slots.length; c++) {
+          if (slots[c].category === 'confession') {
+            confessionOnWheel = slots[c];
+            break;
+          }
+        }
+
+        if (confessionOnWheel && Math.random() < state.riggingLevel * 0.8) {
+          target = confessionOnWheel;
+        }
+
+        return slots.indexOf(target);
+      }
+
+      /* "Fair" spin with subtle bias toward repeated chores */
+      var weights = [];
+      for (var w = 0; w < slots.length; w++) {
+        var h = state.choreHits[slots[w].name] || 0;
+        weights.push(1 + h * 0.1 * state.riggingLevel);
+      }
+
+      var total = 0;
+      for (var t = 0; t < weights.length; t++) { total += weights[t]; }
+
+      var r2 = Math.random() * total;
+      for (var f = 0; f < weights.length; f++) {
+        r2 -= weights[f];
+        if (r2 <= 0) return f;
+      }
+      return 0;
+    }
+
+    /* ========================================
+       WHEEL RENDERING
+       ======================================== */
+
+    function drawWheel() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      var chores = currentDisplayChores;
+      if (chores.length === 0) return;
+
+      var sliceAngle = (Math.PI * 2) / chores.length;
+
+      /* Outer shadow ring */
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(CX, CY, RADIUS + 8, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fill();
+      ctx.restore();
+
+      for (var i = 0; i < chores.length; i++) {
+        var chore = chores[i];
+        var startAngle = currentRotation + i * sliceAngle;
+        var endAngle = startAngle + sliceAngle;
+
+        /* Segment fill */
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(CX, CY);
+        ctx.arc(CX, CY, RADIUS, startAngle, endAngle);
+        ctx.closePath();
+
+        var color = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
+        if (chore.category === 'confession') {
+          color = CONFESSION_COLOR;
+        }
+        ctx.fillStyle = color;
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+
+        /* Text label */
+        ctx.save();
+        var midAngle = startAngle + sliceAngle / 2;
+        var textRadius = RADIUS * 0.65;
+        ctx.translate(
+          CX + Math.cos(midAngle) * textRadius,
+          CY + Math.sin(midAngle) * textRadius
+        );
+        ctx.rotate(midAngle + Math.PI / 2);
+
+        /* Show escalated flavor or base name */
+        var displayText = chore.name;
+        var escalation = state.escalatedChores[chore.name] || 0;
+        if (escalation > 0 && chore.flavors && chore.flavors[escalation]) {
+          displayText = chore.flavors[escalation];
+        }
+
+        ctx.fillStyle = '#e8e0d4';
+        ctx.font = '600 15px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        if (chore.category === 'confession') {
+          ctx.fillStyle = '#c45c5c';
+          ctx.font = '700 14px Georgia, serif';
+        }
+
+        /* Word-wrap within segment width */
+        var maxWidth = RADIUS * 0.48;
+        var words = displayText.split(' ');
+        var lines = [];
+        var currentLine = words[0] || '';
+
+        for (var w = 1; w < words.length; w++) {
+          var testLine = currentLine + ' ' + words[w];
+          if (ctx.measureText(testLine).width > maxWidth) {
+            lines.push(currentLine);
+            currentLine = words[w];
+          } else {
+            currentLine = testLine;
+          }
+        }
+        lines.push(currentLine);
+
+        var lineHeight = 17;
+        var startY = -(lines.length - 1) * lineHeight / 2;
+        for (var l = 0; l < lines.length; l++) {
+          ctx.fillText(lines[l], 0, startY + l * lineHeight);
+        }
+
+        ctx.restore();
+      }
+
+      /* Center hub */
+      ctx.beginPath();
+      ctx.arc(CX, CY, 32, 0, Math.PI * 2);
+      ctx.fillStyle = '#1a1714';
+      ctx.fill();
+      ctx.strokeStyle = '#3a332a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(CX, CY, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#d4915c';
+      ctx.fill();
+    }
+
+    /* ========================================
+       SPINNING PHYSICS
+       ======================================== */
+
+    function startSpin() {
+      if (isSpinning) return;
+
+      if (state.finalTriggered) {
+        showAmbient('The wheel has stopped. There\'s nothing left to spin for.', 6000, 'confession-text');
+        return;
+      }
+
+      isSpinning = true;
+      decelerating = false;
+      spinStartTime = performance.now();
+      document.getElementById('spinBtn').disabled = true;
+
+      /* Select chores and predetermine the landing segment */
+      currentDisplayChores = selectSegmentChores();
+      var targetIdx = determineTargetChore(currentDisplayChores);
+
+      /* Calculate target angle so the pointer lands on the target segment.
+         Pointer is at -PI/2 (top). */
+      var sliceAngle = (Math.PI * 2) / currentDisplayChores.length;
+      var targetSegCenter = targetIdx * sliceAngle + sliceAngle / 2;
+      var desiredRotation = -Math.PI / 2 - targetSegCenter;
+
+      /* Add full rotations for visual drama */
+      var fullSpins = 4 + Math.random() * 4;
+      var diff = ((desiredRotation - currentRotation) % (Math.PI * 2) + Math.PI * 4) % (Math.PI * 2);
+      targetAngle = currentRotation + fullSpins * Math.PI * 2 + diff;
+
+      lastTimestamp = performance.now();
+
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      animFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    function gameLoop(timestamp) {
+      var dt = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
+      lastTimestamp = timestamp;
+
+      if (isSpinning) {
+        /* Coast at high speed for at least 1.5s before decelerating */
+        if (!decelerating && (timestamp - spinStartTime) > 1500) {
+          decelerating = true;
+        }
+
+        if (decelerating && targetAngle !== null) {
+          var remaining = targetAngle - currentRotation;
+          var approachSpeed = Math.min(dt * 3.5, 0.12);
+
+          if (Math.abs(remaining) < 0.004) {
+            currentRotation = targetAngle;
+            isSpinning = false;
+            onSpinComplete();
+          } else {
+            currentRotation += remaining * approachSpeed;
+          }
+        } else {
+          /* Constant high-speed spin during coast phase */
+          currentRotation += 0.35 * dt * 60;
+        }
+      }
+
+      drawWheel();
+
+      if (isSpinning) {
+        animFrameId = requestAnimationFrame(gameLoop);
+      } else {
+        animFrameId = null;
+      }
+    }
+
+    function onSpinComplete() {
+      document.getElementById('spinBtn').disabled = false;
+
+      /* Determine which segment the pointer landed on */
+      var sliceAngle = (Math.PI * 2) / currentDisplayChores.length;
+      var normalizedRot = ((-Math.PI / 2 - currentRotation) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+      var landedIdx = Math.floor(normalizedRot / sliceAngle) % currentDisplayChores.length;
+      var landedChore = currentDisplayChores[landedIdx];
+
+      /* Update persistent state */
+      state.totalSpins++;
+      state.lastSpinDate = new Date().toISOString();
+      if (!state.firstSpinDate) state.firstSpinDate = state.lastSpinDate;
+
+      if (!state.choreHits[landedChore.name]) state.choreHits[landedChore.name] = 0;
+      state.choreHits[landedChore.name]++;
+
+      state.seenChores.push(landedChore.name);
+
+      /* Escalate chore flavor based on assignment count */
+      if (landedChore.flavors && landedChore.flavors.length > 1) {
+        var hits = state.choreHits[landedChore.name];
+        var maxLevel = landedChore.flavors.length - 1;
+        var escalation = Math.min(Math.floor(hits / 2), maxLevel);
+        state.escalatedChores[landedChore.name] = escalation;
+      }
+
+      /* Gradually increase rigging — full rigging by spin 30 */
+      state.riggingLevel = Math.min(1, state.totalSpins / 30);
+
+      /* Track confessions */
+      if (landedChore.category === 'confession' && state.confessedChores.indexOf(landedChore.name) === -1) {
+        state.confessedChores.push(landedChore.name);
+      }
+
+      /* Check endgame trigger */
+      if (state.totalSpins >= 30 && state.confessedChores.length >= 3 && !state.finalTriggered) {
+        state.finalTriggered = true;
+        var finalEl = document.getElementById('finalMessage');
+        finalEl.classList.add('visible');
+        /* Delay fade-in for dramatic effect */
+        setTimeout(function() { finalEl.classList.add('faded-in'); }, 100);
+        document.getElementById('spinBtn').textContent = '\u2026';
+        document.body.classList.add('late-stage');
+      }
+
+      /* Get the current flavor for the log */
+      var currentEscalation = state.escalatedChores[landedChore.name] || 0;
+      var flavor = landedChore.flavors ? landedChore.flavors[currentEscalation] : '';
+
+      addLogEntry(landedChore, flavor, currentEscalation);
+      saveState(state);
+      updateSessionInfo();
+      scheduleAmbient(landedChore);
+
+      /* Late-stage visual effects */
+      if (state.totalSpins > 15 && !document.body.classList.contains('late-stage')) {
+        document.body.classList.add('late-stage');
+      }
+    }
+
+    /* ========================================
+       UI UPDATES
+       ======================================== */
+
+    function addLogEntry(chore, flavor, escalation) {
+      var logEntries = document.getElementById('logEntries');
+
+      /* Clear placeholder on first spin */
+      if (state.totalSpins === 1) {
+        logEntries.innerHTML = '';
+      }
+
+      var entry = document.createElement('div');
+      var cls = 'log-entry';
+      if (chore.category === 'confession') cls += ' confession';
+      else if (escalation >= 2) cls += ' whisper';
+      entry.className = cls;
+
+      var flavorCls = 'chore-flavor';
+      if (chore.category === 'confession') flavorCls += ' confession-text';
+      else if (escalation >= 2) flavorCls += ' whisper-text';
+
+      var flavorHtml = flavor ? '<div class="' + flavorCls + '">' + escapeHtml(flavor) + '</div>' : '';
+
+      entry.innerHTML =
+        '<div class="spin-count">Spin #' + state.totalSpins + '</div>' +
+        '<div class="chore-name">' + escapeHtml(chore.name) + '</div>' +
+        flavorHtml;
+
+      logEntries.insertBefore(entry, logEntries.firstChild);
+      logEntries.scrollTop = 0;
+    }
+
+    function escapeHtml(text) {
+      var div = document.createElement('div');
+      div.appendChild(document.createTextNode(text));
+      return div.innerHTML;
+    }
+
+    function showAmbient(text, duration, cssClass) {
+      var el = document.getElementById('ambientMsg');
+      el.textContent = text;
+      el.className = 'ambient-msg visible';
+      if (cssClass) el.classList.add(cssClass);
+
+      if (ambientTimer) clearTimeout(ambientTimer);
+      ambientTimer = setTimeout(function() {
+        el.classList.remove('visible');
+        setTimeout(function() {
+          if (!el.classList.contains('visible')) {
+            el.textContent = '';
+            el.className = 'ambient-msg';
+          }
+        }, 1200);
+      }, duration || 4000);
+    }
+
+    function scheduleAmbient(chore) {
+      setTimeout(function() {
+        if (isSpinning) return;
+
+        var pool;
+        if (chore.category === 'confession') {
+          pool = AMBIENT_CONFESSION;
+        } else if (state.totalSpins > 15) {
+          pool = AMBIENT_WHISPER.concat(AMBIENT_UNSETTLING);
+        } else if (state.totalSpins > 6) {
+          pool = AMBIENT_UNSETTLING.concat(AMBIENT_NORMAL);
+        } else {
+          pool = AMBIENT_NORMAL;
+        }
+
+        var msg = pool[Math.floor(Math.random() * pool.length)];
+        var cls = '';
+        if (chore.category === 'confession') cls = 'confession-text';
+        else if (state.totalSpins > 15) cls = 'whisper-text';
+        showAmbient(msg, 5000, cls);
+      }, 1500 + Math.random() * 2000);
+    }
+
+    function updateSessionInfo() {
+      var el = document.getElementById('sessionInfo');
+      if (state.totalSpins === 0) { el.textContent = ''; return; }
+
+      var firstDate = new Date(state.firstSpinDate);
+      var daysSince = Math.floor((Date.now() - firstDate.getTime()) / (86400000));
+
+      var info = state.totalSpins + ' spin' + (state.totalSpins !== 1 ? 's' : '') + ' total';
+      if (daysSince > 0) info += ' across ' + (daysSince + 1) + ' day' + (daysSince > 0 ? 's' : '');
+      el.textContent = info;
+    }
+
+    /* ========================================
+       INITIALIZATION
+       ======================================== */
+
+    function resetGame() {
+      if (!confirm('Start over? Everything will be forgotten.')) return;
+
+      localStorage.removeItem(STORAGE_KEY);
+      state = defaultState();
+      document.getElementById('logEntries').innerHTML =
+        '<div style="color: var(--muted); font-size: 0.9rem; font-style: italic; padding: 1rem 0;">' +
+        'No chores assigned yet. Spin the wheel.</div>';
+      document.getElementById('finalMessage').classList.remove('visible');
+      document.getElementById('finalMessage').classList.remove('faded-in');
+      document.getElementById('spinBtn').textContent = 'Spin';
+      document.body.classList.remove('late-stage');
+      currentDisplayChores = selectSegmentChores();
+      currentRotation = Math.random() * Math.PI * 2;
+      drawWheel();
+      updateSessionInfo();
+    }
+
+    function init() {
+      /* Track sessions by calendar day */
+      var today = new Date().toDateString();
+      if (state.lastSessionDate !== today) {
+        state.sessionCount = (state.sessionCount || 0) + 1;
+        state.lastSessionDate = today;
+        saveState(state);
+      }
+
+      /* Rebuild wheel with available chores */
+      currentDisplayChores = selectSegmentChores();
+      drawWheel();
+      updateSessionInfo();
+
+      /* Restore late-stage effects for returning players */
+      if (state.totalSpins > 15) {
+        document.body.classList.add('late-stage');
+      }
+      if (state.finalTriggered) {
+        var finalEl = document.getElementById('finalMessage');
+        finalEl.classList.add('visible');
+        finalEl.classList.add('faded-in');
+        document.getElementById('spinBtn').textContent = '\u2026';
+      }
+
+      /* Event listeners */
+      document.getElementById('spinBtn').addEventListener('click', startSpin);
+
+      canvas.addEventListener('click', function() {
+        if (!isSpinning) startSpin();
+      });
+
+      var resetLink = document.getElementById('resetLink');
+      resetLink.addEventListener('click', resetGame);
+      resetLink.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          resetGame();
+        }
+      });
+
+      /* Welcome-back message for returning players */
+      if (state.totalSpins > 0 && !state.finalTriggered) {
+        var firstDate = new Date(state.firstSpinDate);
+        var daysSince = Math.floor((Date.now() - firstDate.getTime()) / 86400000);
+        if (daysSince > 0) {
+          setTimeout(function() {
+            showAmbient(
+              'Welcome back. It\'s been ' + daysSince + ' day' + (daysSince > 1 ? 's' : '') + '. The wheel has been waiting.',
+              5000
+            );
+          }, 1200);
+        }
+      }
+
+      /* Periodic idle ambient messages */
+      if (idleInterval) clearInterval(idleInterval);
+      idleInterval = setInterval(function() {
+        if (!isSpinning && state.totalSpins > 0 && Math.random() < 0.3) {
+          var pool;
+          if (state.totalSpins > 20) pool = AMBIENT_WHISPER;
+          else if (state.totalSpins > 8) pool = AMBIENT_UNSETTLING;
+          else pool = AMBIENT_NORMAL;
+
+          showAmbient(pool[Math.floor(Math.random() * pool.length)], 5000);
+        }
+      }, 25000);
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>

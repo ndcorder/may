@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Forgery Kit</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #13100c;
+    --wall: #1c1710;
+    --surface: #272018;
+    --paper: #f0e8d8;
+    --ink: #2c1e14;
+    --accent: #c8842a;
+    --accent-light: #e8a84a;
+    --muted: #7a6e5e;
+    --border: #3a3228;
+    --success: #5a9a4a;
+    --danger: #c44040;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--paper);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .display {
+    font-family: 'Playfair Display', serif;
+  }
+
+  /* ---- Canvas Frame ---- */
+  .canvas-frame {
+    background: var(--paper);
+    box-shadow:
+      0 0 0 3px #3a3228,
+      0 0 0 7px #2a2218,
+      0 8px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 2px;
+  }
+  .canvas-frame canvas {
+    display: block;
+    cursor: crosshair;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* ---- Tool Buttons ---- */
+  .tool-btn {
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 16px;
+  }
+  .tool-btn:hover {
+    border-color: var(--accent);
+    color: var(--paper);
+  }
+  .tool-btn:focus-visible {
+    outline: 2px solid var(--accent-light);
+    outline-offset: 2px;
+  }
+  .tool-btn.active {
+    border-color: var(--accent);
+    background: rgba(200, 132, 42, 0.15);
+    color: var(--accent-light);
+    box-shadow: 0 0 12px rgba(200, 132, 42, 0.2);
+  }
+
+  /* ---- Color Swatches ---- */
+  .color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .color-swatch:hover { transform: scale(1.15); }
+  .color-swatch:focus-visible {
+    outline: 2px solid var(--accent-light);
+    outline-offset: 2px;
+  }
+  .color-swatch.active {
+    border-color: var(--accent-light);
+    box-shadow: 0 0 8px rgba(200, 132, 42, 0.4);
+  }
+
+  /* ---- Buttons ---- */
+  .btn {
+    padding: 10px 24px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--accent-light);
+    outline-offset: 2px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  .btn-primary:hover {
+    background: var(--accent-light);
+    transform: translateY(-1px);
+  }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--paper);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  /* ---- Range Input ---- */
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  input[type="range"]:focus-visible {
+    outline: 2px solid var(--accent-light);
+  }
+
+  /* ---- Screen States ---- */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ---- Animations ---- */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.5; }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes gentleFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  @keyframes strokeDraw {
+    from { stroke-dashoffset: 24; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  .anim-fade-in  { animation: fadeIn 0.6s ease-out both; }
+  .anim-slide-up { animation: slideUp 0.5s ease-out both; }
+  .anim-pulse    { animation: pulse 1.5s ease-in-out infinite; }
+
+  /* ---- Dust Particles ---- */
+  .dust {
+    position: absolute;
+    background: rgba(200, 132, 42, 0.12);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* ---- Timer Bar ---- */
+  .timer-bar {
+    height: 4px;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+  }
+
+  /* ---- Progress Dots ---- */
+  .progress-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.3s;
+  }
+  .progress-dot.completed { background: var(--accent); }
+  .progress-dot.current {
+    background: var(--accent-light);
+    box-shadow: 0 0 8px rgba(200, 132, 42, 0.5);
+  }
+
+  /* ---- Toast ---- */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    padding: 12px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--paper);
+    font-size: 14px;
+    z-index: 1000;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ---- Gallery Cards ---- */
+  .gallery-card {
+    background: var(--wall);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .gallery-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+  .gallery-card img { display: block; width: 100%; }
+
+  /* ---- Scrub Comparison ---- */
+  .scrub-container {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: ew-resize;
+    display: inline-block;
+    max-width: 100%;
+  }
+  .scrub-container canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+  .scrub-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(200, 132, 42, 0.6);
+  }
+  .scrub-handle {
+    position: absolute;
+    top: 50%;
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ---- Deviation Bars ---- */
+  .deviation-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .deviation-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s ease-out;
+  }
+
+  /* ---- Twist Text ---- */
+  .twist-text {
+    background: linear-gradient(90deg, var(--paper), var(--accent-light), var(--paper));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 6s linear infinite;
+  }
+
+  /* ---- Accessibility ---- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 520px) {
+    .canvas-frame canvas {
+      width: 320px !important;
+      height: 320px !important;
+    }
+    #scrub-canvas {
+      width: 320px !important;
+      height: 320px !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== TITLE SCREEN ==================== -->
+<div id="screen-title" class="screen active flex-col items-center justify-center relative">
+  <div id="dust-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+  <div class="text-center relative z-10 px-4">
+    <p class="text-sm tracking-[0.3em] uppercase mb-4" style="color: var(--muted);">
+      A game of memory &amp; deception
+    </p>
+    <h1 class="display text-5xl md:text-8xl font-black mb-2" style="color: var(--paper);">
+      The Forgery Kit
+    </h1>
+    <div class="w-24 h-0.5 mx-auto my-6" style="background: var(--accent);"></div>
+    <p class="text-lg max-w-md mx-auto mb-10" style="color: var(--muted); font-family: 'Playfair Display', serif; font-style: italic;">
+      Study the painting. Memorize every shape, every color.<br>
+      Then recreate it from memory.<br>
+      <span style="color: var(--accent);">Your mistakes will define you.</span>
+    </p>
+    <button id="btn-start" class="btn btn-primary text-lg px-10 py-3" aria-label="Begin the game">
+      Begin
+    </button>
+    <div class="mt-8 text-xs" style="color: var(--border);">
+      <span class="mr-4">
+        <kbd class="px-1.5 py-0.5 rounded text-xs" style="background: var(--surface); border: 1px solid var(--border);">1</kbd>
+        <kbd class="px-1.5 py-0.5 rounded text-xs" style="background: var(--surface); border: 1px solid var(--border);">2</kbd>
+        <kbd class="px-1.5 py-0.5 rounded text-xs" style="background: var(--surface); border: 1px solid var(--border);">3</kbd> Switch tools
+      </span>
+      <span>
+        <kbd class="px-1.5 py-0.5 rounded text-xs" style="background: var(--surface); border: 1px solid var(--border);">Ctrl+Z</kbd> Undo
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== VIEWING SCREEN ==================== -->
+<div id="screen-viewing" class="screen flex-col items-center justify-center relative">
+  <div class="absolute top-0 left-0 right-0 p-4">
+    <div class="flex items-center justify-between max-w-xl mx-auto">
+      <div class="flex items-center gap-2">
+        <span class="text-sm" style="color: var(--muted);">Round</span>
+        <span id="viewing-round" class="display text-xl font-bold" style="color: var(--accent);"></span>
+        <span class="text-sm" style="color: var(--muted);">/ 10</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <i class="fa-regular fa-clock text-sm" style="color: var(--muted);"></i>
+        <span id="viewing-timer" class="display text-xl font-bold" style="color: var(--paper);"></span>
+      </div>
+    </div>
+    <div class="w-full max-w-xl mx-auto mt-2 rounded" style="background: var(--border);">
+      <div id="timer-bar" class="timer-bar" style="width: 100%;"></div>
+    </div>
+  </div>
+  <div class="text-center">
+    <p class="text-sm mb-4 anim-pulse" style="color: var(--muted);">Study the original carefully</p>
+    <div class="canvas-frame inline-block">
+      <canvas id="viewing-canvas" width="450" height="450"></canvas>
+    </div>
+    <p id="viewing-title" class="display text-lg mt-4 italic" style="color: var(--muted);"></p>
+  </div>
+</div>
+
+<!-- ==================== PAINTING SCREEN ==================== -->
+<div id="screen-painting" class="screen flex-col items-center" style="min-height: 100vh; padding: 16px;">
+  <div class="w-full max-w-4xl">
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+      <div class="flex items-center gap-3">
+        <span class="text-sm" style="color: var(--muted);">Round</span>
+        <span id="painting-round" class="display text-xl font-bold" style="color: var(--accent);"></span>
+        <span class="text-sm" style="color: var(--muted);">/ 10</span>
+      </div>
+      <div class="flex gap-1.5" id="progress-dots"></div>
+      <button id="btn-finish" class="btn btn-primary">
+        <i class="fa-solid fa-check mr-2"></i>Submit Forgery
+      </button>
+    </div>
+
+    <!-- Canvas & Tools -->
+    <div class="flex flex-col md:flex-row gap-4 items-start justify-center">
+      <!-- Tools Panel -->
+      <div class="flex md:flex-col gap-3 p-3 rounded-lg" style="background: var(--wall); border: 1px solid var(--border);">
+        <div class="flex md:flex-col gap-2">
+          <button class="tool-btn active" data-tool="circle" title="Circle (1)" aria-label="Circle tool">
+            <i class="fa-regular fa-circle"></i>
+          </button>
+          <button class="tool-btn" data-tool="rect" title="Rectangle (2)" aria-label="Rectangle tool">
+            <i class="fa-regular fa-square"></i>
+          </button>
+          <button class="tool-btn" data-tool="triangle" title="Triangle (3)" aria-label="Triangle tool">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polygon points="8,2 14,14 2,14"/>
+            </svg>
+          </button>
+        </div>
+        <div class="w-full h-px md:w-px md:h-6" style="background: var(--border);"></div>
+        <div class="flex md:flex-col gap-2 flex-wrap" id="color-palette"></div>
+        <div class="w-full h-px md:w-px md:h-6" style="background: var(--border);"></div>
+        <div class="flex md:flex-col items-center gap-1" style="min-width: 60px;">
+          <span class="text-xs" style="color: var(--muted);">Size</span>
+          <input type="range" id="size-slider" min="8" max="120" value="35" class="md:w-auto" style="width: 80px;" aria-label="Brush size">
+          <span id="size-label" class="text-xs" style="color: var(--muted);">35</span>
+        </div>
+        <div class="w-full h-px md:w-px md:h-6" style="background: var(--border);"></div>
+        <button class="tool-btn" id="btn-undo" title="Undo (Ctrl+Z)" aria-label="Undo last shape">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+        <button class="tool-btn" id="btn-clear" title="Clear All" aria-label="Clear canvas">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+
+      <!-- Canvas -->
+      <div class="relative">
+        <div class="canvas-frame">
+          <canvas id="painting-canvas" width="450" height="450"></canvas>
+        </div>
+        <div id="shape-count" class="absolute bottom-2 right-3 text-xs px-2 py-1 rounded" style="background: rgba(0,0,0,0.6); color: var(--muted);">
+          0 shapes
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCORING SCREEN ==================== -->
+<div id="screen-scoring" class="screen flex-col items-center justify-center" style="padding: 32px;">
+  <div class="w-full max-w-3xl">
+    <div class="text-center mb-8 anim-slide-up">
+      <p class="text-sm tracking-[0.2em] uppercase mb-2" style="color: var(--muted);">Forgery Assessment</p>
+      <h2 id="score-round-title" class="display text-3xl font-bold" style="color: var(--paper);"></h2>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-6 items-center justify-center mb-8 anim-slide-up" style="animation-delay: 0.2s;">
+      <div class="text-center">
+        <p class="text-xs uppercase tracking-wider mb-2" style="color: var(--muted);">Original</p>
+        <div class="canvas-frame inline-block">
+          <canvas id="score-original" width="220" height="220"></canvas>
+        </div>
+      </div>
+      <div class="text-3xl" style="color: var(--border);">
+        <i class="fa-solid fa-arrows-left-right"></i>
+      </div>
+      <div class="text-center">
+        <p class="text-xs uppercase tracking-wider mb-2" style="color: var(--muted);">Your Forgery</p>
+        <div class="canvas-frame inline-block">
+          <canvas id="score-forgery" width="220" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mb-6 anim-slide-up" style="animation-delay: 0.4s;">
+      <div class="inline-block px-6 py-3 rounded-lg" style="background: var(--surface); border: 1px solid var(--border);">
+        <span class="text-sm" style="color: var(--muted);">Accuracy</span>
+        <span id="score-value" class="display text-2xl font-bold ml-3" style="color: var(--accent);"></span>
+      </div>
+    </div>
+
+    <div id="deviation-bars" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 anim-slide-up" style="animation-delay: 0.6s;"></div>
+
+    <div id="score-commentary" class="text-center mb-8 anim-slide-up" style="animation-delay: 0.8s;">
+      <p class="display text-lg italic max-w-xl mx-auto" style="color: var(--muted);"></p>
+    </div>
+
+    <div class="text-center anim-slide-up" style="animation-delay: 1s;">
+      <button id="btn-next" class="btn btn-primary text-lg px-8 py-3">Next Round</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== GALLERY SCREEN ==================== -->
+<div id="screen-gallery" class="screen flex-col items-center" style="padding: 32px 16px; min-height: 100vh;">
+  <div class="w-full max-w-5xl">
+    <div class="text-center mb-10 anim-fade-in">
+      <p class="text-sm tracking-[0.3em] uppercase mb-3" style="color: var(--muted);">The Exhibition</p>
+      <h2 class="display text-4xl md:text-5xl font-black mb-4" style="color: var(--paper);">
+        Your Hand, Your Eye
+      </h2>
+      <div class="w-16 h-0.5 mx-auto mb-6" style="background: var(--accent);"></div>
+      <p id="gallery-intro" class="text-lg max-w-2xl mx-auto italic" style="color: var(--muted); font-family: 'Playfair Display', serif;"></p>
+    </div>
+
+    <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12"></div>
+
+    <div id="style-profile" class="p-6 rounded-lg mb-10" style="background: var(--wall); border: 1px solid var(--border);"></div>
+
+    <div id="scrub-section" class="text-center mb-12">
+      <h3 class="display text-2xl font-bold mb-2" style="color: var(--paper);">Reveal the Difference</h3>
+      <p class="text-sm mb-4" style="color: var(--muted);">Drag left and right to compare</p>
+      <div class="scrub-container">
+        <canvas id="scrub-canvas" width="500" height="500"></canvas>
+        <div id="scrub-line" class="scrub-line" style="left: 50%;"></div>
+        <div id="scrub-handle" class="scrub-handle" style="left: 50%;">
+          <i class="fa-solid fa-arrows-left-right text-xs" style="color: var(--bg);"></i>
+        </div>
+      </div>
+      <p id="scrub-label" class="text-xs mt-3" style="color: var(--muted);"></p>
+    </div>
+
+    <div id="twist-section" class="text-center py-12 px-6 rounded-lg mb-8" style="background: linear-gradient(to top, rgba(200,132,42,0.06), transparent); border: 1px solid var(--border);">
+      <div class="w-12 h-0.5 mx-auto mb-6" style="background: var(--accent);"></div>
+      <p id="twist-text" class="display text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed twist-text"></p>
+      <div class="w-12 h-0.5 mx-auto mt-6 mb-8" style="background: var(--accent);"></div>
+      <button id="btn-restart" class="btn btn-secondary">
+        <i class="fa-solid fa-rotate-right mr-2"></i>Begin Again
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+// ============================================================
+// CONSTANTS & GAME STATE
+// ============================================================
+const CANVAS_SIZE = 450;
+const MAX_ROUNDS  = 10;
+const VIEWING_TIMES = [8, 8, 9, 9, 10, 10, 11, 12, 13, 14];
+
+const state = {
+  currentRound: 0,
+  currentScreen: 'title',
+  original: null,
+  forgeries: [],
+  originals: [],
+  roundScores: [],
+  tools: { shape: 'circle', color: '#c44040', size: 35 },
+  playerShapes: [],
+  timerInterval: null,
+  timeLeft: 0,
+};
+
+// Accumulated style profile across all rounds
+const profile = {
+  sizeBiases:   [],
+  posXOffsets:  [],
+  posYOffsets:  [],
+  satShifts:    [],
+  brightShifts: [],
+  hueShifts:    [],
+};
+
+const PALETTE = [
+  '#c44040', '#e88030', '#e8c840', '#50a848', '#4088b8',
+  '#6848a8', '#b04888', '#f0e8d8', '#888070', '#282018'
+];
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+function rand(min, max)    { return min + Math.random() * (max - min); }
+function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+function pick(arr)         { return arr[Math.floor(Math.random() * arr.length)]; }
+function clamp(v, lo, hi)  { return Math.max(lo, Math.min(hi, v)); }
+function dist(x1, y1, x2, y2) {
+  return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
+}
+
+/** Seeded LCG for reproducible originals */
+function seededRandom(seed) {
+  let s = seed;
+  return function () {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+// ============================================================
+// COLOR CONVERSIONS
+// ============================================================
+function hexToRGB(hex) {
+  return {
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  };
+}
+
+function hexToHSL(hex) {
+  let r = parseInt(hex.slice(1, 3), 16) / 255;
+  let g = parseInt(hex.slice(3, 5), 16) / 255;
+  let b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r)      h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (max === g) h = ((b - r) / d + 2) / 6;
+    else                h = ((r - g) / d + 4) / 6;
+  }
+  return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+function hslToHex(h, s, l) {
+  h = ((h % 360) + 360) % 360;
+  s = clamp(s, 0, 100) / 100;
+  l = clamp(l, 0, 100) / 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * clamp(color, 0, 1)).toString(16).padStart(2, '0');
+  };
+  return '#' + f(0) + f(8) + f(4);
+}
+
+// ============================================================
+// ART GENERATION ENGINE
+// ============================================================
+function generateOriginal(round) {
+  const S  = CANVAS_SIZE;
+  const cx = S / 2, cy = S / 2;
+  let shapes  = [];
+  let title   = '';
+  let bgColor = '#f0e8d8';
+
+  const seed = round * 7919 + 42;
+  const sr   = seededRandom(seed);
+  const sRand = (min, max) => min + sr() * (max - min);
+  const sPick = (arr) => arr[Math.floor(sr() * arr.length)];
+
+  // Each round has its own compositional logic
+  if (round === 1) {
+    title = 'Three Spheres';
+    shapes.push({ type: 'circle', x: cx - 100, y: cy,      size: 50, color: '#c44040' });
+    shapes.push({ type: 'circle', x: cx + 100, y: cy,      size: 50, color: '#4088b8' });
+    shapes.push({ type: 'circle', x: cx,       y: cy - 90, size: 40, color: '#e8c840' });
+  }
+  else if (round === 2) {
+    title = 'Warm Afternoon';
+    const pts = [
+      { x: cx - 80, y: cy - 60, c: '#c44040' },
+      { x: cx + 90, y: cy - 40, c: '#e88030' },
+      { x: cx - 40, y: cy + 80, c: '#e8c840' },
+      { x: cx + 60, y: cy + 70, c: '#b04848' },
+      { x: cx + 5,  y: cy - 5,  c: '#d87030' },
+    ];
+    for (const p of pts) {
+      shapes.push({
+        type: sPick(['circle', 'circle', 'rect']),
+        x: p.x, y: p.y,
+        size: sRand(32, 48),
+        color: p.c,
+      });
+    }
+  }
+  else if (round === 3) {
+    title = 'Composition No. 3';
+    for (let i = 0; i < 7; i++) {
+      shapes.push({
+        type: sPick(['circle', 'rect', 'triangle']),
+        x: sRand(80, S - 80),
+        y: sRand(80, S - 80),
+        size: sRand(25, 55),
+        color: hslToHex(sRand(0, 360), sRand(50, 70), sRand(40, 60)),
+      });
+    }
+  }
+  else if (round === 4) {
+    title = 'Study in Green';
+    for (let i = 0; i < 8; i++) {
+      shapes.push({
+        type: 'circle',
+        x: sRand(60, S - 60),
+        y: sRand(60, S - 60),
+        size: sRand(20, 48),
+        color: hslToHex(sRand(80, 160), sRand(35, 75), sRand(28, 58)),
+      });
+    }
+  }
+  else if (round === 5) {
+    title = 'Tension';
+    const hBase = sRand(0, 360);
+    shapes.push({ type: 'rect',     x: cx,       y: cy,       size: 120, color: hslToHex(hBase, 50, 40) });
+    shapes.push({ type: 'circle',   x: cx - 80,  y: cy - 60,  size: 50,  color: hslToHex(hBase + 120, 70, 55) });
+    shapes.push({ type: 'circle',   x: cx + 80,  y: cy + 60,  size: 50,  color: hslToHex(hBase + 240, 70, 55) });
+    shapes.push({ type: 'triangle', x: cx + 60,  y: cy - 80,  size: 40,  color: hslToHex(hBase + 60, 65, 50) });
+    shapes.push({ type: 'triangle', x: cx - 60,  y: cy + 80,  size: 35,  color: hslToHex(hBase + 180, 65, 50) });
+  }
+  else if (round === 6) {
+    title = 'Night Music';
+    bgColor = '#e8e0d0';
+    for (let i = 0; i < 12; i++) {
+      shapes.push({
+        type: sPick(['circle', 'circle', 'rect', 'triangle']),
+        x: sRand(50, S - 50),
+        y: sRand(50, S - 50),
+        size: sRand(15, 48),
+        color: hslToHex(sRand(200, 280), sRand(30, 70), sRand(20, 55)),
+      });
+    }
+  }
+  else if (round === 7) {
+    title = 'Suspended';
+    for (let i = 0; i < 10; i++) {
+      shapes.push({
+        type: sPick(['circle', 'rect', 'triangle']),
+        x: sRand(70, S - 70),
+        y: sRand(50, S * 0.5),
+        size: sRand(20, 50),
+        color: hslToHex(sRand(25, 55), sRand(50, 80), sRand(45, 70)),
+      });
+    }
+  }
+  else if (round === 8) {
+    title = 'Grid Study';
+    const h = sRand(0, 360);
+    const gx = [S * 0.3, S * 0.55, S * 0.75];
+    const gy = [S * 0.35, S * 0.65];
+    for (const x of gx) {
+      for (const y of gy) {
+        shapes.push({
+          type: 'rect',
+          x: x + sRand(-15, 15),
+          y: y + sRand(-15, 15),
+          size: sRand(35, 58),
+          color: hslToHex(h + sRand(-30, 30), sRand(55, 80), sRand(38, 62)),
+        });
+      }
+    }
+    shapes.push({ type: 'circle', x: cx, y: cy, size: 30, color: hslToHex(h + 180, 70, 50) });
+  }
+  else if (round === 9) {
+    title = 'The Burden';
+    for (let i = 0; i < 14; i++) {
+      const isHeavy = i < 8;
+      shapes.push({
+        type: sPick(['circle', 'rect']),
+        x: sRand(50, S - 50),
+        y: isHeavy ? sRand(S * 0.6, S - 40) : sRand(40, S * 0.4),
+        size: isHeavy ? sRand(30, 55) : sRand(15, 30),
+        color: isHeavy
+          ? hslToHex(sRand(0, 40),   sRand(50, 70), sRand(28, 48))
+          : hslToHex(sRand(180, 240), sRand(40, 60), sRand(50, 68)),
+      });
+    }
+  }
+  else if (round === 10) {
+    title = 'The Culmination';
+    const hBase = sRand(0, 360);
+    shapes.push({ type: 'circle',   x: cx,       y: cy + 40,  size: 70, color: hslToHex(hBase, 55, 45) });
+    shapes.push({ type: 'rect',     x: cx - 110, y: cy - 80,  size: 55, color: hslToHex(hBase + 120, 65, 50) });
+    shapes.push({ type: 'rect',     x: cx + 110, y: cy - 80,  size: 50, color: hslToHex(hBase + 240, 65, 50) });
+    shapes.push({ type: 'triangle', x: cx - 70,  y: cy + 100, size: 40, color: hslToHex(hBase + 60, 60, 55) });
+    shapes.push({ type: 'triangle', x: cx + 70,  y: cy + 100, size: 45, color: hslToHex(hBase + 300, 60, 55) });
+    for (let i = 0; i < 6; i++) {
+      shapes.push({
+        type: 'circle',
+        x: sRand(60, S - 60),
+        y: sRand(60, S - 60),
+        size: sRand(12, 22),
+        color: hslToHex(hBase + sRand(0, 360), sRand(60, 85), sRand(48, 70)),
+      });
+    }
+  }
+
+  return { shapes, bgColor, title };
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+function renderShapes(ctx, shapes, bgColor, size) {
+  ctx.clearRect(0, 0, size, size);
+  ctx.fillStyle = bgColor || '#f0e8d8';
+  ctx.fillRect(0, 0, size, size);
+  const scale = size / CANVAS_SIZE;
+  for (const shape of shapes) {
+    drawShapeScaled(ctx, shape, scale);
+  }
+}
+
+function drawShapeScaled(ctx, shape, scale) {
+  const sx = shape.x * scale;
+  const sy = shape.y * scale;
+  const sr = Math.max(2, shape.size * scale);
+
+  ctx.fillStyle   = shape.color;
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+  ctx.lineWidth   = Math.max(1, 1.5 * scale);
+
+  if (shape.type === 'circle') {
+    ctx.beginPath();
+    ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  else if (shape.type === 'rect') {
+    ctx.beginPath();
+    ctx.rect(sx - sr, sy - sr, sr * 2, sr * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  else if (shape.type === 'triangle') {
+    ctx.beginPath();
+    ctx.moveTo(sx, sy - sr);
+    ctx.lineTo(sx + sr * 0.95, sy + sr * 0.75);
+    ctx.lineTo(sx - sr * 0.95, sy + sr * 0.75);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
+function canvasToDataURL(shapes, bgColor, size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  renderShapes(c.getContext('2d'), shapes, bgColor, size);
+  return c.toDataURL();
+}
+
+// ============================================================
+// SCORING ENGINE
+// ============================================================
+function scoreForgery(originalShapes, playerShapes, bgColor) {
+  const bg = bgColor || '#f0e8d8';
+
+  // Pixel-level comparison at canvas resolution
+  const tmpO = document.createElement('canvas');
+  tmpO.width = tmpO.height = CANVAS_SIZE;
+  renderShapes(tmpO.getContext('2d'), originalShapes, bg, CANVAS_SIZE);
+  const dO = tmpO.getContext('2d').getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE).data;
+
+  const tmpP = document.createElement('canvas');
+  tmpP.width = tmpP.height = CANVAS_SIZE;
+  renderShapes(tmpP.getContext('2d'), playerShapes, bg, CANVAS_SIZE);
+  const dP = tmpP.getContext('2d').getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE).data;
+
+  let totalDiff  = 0;
+  let compPixels = 0;
+  const BG_THRESH = 238;
+
+  for (let i = 0; i < dO.length; i += 4) {
+    const isBg1 = dO[i] > BG_THRESH && dO[i + 1] > BG_THRESH && dO[i + 2] > BG_THRESH;
+    const isBg2 = dP[i] > BG_THRESH && dP[i + 1] > BG_THRESH && dP[i + 2] > BG_THRESH;
+
+    if (!isBg1 || !isBg2) {
+      const diff = (
+        Math.abs(dO[i]     - dP[i])     +
+        Math.abs(dO[i + 1] - dP[i + 1]) +
+        Math.abs(dO[i + 2] - dP[i + 2])
+      ) / (3 * 255);
+      totalDiff  += diff;
+      compPixels += 1;
+    }
+  }
+
+  const avgDiff = compPixels > 0 ? totalDiff / compPixels : 1;
+  const score   = Math.max(0, Math.round((1 - avgDiff) * 100));
+
+  const devs = analyzeDeviations(originalShapes, playerShapes);
+
+  return { score, avgDiff, devs };
+}
+
+function analyzeDeviations(origShapes, playShapes) {
+  const used    = new Set();
+  const matches = [];
+
+  // Greedy nearest-neighbour matching
+  for (const os of origShapes) {
+    let bestDist = Infinity, bestIdx = -1;
+    for (let j = 0; j < playShapes.length; j++) {
+      if (used.has(j)) continue;
+      const d = dist(os.x, os.y, playShapes[j].x, playShapes[j].y);
+      if (d < bestDist) { bestDist = d; bestIdx = j; }
+    }
+
+    if (bestIdx >= 0 && bestDist < CANVAS_SIZE * 0.28) {
+      used.add(bestIdx);
+      const ps   = playShapes[bestIdx];
+      const ohsl = hexToHSL(os.color);
+      const phsl = hexToHSL(ps.color);
+
+      matches.push({
+        sizeBias:    (ps.size - os.size) / Math.max(1, os.size),
+        posX:        (ps.x - os.x) / CANVAS_SIZE,
+        posY:        (ps.y - os.y) / CANVAS_SIZE,
+        satShift:    (phsl.s - ohsl.s) / 100,
+        brightShift: (phsl.l - ohsl.l) / 100,
+        hueShift:    Math.min(
+                        Math.abs(phsl.h - ohsl.h),
+                        360 - Math.abs(phsl.h - ohsl.h)
+                      ) / 180,
+      });
+    }
+  }
+
+  if (matches.length === 0) {
+    return {
+      matchCount: 0,
+      sizeBias: 0, posX: 0, posY: 0,
+      satShift: 0, brightShift: 0, hueShift: 0,
+    };
+  }
+
+  const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+  return {
+    matchCount:   matches.length,
+    sizeBias:     avg(matches.map(m => m.sizeBias)),
+    posX:         avg(matches.map(m => m.posX)),
+    posY:         avg(matches.map(m => m.posY)),
+    satShift:     avg(matches.map(m => m.satShift)),
+    brightShift:  avg(matches.map(m => m.brightShift)),
+    hueShift:     avg(matches.map(m => m.hueShift)),
+  };
+}
+
+// ============================================================
+// STYLE PROFILE
+// ============================================================
+function updateProfile(devs) {
+  if (devs.matchCount === 0) return;
+  profile.sizeBiases.push(devs.sizeBias);
+  profile.posXOffsets.push(devs.posX);
+  profile.posYOffsets.push(devs.posY);
+  profile.satShifts.push(devs.satShift);
+  profile.brightShifts.push(devs.brightShift);
+  profile.hueShifts.push(devs.hueShift);
+}
+
+function avgArr(arr) {
+  return arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+}
+
+function getProfileSummary() {
+  const n = profile.sizeBiases.length;
+  if (n === 0) {
+    return {
+      traits: [], summary: 'Not enough data yet.',
+      sizeLabel: 'Unknown', posLabel: 'Unknown',
+      satLabel: 'Unknown', brightLabel: 'Unknown',
+      avgSize: 0, avgPX: 0, avgPY: 0, avgSat: 0, avgBright: 0,
+    };
+  }
+
+  const avgSize   = avgArr(profile.sizeBiases);
+  const avgPX     = avgArr(profile.posXOffsets);
+  const avgPY     = avgArr(profile.posYOffsets);
+  const avgSat    = avgArr(profile.satShifts);
+  const avgBright = avgArr(profile.brightShifts);
+
+  const traits = [];
+
+  if (avgSize > 0.08)      traits.push('you consistently enlarge your shapes');
+  else if (avgSize < -0.08) traits.push('you compress shapes smaller than the original');
+
+  if (Math.abs(avgPX) > 0.02 || Math.abs(avgPY) > 0.02) {
+    const xDir = avgPX > 0 ? 'rightward' : 'leftward';
+    const yDir = avgPY > 0 ? 'downward' : 'upward';
+    traits.push('your compositions drift ' + xDir + ' and ' + yDir);
+  }
+
+  if (avgSat > 0.05)       traits.push('your palette grows more vivid with each round');
+  else if (avgSat < -0.05)  traits.push('you mute colors, pulling them toward earth');
+
+  if (avgBright > 0.05)       traits.push('you paint lighter than the original');
+  else if (avgBright < -0.05)  traits.push('your tones darken over time');
+
+  const sizeLabel   = avgSize > 0.08 ? 'Expansive' : avgSize < -0.08 ? 'Economical' : 'Faithful';
+  const posLabel    = (Math.abs(avgPX) > 0.02 || Math.abs(avgPY) > 0.02) ? 'Drifting' : 'Centered';
+  const satLabel    = avgSat > 0.05 ? 'Vivid' : avgSat < -0.05 ? 'Muted' : 'Faithful';
+  const brightLabel = avgBright > 0.05 ? 'Luminous' : avgBright < -0.05 ? 'Shadowed' : 'Balanced';
+
+  const summary = traits.length > 0
+    ? 'Across ' + n + ' rounds, ' + traits.join(', ') + '. These are not flaws — they are the beginnings of a signature.'
+    : 'Across ' + n + ' rounds, your eye proved remarkably faithful to the originals. A precision that is itself a style.';
+
+  return {
+    traits, summary, sizeLabel, posLabel, satLabel, brightLabel,
+    avgSize, avgPX, avgPY, avgSat, avgBright,
+  };
+}
+
+// ============================================================
+// COMMENTARY ENGINE
+// ============================================================
+function getCommentary(round, score, devs) {
+  const poolEarly = [
+    'The shapes are there, but the hand has its own ideas.',
+    'Close enough to fool a casual glance.',
+    'The memory betrays you — or sets you free.',
+    'An imperfect copy. Something is emerging.',
+  ];
+  const poolMid = [
+    'A style crystallizes from repetition.',
+    'Your hand is developing a preference.',
+    'Mistakes repeated become decisions.',
+    'The forgery is becoming more interesting than the original.',
+  ];
+  const poolLate = [
+    'You are no longer copying. You are interpreting.',
+    'The original was just a prompt.',
+    'A master forger does not replicate — they channel.',
+    'Your forgeries could stand alone as originals.',
+  ];
+
+  let pool;
+  if      (round <= 3) pool = poolEarly;
+  else if (round <= 7) pool = poolMid;
+  else                 pool = poolLate;
+
+  let comment = pool[(round - 1) % pool.length];
+
+  // Layer specific deviation observations
+  if (devs.matchCount > 0) {
+    if (devs.sizeBias > 0.18) {
+      comment += ' Everything slightly too large — as if the painting wanted to be more than it was.';
+    }
+    else if (devs.sizeBias < -0.18) {
+      comment += ' Everything slightly tighter. A hand that holds itself back.';
+    }
+    if (Math.abs(devs.posX) > 0.04 || Math.abs(devs.posY) > 0.04) {
+      comment += ' Notice how the composition shifts under your hand.';
+    }
+    if (devs.satShift > 0.1) {
+      comment += ' The colors sing louder than the original dared.';
+    }
+    else if (devs.satShift < -0.1) {
+      comment += ' The palette softens, as if seen through morning fog.';
+    }
+  }
+
+  return comment;
+}
+
+// ============================================================
+// SCREEN MANAGEMENT
+// ============================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + name);
+  if (el) {
+    el.classList.add('active');
+    el.scrollTop = 0;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const focusTarget = el.querySelector('button, [tabindex]');
+    if (focusTarget) focusTarget.focus();
+  }
+  state.currentScreen = name;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// VIEWING PHASE
+// ============================================================
+function startViewing() {
+  const round = state.currentRound;
+  state.original     = generateOriginal(round);
+  state.playerShapes = [];
+
+  document.getElementById('viewing-round').textContent = round;
+  document.getElementById('viewing-title').textContent  = '"' + state.original.title + '"';
+
+  const vc = document.getElementById('viewing-canvas');
+  renderShapes(vc.getContext('2d'), state.original.shapes, state.original.bgColor, CANVAS_SIZE);
+
+  showScreen('viewing');
+
+  // Timer countdown
+  state.timeLeft = VIEWING_TIMES[round - 1];
+  const totalTime = state.timeLeft;
+  updateTimerDisplay();
+
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    state.timeLeft -= 0.1;
+    if (state.timeLeft <= 0) {
+      state.timeLeft = 0;
+      clearInterval(state.timerInterval);
+      state.timerInterval = null;
+
+      // Brief cinematic fade before the painting phase
+      vc.style.transition = 'opacity 0.3s';
+      vc.style.opacity = '0';
+      setTimeout(() => {
+        vc.style.opacity = '1';
+        vc.style.transition = '';
+        startPainting();
+      }, 400);
+    }
+    updateTimerDisplay();
+    const pct = clamp((state.timeLeft / totalTime) * 100, 0, 100);
+    document.getElementById('timer-bar').style.width = pct + '%';
+    document.getElementById('timer-bar').style.background =
+      state.timeLeft < 3 ? 'var(--danger)' : 'var(--accent)';
+  }, 100);
+}
+
+function updateTimerDisplay() {
+  document.getElementById('viewing-timer').textContent =
+    Math.ceil(Math.max(0, state.timeLeft)) + 's';
+}
+
+// ============================================================
+// PAINTING PHASE
+// ============================================================
+function startPainting() {
+  document.getElementById('painting-round').textContent = state.currentRound;
+
+  // Progress dots
+  const dotsEl = document.getElementById('progress-dots');
+  dotsEl.innerHTML = '';
+  for (let i = 1; i <= MAX_ROUNDS; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot';
+    if (i < state.currentRound) dot.classList.add('completed');
+    if (i === state.currentRound) dot.classList.add('current');
+    dotsEl.appendChild(dot);
+  }
+
+  // Clear canvas
+  const pc = document.getElementById('painting-canvas');
+  renderShapes(pc.getContext('2d'), [], state.original.bgColor, CANVAS_SIZE);
+
+  showScreen('painting');
+  updateShapeCount();
+}
+
+function updateShapeCount() {
+  const n = state.playerShapes.length;
+  document.getElementById('shape-count').textContent =
+    n + ' shape' + (n !== 1 ? 's' : '');
+}
+
+function redrawPaintingCanvas(previewX, previewY) {
+  const pc = document.getElementById('painting-canvas');
+  renderShapes(pc.getContext('2d'), state.playerShapes, state.original.bgColor, CANVAS_SIZE);
+  updateShapeCount();
+
+  // Draw ghost preview at cursor position
+  if (previewX !== undefined && previewY !== undefined) {
+    const ctx = pc.getContext('2d');
+    const sz  = state.tools.size;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(200,132,42,0.5)';
+    ctx.fillStyle   = state.tools.color + '20';
+    ctx.lineWidth   = 1.5;
+    ctx.setLineDash([5, 5]);
+
+    if (state.tools.shape === 'circle') {
+      ctx.beginPath();
+      ctx.arc(previewX, previewY, sz, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    else if (state.tools.shape === 'rect') {
+      ctx.beginPath();
+      ctx.rect(previewX - sz, previewY - sz, sz * 2, sz * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    else if (state.tools.shape === 'triangle') {
+      ctx.beginPath();
+      ctx.moveTo(previewX, previewY - sz);
+      ctx.lineTo(previewX + sz * 0.95, previewY + sz * 0.75);
+      ctx.lineTo(previewX - sz * 0.95, previewY + sz * 0.75);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+// ============================================================
+// SCORING PHASE
+// ============================================================
+function startScoring() {
+  const round     = state.currentRound;
+  const origShapes = state.original.shapes;
+  const playShapes = [...state.playerShapes];
+  const bgColor   = state.original.bgColor;
+
+  // Save image data for gallery
+  const origDataURL = canvasToDataURL(origShapes, bgColor, CANVAS_SIZE);
+  const forgDataURL = canvasToDataURL(playShapes, bgColor, CANVAS_SIZE);
+
+  state.originals.push({
+    shapes: origShapes,
+    dataURL: origDataURL,
+    bgColor: bgColor,
+    title: state.original.title,
+  });
+  state.forgeries.push({
+    shapes: playShapes,
+    dataURL: forgDataURL,
+  });
+
+  // Compute score
+  const result = scoreForgery(origShapes, playShapes, bgColor);
+  state.roundScores.push(result);
+  updateProfile(result.devs);
+
+  // Render side-by-side comparison
+  const scoreOrig = document.getElementById('score-original');
+  renderShapes(scoreOrig.getContext('2d'), origShapes, bgColor, 220);
+  const scoreForg = document.getElementById('score-forgery');
+  renderShapes(scoreForg.getContext('2d'), playShapes, bgColor, 220);
+
+  // Round title
+  document.getElementById('score-round-title').textContent =
+    'Round ' + round + ': "' + state.original.title + '"';
+
+  // Score display
+  const scoreEl = document.getElementById('score-value');
+  scoreEl.textContent = result.score + '%';
+  scoreEl.style.color = result.score > 65
+    ? 'var(--success)'
+    : result.score > 35 ? 'var(--accent)' : 'var(--danger)';
+
+  // Deviation metric bars
+  const barsEl = document.getElementById('deviation-bars');
+  barsEl.innerHTML = '';
+  const d = result.devs;
+
+  if (d.matchCount > 0) {
+    const metrics = [
+      {
+        label: 'Size Accuracy',
+        value: clamp(1 - Math.abs(d.sizeBias), 0, 1),
+        note: d.sizeBias > 0.08  ? 'Enlarged'
+            : d.sizeBias < -0.08 ? 'Shrunk'
+            : 'True to scale',
+      },
+      {
+        label: 'Position Accuracy',
+        value: clamp(1 - Math.sqrt(d.posX ** 2 + d.posY ** 2) * 4, 0, 1),
+        note: (Math.abs(d.posX) > 0.03 || Math.abs(d.posY) > 0.03)
+              ? 'Shifted' : 'Well placed',
+      },
+      {
+        label: 'Color Fidelity',
+        value: clamp(1 - (Math.abs(d.satShift) + Math.abs(d.brightShift) + d.hueShift) * 1.5, 0, 1),
+        note: d.satShift > 0.05  ? 'More vivid'
+            : d.satShift < -0.05 ? 'More muted'
+            : 'Faithful',
+      },
+    ];
+
+    for (const m of metrics) {
+      const pct      = Math.round(m.value * 100);
+      const barColor = pct > 65 ? 'var(--success)' : pct > 35 ? 'var(--accent)' : 'var(--danger)';
+      barsEl.innerHTML +=
+        '<div class="p-3 rounded-lg" style="background: var(--surface); border: 1px solid var(--border);">' +
+          '<div class="flex justify-between text-xs mb-2">' +
+            '<span style="color: var(--muted);">' + m.label + '</span>' +
+            '<span style="color: var(--paper);">' + pct + '%</span>' +
+          '</div>' +
+          '<div class="deviation-bar">' +
+            '<div class="deviation-fill" style="width: ' + pct + '%; background: ' + barColor + ';"></div>' +
+          '</div>' +
+          '<p class="text-xs mt-1" style="color: var(--muted);">' + m.note + '</p>' +
+        '</div>';
+    }
+  }
+  else {
+    barsEl.innerHTML =
+      '<div class="col-span-3 text-center p-4 rounded-lg" style="background: var(--surface); border: 1px solid var(--border);">' +
+        '<p class="text-sm" style="color: var(--muted);">No shapes matched for comparison. Place shapes closer to the original positions.</p>' +
+      '</div>';
+  }
+
+  // Commentary
+  const commentary = getCommentary(round, result.score, result.devs);
+  document.getElementById('score-commentary').querySelector('p').textContent = commentary;
+
+  // Button label
+  const btnNext = document.getElementById('btn-next');
+  if (round >= MAX_ROUNDS) {
+    btnNext.innerHTML = '<i class="fa-solid fa-palette mr-2"></i>View Exhibition';
+  }
+  else {
+    btnNext.innerHTML = '<i class="fa-solid fa-arrow-right mr-2"></i>Next Round';
+  }
+
+  showScreen('scoring');
+}
+
+// ============================================================
+// GALLERY PHASE
+// ============================================================
+function showGallery() {
+  const prof = getProfileSummary();
+
+  // Intro text
+  const introEl = document.getElementById('gallery-intro');
+  if (prof.traits.length > 0) {
+    introEl.textContent = 'Ten forgeries. Ten interpretations. ' + prof.summary;
+  }
+  else {
+    introEl.textContent =
+      'Ten forgeries. Ten interpretations. Your hand has spoken — ' +
+      'and it says something the originals never could.';
+  }
+
+  // Gallery grid
+  const grid = document.getElementById('gallery-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < MAX_ROUNDS; i++) {
+    const card  = document.createElement('div');
+    card.className = 'gallery-card anim-slide-up';
+    card.style.animationDelay = (i * 0.08) + 's';
+    const title = state.originals[i] ? state.originals[i].title : 'Round ' + (i + 1);
+    const sc    = state.roundScores[i] ? state.roundScores[i].score : '?';
+    card.innerHTML =
+      '<img src="' + state.forgeries[i].dataURL + '" alt="Forgery ' + (i + 1) + '">' +
+      '<div class="p-3">' +
+        '<p class="display text-sm font-bold" style="color: var(--paper);">Forgery ' + (i + 1) + '</p>' +
+        '<p class="text-xs" style="color: var(--muted);">after "' + title + '" — ' + sc + '%</p>' +
+      '</div>';
+    grid.appendChild(card);
+  }
+
+  // Style profile card
+  const profileEl = document.getElementById('style-profile');
+  const avgScore  = state.roundScores.length > 0
+    ? Math.round(state.roundScores.reduce((s, r) => s + r.score, 0) / state.roundScores.length)
+    : 0;
+
+  profileEl.innerHTML =
+    '<h3 class="display text-xl font-bold mb-4" style="color: var(--paper);">Your Style Profile</h3>' +
+    '<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">' +
+      buildProfileCell('Scale', prof.sizeLabel) +
+      buildProfileCell('Position', prof.posLabel) +
+      buildProfileCell('Saturation', prof.satLabel) +
+      buildProfileCell('Brightness', prof.brightLabel) +
+      buildProfileCell('Avg Score', avgScore + '%') +
+    '</div>' +
+    '<p class="text-sm italic" style="color: var(--muted); font-family: \'Playfair Display\', serif;">' +
+      prof.summary +
+    '</p>';
+
+  // Scrub comparison widget
+  setupScrub();
+
+  // Twist text — the final reflection
+  const twistTexts = [
+    'The originals were made by a formula in milliseconds. No doubt, no desire, no hand. Your forgeries carry all three. In the art world, we call that style. And style is worth more than accuracy ever was.',
+    'You spent ten rounds chasing fidelity. But look at your work — the consistent enlargement, the color drift, the compositional lean. These are not errors. They are a signature. The machine made ten paintings. You made a body of work.',
+    'Every forger in history eventually stopped copying. Not by choice — because their hand would not cooperate with perfect reproduction. Look at your gallery. The originals are generic. Your forgeries are unmistakable. That makes them invaluable.',
+  ];
+  document.getElementById('twist-text').textContent =
+    twistTexts[state.currentRound % twistTexts.length];
+
+  showScreen('gallery');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function buildProfileCell(label, value) {
+  return '<div class="text-center p-3 rounded" style="background: var(--bg);">' +
+    '<p class="text-xs uppercase tracking-wider mb-1" style="color: var(--muted);">' + label + '</p>' +
+    '<p class="display text-lg font-bold" style="color: var(--accent);">' + value + '</p>' +
+  '</div>';
+}
+
+// ============================================================
+// SCRUB COMPARISON WIDGET
+// ============================================================
+function setupScrub() {
+  const scrubCanvas = document.getElementById('scrub-canvas');
+  const sctx        = scrubCanvas.getContext('2d');
+  const scrubLine   = document.getElementById('scrub-line');
+  const scrubHandle = document.getElementById('scrub-handle');
+  const scrubLabel  = document.getElementById('scrub-label');
+
+  // Pick round with strongest style divergence
+  let bestIdx = 0, bestDiv = 0;
+  for (let i = 0; i < state.roundScores.length; i++) {
+    const d   = state.roundScores[i].devs;
+    const div = Math.abs(d.sizeBias) + Math.abs(d.posX) + Math.abs(d.posY) + Math.abs(d.satShift);
+    if (div > bestDiv) { bestDiv = div; bestIdx = i; }
+  }
+  if (bestDiv === 0) bestIdx = Math.floor(state.roundScores.length / 2);
+
+  const orig = state.originals[bestIdx];
+  const forg = state.forgeries[bestIdx];
+  if (!orig || !forg) return;
+
+  const ss = scrubCanvas.width;
+  let scrubPos = 0.5;
+
+  function drawScrub() {
+    sctx.clearRect(0, 0, ss, ss);
+
+    // Original on left side
+    sctx.save();
+    sctx.beginPath();
+    sctx.rect(0, 0, ss * scrubPos, ss);
+    sctx.clip();
+    renderShapes(sctx, orig.shapes, orig.bgColor, ss);
+    sctx.restore();
+
+    // Forgery on right side
+    sctx.save();
+    sctx.beginPath();
+    sctx.rect(ss * scrubPos, 0, ss * (1 - scrubPos), ss);
+    sctx.clip();
+    renderShapes(sctx, forg.shapes, orig.bgColor, ss);
+    sctx.restore();
+
+    // Labels
+    sctx.font      = '11px DM Sans';
+    sctx.fillStyle = 'rgba(0,0,0,0.45)';
+    if (scrubPos > 0.18) sctx.fillText('ORIGINAL', 10, 20);
+    if (scrubPos < 0.82) sctx.fillText('YOUR FORGERY', ss * scrubPos + 10, 20);
+
+    scrubLine.style.left   = (scrubPos * 100) + '%';
+    scrubHandle.style.left = (scrubPos * 100) + '%';
+
+    const score = state.roundScores[bestIdx] ? state.roundScores[bestIdx].score : '?';
+    scrubLabel.textContent =
+      '"' + orig.title + '" — Round ' + (bestIdx + 1) + ' (Accuracy: ' + score + '%)';
+  }
+
+  drawScrub();
+
+  const container = scrubCanvas.parentElement;
+  let dragging = false;
+
+  function updatePos(e) {
+    const rect    = scrubCanvas.getBoundingClientRect();
+    const clientX = e.clientX !== undefined
+      ? e.clientX
+      : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+    scrubPos = clamp((clientX - rect.left) / rect.width, 0.03, 0.97);
+    drawScrub();
+  }
+
+  container.addEventListener('mousedown',  (e) => { dragging = true; updatePos(e); });
+  container.addEventListener('touchstart',  (e) => { dragging = true; updatePos(e); }, { passive: true });
+  window.addEventListener('mousemove',      (e) => { if (dragging) updatePos(e); });
+  window.addEventListener('touchmove',      (e) => { if (dragging) updatePos(e); }, { passive: true });
+  window.addEventListener('mouseup',  () => { dragging = false; });
+  window.addEventListener('touchend', () => { dragging = false; });
+}
+
+// ============================================================
+// INITIALIZATION & EVENT WIRING
+// ============================================================
+function init() {
+  // Floating dust particles on the title screen
+  const dustContainer = document.getElementById('dust-container');
+  for (let i = 0; i < 40; i++) {
+    const dust   = document.createElement('div');
+    dust.className = 'dust';
+    dust.style.left      = rand(3, 97) + '%';
+    dust.style.top       = rand(3, 97) + '%';
+    const sz = rand(1, 3);
+    dust.style.width     = sz + 'px';
+    dust.style.height    = sz + 'px';
+    dust.style.opacity   = rand(0.04, 0.18);
+    dust.style.animation = 'gentleFloat ' + rand(4, 9) + 's ease-in-out ' + rand(0, 4) + 's infinite';
+    dustContainer.appendChild(dust);
+  }
+
+  // ---- Start button ----
+  document.getElementById('btn-start').addEventListener('click', () => {
+    state.currentRound = 1;
+    state.forgeries    = [];
+    state.originals    = [];
+    state.roundScores  = [];
+    profile.sizeBiases   = [];
+    profile.posXOffsets  = [];
+    profile.posYOffsets  = [];
+    profile.satShifts    = [];
+    profile.brightShifts = [];
+    profile.hueShifts    = [];
+    startViewing();
+  });
+
+  // ---- Submit forgery ----
+  document.getElementById('btn-finish').addEventListener('click', () => {
+    if (state.playerShapes.length === 0) {
+      showToast('Place at least one shape before submitting.');
+      return;
+    }
+    startScoring();
+  });
+
+  // ---- Next round / Gallery ----
+  document.getElementById('btn-next').addEventListener('click', () => {
+    if (state.currentRound >= MAX_ROUNDS) {
+      showGallery();
+    }
+    else {
+      state.currentRound++;
+      startViewing();
+    }
+  });
+
+  // ---- Restart ----
+  document.getElementById('btn-restart').addEventListener('click', () => {
+    state.currentRound = 0;
+    showScreen('title');
+  });
+
+  // ---- Tool selection ----
+  document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.tools.shape = btn.dataset.tool;
+    });
+  });
+
+  // ---- Color palette ----
+  const paletteEl = document.getElementById('color-palette');
+  PALETTE.forEach((color, i) => {
+    const swatch = document.createElement('div');
+    swatch.className = 'color-swatch' + (i === 0 ? ' active' : '');
+    swatch.style.background = color;
+    swatch.setAttribute('aria-label', 'Color ' + color);
+    swatch.setAttribute('tabindex', '0');
+    swatch.setAttribute('role', 'button');
+    swatch.addEventListener('click', () => {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      swatch.classList.add('active');
+      state.tools.color = color;
+    });
+    swatch.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); swatch.click(); }
+    });
+    paletteEl.appendChild(swatch);
+  });
+
+  // ---- Size slider ----
+  const sizeSlider = document.getElementById('size-slider');
+  const sizeLabel  = document.getElementById('size-label');
+  sizeSlider.addEventListener('input', () => {
+    state.tools.size = parseInt(sizeSlider.value);
+    sizeLabel.textContent = sizeSlider.value;
+  });
+
+  // ---- Undo button ----
+  document.getElementById('btn-undo').addEventListener('click', () => {
+    if (state.playerShapes.length > 0) {
+      state.playerShapes.pop();
+      redrawPaintingCanvas();
+    }
+  });
+
+  // ---- Clear button ----
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    if (state.playerShapes.length > 0) {
+      state.playerShapes = [];
+      redrawPaintingCanvas();
+      showToast('Canvas cleared.');
+    }
+  });
+
+  // ---- Canvas: place shapes on click ----
+  const paintCanvas   = document.getElementById('painting-canvas');
+  let lastTouchTime   = 0;
+
+  function getCanvasPos(e) {
+    const rect   = paintCanvas.getBoundingClientRect();
+    const scaleX = CANVAS_SIZE / rect.width;
+    const scaleY = CANVAS_SIZE / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top)  * scaleY,
+    };
+  }
+
+  function placeShape(x, y) {
+    if (state.currentScreen !== 'painting') return;
+    state.playerShapes.push({
+      type:  state.tools.shape,
+      x:     x,
+      y:     y,
+      size:  state.tools.size,
+      color: state.tools.color,
+    });
+    redrawPaintingCanvas();
+  }
+
+  // Mouse click
+  paintCanvas.addEventListener('click', (e) => {
+    if (Date.now() - lastTouchTime < 400) return;
+    const pos = getCanvasPos(e);
+    placeShape(pos.x, pos.y);
+  });
+
+  // Touch placement
+  paintCanvas.addEventListener('touchend', (e) => {
+    if (state.currentScreen !== 'painting') return;
+    e.preventDefault();
+    lastTouchTime = Date.now();
+    const touch = e.changedTouches[0];
+    const rect  = paintCanvas.getBoundingClientRect();
+    placeShape(
+      (touch.clientX - rect.left) * (CANVAS_SIZE / rect.width),
+      (touch.clientY - rect.top)  * (CANVAS_SIZE / rect.height),
+    );
+  });
+
+  // Preview ghost on hover
+  paintCanvas.addEventListener('mousemove', (e) => {
+    if (state.currentScreen !== 'painting') return;
+    const pos = getCanvasPos(e);
+    redrawPaintingCanvas(pos.x, pos.y);
+  });
+  paintCanvas.addEventListener('mouseleave', () => {
+    if (state.currentScreen !== 'painting') return;
+    redrawPaintingCanvas();
+  });
+
+  // ---- Keyboard shortcuts ----
+  document.addEventListener('keydown', (e) => {
+    if (state.currentScreen === 'painting') {
+      if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (state.playerShapes.length > 0) {
+          state.playerShapes.pop();
+          redrawPaintingCanvas();
+        }
+      }
+      if (e.key === '1') selectTool('circle');
+      if (e.key === '2') selectTool('rect');
+      if (e.key === '3') selectTool('triangle');
+      if (e.key === 'Enter') {
+        if (state.playerShapes.length > 0) startScoring();
+      }
+    }
+  });
+
+  function selectTool(tool) {
+    state.tools.shape = tool;
+    document.querySelectorAll('.tool-btn[data-tool]').forEach(b => {
+      b.classList.toggle('active', b.dataset.tool === tool);
+    });
+  }
+
+  showScreen('title');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

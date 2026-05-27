@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Playlist That Played at the End of the World (Based on a True Alarm)</title>
+<script src="https://cdn.jsdelivr.net/npm/@strudel/repl@latest"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    color: #d4d0c6;
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  strudel-editor {
+    display: block;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .header {
+    padding: 3rem 2rem 1.5rem;
+    max-width: 700px;
+    text-align: center;
+    width: 100%;
+  }
+
+  .title {
+    font-size: 1.05rem;
+    letter-spacing: 0.18em;
+    line-height: 1.9;
+    text-transform: uppercase;
+    font-weight: normal;
+    color: #d4d0c6;
+  }
+
+  .subtitle {
+    font-size: 0.7rem;
+    letter-spacing: 0.35em;
+    margin-top: 1.2rem;
+    color: #555;
+    text-transform: uppercase;
+  }
+
+  .phase-indicator {
+    margin-top: 1.5rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.5em;
+    color: #333;
+    transition: color 3s ease, opacity 3s ease;
+    min-height: 1.2em;
+  }
+
+  .prose {
+    padding: 2rem;
+    max-width: 560px;
+    font-size: 0.78rem;
+    line-height: 2;
+    color: #444;
+    letter-spacing: 0.04em;
+  }
+
+  .prose em {
+    color: #666;
+    font-style: normal;
+  }
+
+  .prose .note {
+    display: block;
+    margin-top: 2rem;
+    font-size: 0.68rem;
+    color: #383838;
+    line-height: 1.9;
+  }
+
+  .divider {
+    width: 30px;
+    height: 1px;
+    background: #1a1a1a;
+    margin: 0.5rem auto 1rem;
+  }
+
+  .instructions {
+    padding: 1rem 2rem 3rem;
+    max-width: 600px;
+    font-size: 0.62rem;
+    color: #2a2a2a;
+    letter-spacing: 0.12em;
+    line-height: 2;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">The Playlist That Played<br>at the End of the World</div>
+  <div class="subtitle">(Based on a True Alarm)</div>
+  <div class="phase-indicator" id="phaseIndicator"></div>
+</div>
+
+<div class="prose">
+  The <em>Attention Signal</em> — two tones at 853 and 960 Hz — was designed to cut through any acoustic environment, any emotional state, any dream. Tornado sirens modulate to approximate the doppler effect of approaching catastrophe. AMBER alerts occupy a distinct frequency band — a separate category of urgency. Nuclear test sirens descend because the blast wave has already passed. This composition uses the exact frequencies documented in FCC Public Notice DA 02-3580. The only modification is time.
+  <span class="note">(Duration: approximately 3 minutes. The transformation is not an escape — it is a different way of hearing what has always been there.)</span>
+</div>
+
+<div class="divider"></div>
+
+<strudel-editor>
+  // THE PLAYLIST THAT PLAYED AT THE END OF THE WORLD
+  // (Based on a True Alarm)
+  //
+  // Emergency alert tones recomposed.
+  // All frequencies from FCC EAS specifications.
+  // The only modification is time.
+
+  // Structure: all layers play simultaneously,
+  // but slower patterns emerge naturally over time.
+  // What begins as alarm gradually reveals harmonic content
+  // that was always present in the overtones.
+
+  // Fast layers (ALARM) are audible immediately.
+  // Slow layers (HYMN) take 30-90 seconds to surface.
+  // The scar runs throughout.
+
+  $stack(
+
+    // ═══ LAYER 1: EAS ATTENTION SIGNAL ═══
+    // 853Hz + 960Hz — the most recognized sound in America
+    // Fast cycling = alarm. Slow cycling = interval.
+
+    // ALARM: rapid alternation (period ~2s)
+    sine(853).slow(2)
+      .struct("1 0")
+      .gain(0.13)
+      .cutoff(1200),
+
+    sine(960).slow(2)
+      .struct("0 1")
+      .gain(0.11)
+      .cutoff(1300),
+
+    // HYMN: same tones, held long (period ~24s)
+    // Emerges naturally as the fast pulses tire the ear
+    sine(853).slow(24)
+      .gain(0.06)
+      .cutoff(1800)
+      .room(0.6),
+
+    sine(960).slow(24)
+      .gain(0.04)
+      .cutoff(1800)
+      .room(0.6),
+
+    // ═══ LAYER 2: TORNADO SIREN ═══
+    // Federal Signal 2001 series: ~460Hz + harmonics
+    // The vibrato that means sky-rotation.
+
+    // ALARM: mid-speed sweep
+    triangle(460).add(triangle(690).gain(0.35))
+      .slow(4)
+      .gain(0.07)
+      .cutoff(1000),
+
+    // HYMN: held pad — the sweep becomes a still tone
+    triangle(460).add(triangle(690).gain(0.25))
+      .slow(32)
+      .gain(0.05)
+      .room(0.7)
+      .cutoff(1400),
+
+    // ═══ LAYER 3: AMBER ALERT ═══
+    // 912Hz + 1056Hz — the frequency of missing children
+    // Together they suggest an A-major triad fragment
+
+    // ALARM: rapid pulse
+    square(912).slow(2)
+      .struct("1 0 1 0")
+      .gain(0.03)
+      .cutoff(1900),
+
+    square(1056).slow(2)
+      .struct("0 1 0 1")
+      .gain(0.025)
+      .cutoff(2000),
+
+    // HYMN: AMBER harmonics bloom
+    sine(912).slow(16)
+      .add(sine(1056).slow(16).gain(0.7))
+      .add(sine(1368).slow(16).gain(0.4))
+      .gain(0.035)
+      .cutoff(2200)
+      .room(0.7),
+
+    // ═══ LAYER 4: NUCLEAR DESCENT ═══
+    // 750Hz → 250Hz glide — the attack warning
+    // "The blast wave has already passed."
+
+    // ALARM: medium-speed descent
+    saw(750).slow(8)
+      .gain(0.025)
+      .cutoff(800),
+
+    // HYMN: nearly静止 — cantus firmus
+    saw(400).slow(64)
+      .gain(0.015)
+      .cutoff(700)
+      .room(0.8),
+
+    // ═══ LAYER 5: NATIONAL PERIODIC TONE ═══
+    // 1080Hz beacon — every 30s in real systems
+
+    // ALARM: periodic pulse
+    sine(1080).slow(8)
+      .struct("1 0 0 0 0 0 0 0")
+      .gain(0.07)
+      .cutoff(1600),
+
+    // HYMN: held note + fifth below
+    sine(1080).slow(48)
+      .gain(0.025)
+      .add(sine(540).slow(48).gain(0.02))
+      .cutoff(2000)
+      .room(0.8),
+
+    // ═══ LAYER 6: OVERTONE SERIES ═══
+    // Sum tones that were always present
+    // 853+460=1313, 460×3=1380, 460×4=1840
+    // These only become audible at HYMN tempi
+
+    sine(1313).slow(24)
+      .gain(0.02)
+      .room(0.8)
+      .cutoff(1600),
+
+    sine(1380).slow(32)
+      .gain(0.015)
+      .room(0.9)
+      .cutoff(1800),
+
+    sine(1840).slow(48)
+      .gain(0.01)
+      .room(0.9)
+      .cutoff(2200),
+
+    // ═══ LAYER 7: INFRASTRUCTURE ═══
+    // 60Hz — the building's electrical hum
+    // What remains when everyone has left
+
+    sine(60).gain(0.04)
+      .add(sine(120).gain(0.015))
+      .add(sine(30).gain(0.01))
+      .cutoff(180)
+      .room(0.2),
+
+    // ═══ THE SCAR ═══
+    // Raw 853/960 alert at original rhythm.
+    // Never transforms. Never stops.
+    // Gets quieter but never vanishes.
+    // This is the alarm you will always hear
+    // beneath the hymn.
+
+    sine(853).slow(2)
+      .struct("1 0")
+      .add(
+        sine(960).slow(2)
+          .struct("0 1").gain(0.7)
+      )
+      .gain(0.035)
+      .cutoff(1000)
+      .room(0.05)
+      .delay(0.1)
+
+  )
+  .gain(1.4)
+  .room(0.15)
+  .delay(0.12)
+  .delaytime(0.35)
+  .delayfeedback(0.15)
+</strudel-editor>
+
+<div class="instructions">
+  press play to begin the broadcast.<br>
+  the piece lasts approximately three minutes.<br>
+  volume is recommended at a moderate, conversational level.<br>
+  listen for the tone that never fully transforms.<br>
+  that is the alarm. that is always the alarm.
+</div>
+
+<script>
+  // Phase indicator — starts counting from first click
+  const phaseEl = document.getElementById('phaseIndicator');
+  let startTime = null;
+  let currentPhase = '';
+  let started = false;
+
+  const phases = [
+    { name: 'ALARM',      time: 0,     label: 'I — ALARM' },
+    { name: 'DISSOLUTION', time: 35000, label: 'II — DISSOLUTION' },
+    { name: 'HYMN',       time: 70000, label: 'III — HYMN' },
+  ];
+
+  function updatePhase() {
+    if (!started) {
+      requestAnimationFrame(updatePhase);
+      return;
+    }
+
+    const elapsed = Date.now() - startTime;
+
+    let phase = phases[0];
+    for (const p of phases) {
+      if (elapsed >= p.time) phase = p;
+    }
+
+    if (phase.name !== currentPhase) {
+      currentPhase = phase.name;
+      phaseEl.style.opacity = '0';
+      setTimeout(() => {
+        phaseEl.textContent = phase.label;
+        phaseEl.style.opacity = '1';
+      }, 800);
+    }
+
+    requestAnimationFrame(updatePhase);
+  }
+
+  // Detect play: listen for audio context creation
+  const originalAudioContext = window.AudioContext || window.webkitAudioContext;
+  if (originalAudioContext) {
+    window.AudioContext = function() {
+      const ctx = new originalAudioContext();
+      if (!started) {
+        started = true;
+        startTime = Date.now();
+      }
+      return ctx;
+    };
+    window.AudioContext.prototype = originalAudioContext.prototype;
+    window.webkitAudioContext = window.AudioContext;
+  }
+
+  // Fallback: any click starts the timer
+  document.addEventListener('click', () => {
+    if (!started) {
+      started = true;
+      startTime = Date.now();
+    }
+  }, { once: false });
+
+  requestAnimationFrame(updatePhase);
+</script>
+
+</body>
+</html>

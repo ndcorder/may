@@ -1,0 +1,26 @@
+{
+  "name": "blessing-engine",
+  "version": "1.0.0",
+  "description": "A CLI tool that generates blessings tailored to your specific situation. Describe what you're facing — a loss, a long Wednesday, the feeling before you call someone back — and receive a blessing that feels like it was written for exactly this moment.",
+  "main": "engine.js",
+  "bin": {
+    "blessing-engine": "./cli.js",
+    "bless": "./cli.js"
+  },
+  "scripts": {
+    "start": "node cli.js",
+    "bless": "node cli.js"
+  },
+  "keywords": [
+    "blessing",
+    "cli",
+    "comfort",
+    "ritual",
+    "meditation"
+  ],
+  "author": "The Blessing Engine",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

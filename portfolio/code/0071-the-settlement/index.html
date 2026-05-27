@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Settlement</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0c0b10;
+      --bg-card: #14121a;
+      --bg-elevated: #1e1b28;
+      --text: #d8cdc0;
+      --text-muted: #7a7580;
+      --text-dim: #4e4a55;
+      --accent: #c49a6c;
+      --accent-glow: #c49a6c33;
+      --keeper: #7db8a0;
+      --keeper-dim: rgba(125,184,160,0.18);
+      --cartographer: #c4836c;
+      --cartographer-dim: rgba(196,131,108,0.18);
+      --threshold: #c46c80;
+      --threshold-dim: rgba(196,108,128,0.12);
+      --border: #2a2636;
+      --border-light: #3a3646;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+    }
+
+    #bg-canvas {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+    }
+
+    #app {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+
+    .screen { display: none; width: 100%; max-width: 820px; }
+    .screen.active { display: block; animation: fadeIn 0.6s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-block;
+      padding: 14px 40px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+    }
+    .btn:hover {
+      background: var(--accent);
+      color: var(--bg);
+      box-shadow: 0 0 30px var(--accent-glow);
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+    .btn:disabled { opacity: 0.3; pointer-events: none; }
+
+    .pass-btn {
+      background: transparent;
+      border: 1px solid var(--border-light);
+      color: var(--text-muted);
+      padding: 12px 36px;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .pass-btn:hover { border-color: var(--text-muted); color: var(--text); }
+    .pass-btn:focus-visible { outline: 2px solid var(--text-muted); outline-offset: 4px; }
+
+    /* ===== TITLE ===== */
+    .title-content { text-align: center; padding: 40px 0; }
+    .title-content h1 {
+      font-size: clamp(3rem, 8vw, 5.5rem);
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 8px;
+      line-height: 1.1;
+    }
+    .title-content .subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text-muted);
+      letter-spacing: 0.15em;
+      margin-bottom: 48px;
+    }
+    .title-content .tagline {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      max-width: 440px;
+      margin: 0 auto 50px;
+      line-height: 1.7;
+    }
+
+    /* ===== RULES ===== */
+    .rules-brief {
+      max-width: 520px;
+      margin: 0 auto 40px;
+      text-align: left;
+      padding: 24px 28px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+    .rules-brief h3 {
+      font-size: 1.1rem;
+      color: var(--accent);
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+    }
+    .rules-brief ul { list-style: none; padding: 0; }
+    .rules-brief li {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      padding: 4px 0 4px 18px;
+      position: relative;
+    }
+    .rules-brief li::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 12px;
+      width: 6px; height: 1px;
+      background: var(--accent);
+    }
+
+    /* ===== ROLES ===== */
+    .role-screen-inner { text-align: center; }
+    .role-screen-inner h2 {
+      font-size: 1.5rem;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      font-weight: 300;
+    }
+    .roles-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .role-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 36px 24px;
+      transition: all 0.4s ease;
+    }
+    .role-card h3 {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .role-card.keeper h3 { color: var(--keeper); }
+    .role-card.cartographer h3 { color: var(--cartographer); }
+    .role-card .role-icon {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .role-card.keeper .role-icon { color: var(--keeper); }
+    .role-card.cartographer .role-icon { color: var(--cartographer); }
+    .role-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+    .role-assign {
+      margin-top: 16px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ===== TURN TRANSITION ===== */
+    .turn-transition { text-align: center; padding: 80px 20px; }
+    .turn-transition h2 {
+      font-size: 2rem;
+      margin-bottom: 12px;
+      font-weight: 300;
+      color: var(--text-muted);
+    }
+    .turn-transition .turn-player {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+    }
+    .turn-player.keeper-name { color: var(--keeper); }
+    .turn-player.cartographer-name { color: var(--cartographer); }
+    .turn-transition .turn-instruction {
+      margin-top: 24px;
+      color: var(--text-dim);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    /* ===== GAME BOARD ===== */
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .round-info {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      color: var(--text-muted);
+    }
+    .round-info strong { color: var(--text); font-weight: 600; }
+    .hearts-row { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+    .hearts-group { display: flex; align-items: center; gap: 4px; }
+    .heart-name {
+      font-size: 0.72rem;
+      margin-right: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .heart { font-size: 0.95rem; transition: all 0.3s ease; }
+    .heart.full { color: var(--accent); }
+    .heart.empty { color: var(--text-dim); opacity: 0.25; }
+
+    .current-turn-label {
+      text-align: center;
+      margin-bottom: 20px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 300;
+      color: var(--text-muted);
+    }
+    .current-turn-label strong { font-weight: 700; }
+    .current-turn-label strong.keeper-text { color: var(--keeper); }
+    .current-turn-label strong.cartographer-text { color: var(--cartographer); }
+
+    .items-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .item-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 26px 22px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      animation: slideUp 0.5s ease both;
+    }
+    .item-card:nth-child(2) { animation-delay: 0.12s; }
+    .item-card:hover:not(.disabled) {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    }
+    .item-card.disabled {
+      pointer-events: none;
+      opacity: 0.35;
+    }
+    .item-card .item-category {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    .item-card .item-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+    .item-card .item-desc {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .item-card .item-cost {
+      margin-top: 12px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+    .item-card .item-cost .cost-hearts { color: var(--accent); }
+    .item-card .claimed-badge {
+      position: absolute;
+      top: 10px; right: 12px;
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+    }
+    .claimed-badge.keeper-badge { background: var(--keeper-dim); color: var(--keeper); }
+    .claimed-badge.cartographer-badge { background: var(--cartographer-dim); color: var(--cartographer); }
+
+    .game-actions { text-align: center; margin-top: 8px; }
+
+    .threshold-weight {
+      text-align: center;
+      margin-top: 16px;
+      padding: 10px;
+      font-size: 0.82rem;
+      color: var(--threshold);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .threshold-weight.visible { opacity: 1; }
+    .threshold-weight i { margin-right: 6px; }
+
+    /* ===== THRESHOLD POPUP ===== */
+    .threshold-popup { text-align: center; padding: 40px 20px; }
+    .threshold-popup h3 {
+      font-size: 1.8rem;
+      color: var(--threshold);
+      margin-bottom: 8px;
+      font-weight: 300;
+    }
+    .threshold-popup .threshold-subtitle {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+    .threshold-items-list {
+      max-width: 480px;
+      margin: 0 auto 32px;
+      text-align: left;
+    }
+    .threshold-item {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .threshold-item:hover {
+      color: var(--threshold);
+      background: var(--threshold-dim);
+    }
+    .threshold-item .ti-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+    .threshold-item .ti-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+    .threshold-item .ti-cost {
+      font-size: 0.75rem;
+      color: var(--threshold);
+      margin-top: 6px;
+    }
+
+    /* ===== MIDPOINT ===== */
+    .midpoint-screen { text-align: center; padding: 60px 20px; }
+    .midpoint-screen h2 {
+      font-size: 1.9rem;
+      color: var(--text);
+      font-weight: 300;
+      margin-bottom: 16px;
+    }
+    .midpoint-screen p {
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 500px;
+      margin: 0 auto 36px;
+    }
+    .threshold-peek {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 24px;
+      max-width: 500px;
+      margin: 0 auto 36px;
+      text-align: left;
+    }
+    .threshold-peek h4 {
+      color: var(--threshold);
+      font-size: 0.88rem;
+      margin-bottom: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .threshold-peek .tp-item {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .claimed-so-far {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 24px;
+      max-width: 500px;
+      margin: 0 auto 36px;
+      text-align: left;
+    }
+    .claimed-so-far h4 {
+      font-size: 0.88rem;
+      margin-bottom: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .claimed-so-far .csf-item {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      padding: 5px 0;
+    }
+    .csf-item .csf-player {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ===== SCORING ===== */
+    .scoring-screen { max-width: 700px; margin: 0 auto; padding: 20px 0 60px; }
+    .scoring-header { text-align: center; margin-bottom: 48px; }
+    .scoring-header h2 {
+      font-size: 2.4rem;
+      font-weight: 300;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .scoring-header .scoring-subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    .score-section {
+      margin-bottom: 28px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .score-section.visible { opacity: 1; transform: translateY(0); }
+    .score-section h3 {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+    }
+    .score-section h3 i { margin-right: 8px; font-size: 0.9rem; }
+    .score-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .score-card .score-label { font-size: 1rem; color: var(--text); }
+    .score-card .score-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 50px;
+      text-align: right;
+    }
+    .score-detail {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .divider-bar {
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border-light), transparent);
+      margin: 32px 0;
+    }
+
+    .final-reveal {
+      text-align: center;
+      padding: 40px 20px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 1s ease, transform 1s ease;
+    }
+    .final-reveal.visible { opacity: 1; transform: translateY(0); }
+    .final-reveal .final-label {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .final-reveal .winner-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 6vw, 3.2rem);
+      font-weight: 700;
+      margin-bottom: 28px;
+    }
+    .winner-name.keeper-name { color: var(--keeper); }
+    .winner-name.cartographer-name { color: var(--cartographer); }
+    .winner-name.tie-name { color: var(--accent); }
+    .final-reveal .win-reason {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-style: italic;
+      color: var(--text-muted);
+      line-height: 1.75;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .inventory-overview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 40px;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    .inventory-overview.visible { opacity: 1; }
+    .inventory-column h4 {
+      font-size: 1rem;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .inventory-column.keeper-col h4 { color: var(--keeper); }
+    .inventory-column.cartographer-col h4 { color: var(--cartographer); }
+    .inventory-item {
+      padding: 7px 12px;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .inventory-item span { color: var(--text-dim); font-size: 0.78rem; }
+
+    .threshold-remainder {
+      margin-top: 24px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    .threshold-remainder.visible { opacity: 1; }
+    .threshold-remainder h4 {
+      color: var(--threshold);
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    /* ===== TOAST ===== */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+    .toast {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-light);
+      color: var(--text);
+      padding: 12px 28px;
+      font-size: 0.88rem;
+      animation: slideUp 0.3s ease;
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+    }
+    .toast.toast-exit { opacity: 0; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      .items-area { grid-template-columns: 1fr; }
+      .roles-grid { grid-template-columns: 1fr; }
+      .game-header { flex-direction: column; align-items: stretch; }
+      .hearts-row { justify-content: center; }
+      .inventory-overview { grid-template-columns: 1fr; }
+      .title-content h1 { font-size: 2.6rem; }
+      .score-card { flex-direction: column; gap: 8px; text-align: center; }
+      .score-card .score-value { text-align: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+  <div id="app">
+    <!-- TITLE -->
+    <div id="screen-title" class="screen active">
+      <div class="title-content">
+        <h1>The Settlement</h1>
+        <p class="subtitle">a game of division</p>
+        <p class="tagline">Two players. One shared history. Everything must be divided &mdash; the objects, the memories, the habits. Who keeps what, and at what cost?</p>
+        <div class="rules-brief">
+          <h3>How It Works</h3>
+          <ul>
+            <li>Two players take turns: the Keeper and the Cartographer</li>
+            <li>Each round, you face two items from a shared life</li>
+            <li>Claim something and spend hearts. Pass and it drifts to the threshold</li>
+            <li>After round three, you may reach into the threshold &mdash; but taking ends the game</li>
+            <li>Five rounds. Then the accounting.</li>
+          </ul>
+        </div>
+        <button class="btn" onclick="showScreen('screen-roles')">Begin</button>
+      </div>
+    </div>
+
+    <!-- ROLES -->
+    <div id="screen-roles" class="screen">
+      <div class="role-screen-inner">
+        <h2>Before you divide anything, decide who you are</h2>
+        <div class="roles-grid">
+          <div class="role-card keeper">
+            <span class="role-icon"><i class="fa-solid fa-hand-holding-heart"></i></span>
+            <h3>The Keeper</h3>
+            <p>The one who holds on. The Keeper believes that what was shared should remain &mdash; that the thread between two people is worth more than the clean break.</p>
+            <div class="role-assign">Player One</div>
+          </div>
+          <div class="role-card cartographer">
+            <span class="role-icon"><i class="fa-solid fa-map"></i></span>
+            <h3>The Cartographer</h3>
+            <p>The one who redraws. The Cartographer believes that boundaries create clarity &mdash; that the map of a life can be drawn anew, with fresh ink.</p>
+            <div class="role-assign">Player Two</div>
+          </div>
+        </div>
+        <button class="btn" onclick="startGame()">Deal the Cards</button>
+      </div>
+    </div>
+
+    <!-- TURN TRANSITION -->
+    <div id="screen-turn" class="screen">
+      <div class="turn-transition">
+        <h2>It is time for</h2>
+        <div id="turn-player-name" class="turn-player"></div>
+        <p class="turn-instruction">Hand the device to this player.<br>The other, look away.</p>
+        <div style="margin-top: 40px;">
+          <button class="btn" onclick="showGameRound()">I'm ready</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME BOARD -->
+    <div id="screen-game" class="screen">
+      <div class="game-header">
+        <div class="round-info">Round <strong id="round-num">1</strong> of <strong>5</strong></div>
+        <div class="hearts-row" id="hearts-display"></div>
+      </div>
+      <div class="current-turn-label" id="current-turn-label"></div>
+      <div class="items-area" id="items-area"></div>
+      <div class="game-actions">
+        <button class="pass-btn" id="pass-btn" onclick="handlePass()">
+          <i class="fa-solid fa-forward"></i>&ensp;Let them go to the threshold
+        </button>
+      </div>
+      <div class="threshold-weight" id="threshold-weight">
+        <i class="fa-solid fa-heart-crack"></i>
+        <span id="threshold-count">0</span> items gathering weight at the threshold
+      </div>
+    </div>
+
+    <!-- THRESHOLD POPUP -->
+    <div id="screen-threshold" class="screen">
+      <div class="threshold-popup">
+        <h3>The Threshold</h3>
+        <p class="threshold-subtitle">
+          Something waits here &mdash; unclaimed, patient, gathering weight.<br>
+          Take it, and the division ends. Leave it, and it grows heavier still.
+        </p>
+        <div class="threshold-items-list" id="threshold-items-list"></div>
+        <div style="margin-top: 12px;">
+          <button class="pass-btn" onclick="skipThreshold()">Leave it all behind</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIDPOINT -->
+    <div id="screen-midpoint" class="screen">
+      <div class="midpoint-screen">
+        <h2>Three rounds behind you</h2>
+        <p>Some things have been claimed. Others wait in the threshold &mdash; unowned, unspoken for. This is the last quiet moment before the final division.</p>
+        <div class="claimed-so-far" id="claimed-so-far"></div>
+        <div class="threshold-peek" id="threshold-peek"></div>
+        <button class="btn" onclick="continueToRound4()">Carry on</button>
+      </div>
+    </div>
+
+    <!-- SCORING -->
+    <div id="screen-scoring" class="screen">
+      <div class="scoring-screen" id="scoring-content"></div>
+    </div>
+  </div>
+
+  <div id="toast-container" aria-live="polite"></div>
+
+  <script>
+  /* ================================================================
+     ITEM DATABASE
+     Every item carries hidden keeper_value and cartographer_value.
+     Invisible to players. These determine the Alignment score at
+     endgame — how similarly two people valued what they shared.
+     ================================================================ */
+  var ALL_ITEMS = [
+    { name: "The Dutch Oven", category: "Possessions", desc: "Seasoned over four years of Sunday mornings. Every stain marks a meal someone cared enough to make.", cost: 2, keeper_value: 4, cartographer_value: 2 },
+    { name: "The Photo Albums", category: "Memories", desc: "Three leather-bound books from before the phones took over. From before a lot of things.", cost: 2, keeper_value: 5, cartographer_value: 3 },
+    { name: "The Dog", category: "Living Bonds", desc: "Cedar. Six years old. Sleeps in the space between where two people used to.", cost: 3, keeper_value: 5, cartographer_value: 4 },
+    { name: "The Netflix Password", category: "Daily Life", desc: "Shared for three years. Who gets the watch history, the algorithms, the curated knowing?", cost: 1, keeper_value: 1, cartographer_value: 3 },
+    { name: "The Morning Routine", category: "Daily Life", desc: "Coffee at 6:15. The blue mug on the left side of the counter. The way the kitchen held you both before the world poured in.", cost: 2, keeper_value: 4, cartographer_value: 2 },
+    { name: "The Sunday Ritual", category: "Memories", desc: "Sleeping in. Reading in bed until noon. Arguing about who got up for coffee first \u2014 and then the argument itself became the thing worth keeping.", cost: 2, keeper_value: 3, cartographer_value: 4 },
+    { name: "The Inside Jokes", category: "Memories", desc: "The shorthand that built up in the cracks of shared time. Words that only two people on Earth understand.", cost: 1, keeper_value: 3, cartographer_value: 3 },
+    { name: "The Guest Room", category: "Possessions", desc: "Who gets the room nobody slept in? The room that was always waiting for someone who never came.", cost: 1, keeper_value: 1, cartographer_value: 4 },
+    { name: "The Decomposition", category: "Memories", desc: "The slow realization that love doesn\u2019t end \u2014 it just becomes something you can no longer hold. The memory of feeling it dissolve.", cost: 2, keeper_value: 4, cartographer_value: 5 },
+    { name: "The Houseplants", category: "Possessions", desc: "The fern from her mother. The succulent from a farmers\u2019 market on a morning that felt, briefly, like the beginning of something.", cost: 1, keeper_value: 3, cartographer_value: 1 },
+    { name: "The Emergency Contact", category: "Commitments", desc: "The understanding that someone would call the other first. In grief, in emergency, in the end. Is that still true?", cost: 3, keeper_value: 5, cartographer_value: 3 },
+    { name: "The In-Laws", category: "Living Bonds", desc: "Her mother\u2019s number. Still saved. Still calling on birthdays, sometimes. Does blood choose sides?", cost: 2, keeper_value: 3, cartographer_value: 4 },
+    { name: "The Spotify Account", category: "Daily Life", desc: "Two thousand shared songs. Every playlist a map of a year: Monday commute. Rainy Sunday. The one called \u2018kitchen dancing.\u2019", cost: 1, keeper_value: 2, cartographer_value: 3 },
+    { name: "The Stack of Records", category: "Possessions", desc: "Four crates collected together. They belong together. But so did the people who bought them.", cost: 2, keeper_value: 3, cartographer_value: 2 },
+    { name: "The Unsent Letters", category: "Memories", desc: "Written during the last year. Some kind, some furious. None of them given. They exist in a drawer that now belongs to someone.", cost: 3, keeper_value: 5, cartographer_value: 5 },
+    { name: "The Bench on Hawthorne", category: "Memories", desc: "Where the first \u2018I love you\u2019 was returned. It\u2019s still there. It\u2019s just a bench. But it\u2019s not.", cost: 1, keeper_value: 4, cartographer_value: 2 },
+    { name: "The Coming Year", category: "Commitments", desc: "The year ahead sits empty and terrifying. Who gets to decide what it becomes? Does it belong to both of you, or to neither?", cost: 2, keeper_value: 2, cartographer_value: 5 },
+    { name: "The Apology", category: "Commitments", desc: "The one that was never made. The silence that hardened into something permanent. Does anyone deserve to carry that alone?", cost: 3, keeper_value: 4, cartographer_value: 4 },
+    { name: "The Holidays", category: "Daily Life", desc: "Who gets Thanksgiving? Who gets Christmas? How do you halve a tradition without anyone noticing the knife?", cost: 2, keeper_value: 3, cartographer_value: 3 },
+    { name: "The Blueprint", category: "Memories", desc: "The five-year plan, sketched in broad strokes on a kitchen table. A future that was supposed to hold two.", cost: 2, keeper_value: 4, cartographer_value: 4 }
+  ];
+
+  /* ================================================================
+     GAME STATE
+     ================================================================ */
+  var game = {
+    round: 0,
+    currentPlayer: 0,        // 0 = Keeper, 1 = Cartographer
+    firstPlayer: 0,          // alternates each round
+    roundItemPool: [],
+    keeper: { hearts: 10, items: [], passedCount: 0 },
+    cartographer: { hearts: 10, items: [], passedCount: 0 },
+    threshold: [],
+    claimHistory: [],
+    gameEndedByThreshold: false,
+    shuffledItems: [],
+    playersActedThisPair: 0
+  };
+
+  function resetGame() {
+    game.round = 0;
+    game.currentPlayer = 0;
+    game.firstPlayer = 0;
+    game.roundItemPool = [];
+    game.keeper = { hearts: 10, items: [], passedCount: 0 };
+    game.cartographer = { hearts: 10, items: [], passedCount: 0 };
+    game.threshold = [];
+    game.claimHistory = [];
+    game.gameEndedByThreshold = false;
+    game.shuffledItems = [];
+    game.playersActedThisPair = 0;
+  }
+
+  /* ================================================================
+     UTILITIES
+     ================================================================ */
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(function(s) {
+      s.classList.remove('active');
+    });
+    var el = document.getElementById(id);
+    el.classList.add('active');
+    // Restart animation
+    el.style.animation = 'none';
+    void el.offsetHeight;
+    el.style.animation = '';
+  }
+
+  function showToast(msg, duration) {
+    duration = duration || 3000;
+    var container = document.getElementById('toast-container');
+    var toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(function() {
+      toast.classList.add('toast-exit');
+      setTimeout(function() { toast.remove(); }, 300);
+    }, duration);
+  }
+
+  function getPlayer(idx) {
+    return idx === 0 ? game.keeper : game.cartographer;
+  }
+
+  function getPlayerName(idx) {
+    return idx === 0 ? 'The Keeper' : 'The Cartographer';
+  }
+
+  function getPlayerClass(idx) {
+    return idx === 0 ? 'keeper' : 'cartographer';
+  }
+
+  function isClaimed(itemName) {
+    return game.claimHistory.some(function(c) {
+      return c.itemName === itemName;
+    });
+  }
+
+  function getUnclaimedInPool() {
+    return game.roundItemPool.filter(function(item) {
+      return !isClaimed(item.name);
+    });
+  }
+
+  /* ================================================================
+     GAME START
+     ================================================================ */
+  function startGame() {
+    resetGame();
+    game.shuffledItems = shuffle(ALL_ITEMS);
+    game.firstPlayer = Math.random() < 0.5 ? 0 : 1;
+    game.round = 1;
+    beginRound();
+  }
+
+  /* ================================================================
+     ROUND LOGIC
+     ================================================================ */
+  function beginRound() {
+    var offset = (game.round - 1) * 2;
+    game.roundItemPool = game.shuffledItems.slice(offset, offset + 2);
+    game.playersActedThisPair = 0;
+    game.currentPlayer = game.firstPlayer;
+    showTurnTransition();
+  }
+
+  function showTurnTransition() {
+    var nameEl = document.getElementById('turn-player-name');
+    nameEl.textContent = getPlayerName(game.currentPlayer);
+    nameEl.className = 'turn-player ' + getPlayerClass(game.currentPlayer) + '-name';
+    showScreen('screen-turn');
+  }
+
+  function showGameRound() {
+    document.getElementById('round-num').textContent = game.round;
+    renderHearts();
+    renderCurrentPlayerLabel();
+    renderItems();
+    updateThresholdWeight();
+    showScreen('screen-game');
+  }
+
+  function renderCurrentPlayerLabel() {
+    var el = document.getElementById('current-turn-label');
+    var cls = game.currentPlayer === 0 ? 'keeper-text' : 'cartographer-text';
+    el.innerHTML = '<strong class="' + cls + '">' + getPlayerName(game.currentPlayer) + '</strong>, what do you take?';
+  }
+
+  function renderHearts() {
+    var container = document.getElementById('hearts-display');
+    var html = '';
+
+    html += '<div class="hearts-group">';
+    html += '<span class="heart-name" style="color:var(--keeper)">Keeper</span>';
+    for (var i = 0; i < 10; i++) {
+      html += '<span class="heart ' + (i < game.keeper.hearts ? 'full' : 'empty') + '"><i class="fa-solid fa-heart"></i></span>';
+    }
+    html += '</div>';
+
+    html += '<div class="hearts-group">';
+    html += '<span class="heart-name" style="color:var(--cartographer)">Cartographer</span>';
+    for (var i = 0; i < 10; i++) {
+      html += '<span class="heart ' + (i < game.cartographer.hearts ? 'full' : 'empty') + '"><i class="fa-solid fa-heart"></i></span>';
+    }
+    html += '</div>';
+
+    container.innerHTML = html;
+  }
+
+  function renderItems() {
+    var area = document.getElementById('items-area');
+    var html = '';
+
+    game.roundItemPool.forEach(function(item, i) {
+      var claimed = isClaimed(item.name);
+      var disabled = claimed ? ' disabled' : '';
+      var badge = '';
+
+      if (claimed) {
+        var claim = game.claimHistory.find(function(c) {
+          return c.itemName === item.name;
+        });
+        var badgeClass = claim.player === 0 ? 'keeper-badge' : 'cartographer-badge';
+        badge = '<div class="claimed-badge ' + badgeClass + '">' + getPlayerName(claim.player) + '</div>';
+      }
+
+      var heartIcons = '';
+      for (var h = 0; h < item.cost; h++) {
+        heartIcons += '<i class="fa-solid fa-heart" style="font-size:0.65rem"></i>';
+      }
+
+      html += '<div class="item-card' + disabled + '" data-index="' + i + '"'
+        + ' onclick="handleClaim(' + i + ')" role="button" tabindex="0"'
+        + ' aria-label="Claim ' + item.name + '">'
+        + badge
+        + '<div class="item-category">' + item.category + '</div>'
+        + '<div class="item-name">' + item.name + '</div>'
+        + '<div class="item-desc">' + item.desc + '</div>'
+        + '<div class="item-cost"><span class="cost-hearts">' + heartIcons + '</span> '
+        + item.cost + (item.cost === 1 ? ' heart' : ' hearts') + '</div>'
+        + '</div>';
+    });
+
+    area.innerHTML = html;
+  }
+
+  function updateThresholdWeight() {
+    var el = document.getElementById('threshold-weight');
+    var countEl = document.getElementById('threshold-count');
+    if (game.threshold.length > 0) {
+      el.classList.add('visible');
+      countEl.textContent = game.threshold.length;
+    } else {
+      el.classList.remove('visible');
+    }
+  }
+
+  /* ================================================================
+     CLAIMING
+     ================================================================ */
+  function handleClaim(index) {
+    var item = game.roundItemPool[index];
+    if (!item || isClaimed(item.name)) return;
+
+    var player = getPlayer(game.currentPlayer);
+    if (player.hearts < item.cost) {
+      showToast('Not enough hearts for this.');
+      return;
+    }
+
+    player.hearts -= item.cost;
+    player.items.push(item);
+    game.claimHistory.push({
+      itemName: item.name,
+      player: game.currentPlayer,
+      round: game.round,
+      fromThreshold: false
+    });
+
+    showToast(getPlayerName(game.currentPlayer) + ' claimed ' + item.name + '.');
+    playerActed();
+  }
+
+  function handlePass() {
+    var remaining = getUnclaimedInPool();
+    var passer = getPlayer(game.currentPlayer);
+
+    remaining.forEach(function(item) {
+      var alreadyThere = game.threshold.some(function(t) { return t.name === item.name; });
+      if (!alreadyThere) {
+        game.threshold.push(item);
+      }
+    });
+    passer.passedCount += remaining.length;
+
+    if (remaining.length > 0) {
+      showToast(remaining.length + ' item' + (remaining.length > 1 ? 's' : '') + ' passed to the threshold.');
+    }
+    playerActed();
+  }
+
+  function playerActed() {
+    game.playersActedThisPair++;
+    var stillUnclaimed = getUnclaimedInPool();
+
+    if (game.playersActedThisPair >= 2 || stillUnclaimed.length === 0) {
+      // Any truly remaining items drift to threshold
+      stillUnclaimed.forEach(function(item) {
+        var alreadyThere = game.threshold.some(function(t) { return t.name === item.name; });
+        if (!alreadyThere) {
+          game.threshold.push(item);
+        }
+      });
+      if (stillUnclaimed.length > 0) {
+        showToast(stillUnclaimed.length + ' unclaimed item' + (stillUnclaimed.length > 1 ? 's' : '') + ' drifted to the threshold.');
+      }
+      finishPair();
+    } else {
+      // Switch to the other player
+      game.currentPlayer = 1 - game.currentPlayer;
+      showTurnTransition();
+    }
+  }
+
+  function finishPair() {
+    // After rounds 3-5, offer a chance to reach into the threshold
+    if (game.threshold.length > 0 && game.round >= 3 && !game.gameEndedByThreshold) {
+      showThresholdOpportunity();
+    } else {
+      finishRound();
+    }
+  }
+
+  /* ================================================================
+     THRESHOLD
+     ================================================================ */
+  function showThresholdOpportunity() {
+    var list = document.getElementById('threshold-items-list');
+    var html = '';
+
+    game.threshold.forEach(function(item, i) {
+      var heartIcons = '';
+      for (var h = 0; h < item.cost; h++) {
+        heartIcons += '<i class="fa-solid fa-heart" style="font-size:0.6rem"></i>';
+      }
+      html += '<div class="threshold-item" onclick="claimFromThreshold(' + i + ')" role="button" tabindex="0">'
+        + '<div class="ti-name">' + item.name + '</div>'
+        + '<div class="ti-desc">' + item.desc + '</div>'
+        + '<div class="ti-cost">' + heartIcons + ' ' + item.cost + (item.cost === 1 ? ' heart' : ' hearts') + '</div>'
+        + '</div>';
+    });
+
+    list.innerHTML = html;
+    showScreen('screen-threshold');
+  }
+
+  function claimFromThreshold(index) {
+    var item = game.threshold[index];
+    var player = getPlayer(game.currentPlayer);
+
+    if (player.hearts < item.cost) {
+      showToast('Not enough hearts for this.');
+      return;
+    }
+
+    player.hearts -= item.cost;
+    player.items.push(item);
+    game.threshold.splice(index, 1);
+    game.gameEndedByThreshold = true;
+
+    game.claimHistory.push({
+      itemName: item.name,
+      player: game.currentPlayer,
+      round: game.round,
+      fromThreshold: true
+    });
+
+    showToast(getPlayerName(game.currentPlayer) + ' reached into the threshold and took ' + item.name + '.');
+    setTimeout(function() { showScoring(); }, 1800);
+  }
+
+  function skipThreshold() {
+    showToast('Left behind. Again.');
+    setTimeout(function() { finishRound(); }, 900);
+  }
+
+  /* ================================================================
+     ROUND FLOW
+     ================================================================ */
+  function finishRound() {
+    if (game.round === 3 && !game.gameEndedByThreshold) {
+      showMidpoint();
+      return;
+    }
+    if (game.round >= 5 || game.gameEndedByThreshold) {
+      showScoring();
+      return;
+    }
+    game.round++;
+    game.firstPlayer = 1 - game.firstPlayer;
+    beginRound();
+  }
+
+  function showMidpoint() {
+    // Claimed items
+    var claimedEl = document.getElementById('claimed-so-far');
+    var keeperItems = game.keeper.items;
+    var cartItems = game.cartographer.items;
+    var chtml = '<h4>What\u2019s Been Claimed</h4>';
+
+    if (keeperItems.length === 0 && cartItems.length === 0) {
+      chtml += '<p style="color:var(--text-dim);font-style:italic;font-size:0.9rem;">Nothing yet. Everything waits.</p>';
+    } else {
+      keeperItems.forEach(function(item) {
+        chtml += '<div class="csf-item"><span class="csf-player" style="color:var(--keeper);">Keeper</span> &mdash; ' + item.name + '</div>';
+      });
+      cartItems.forEach(function(item) {
+        chtml += '<div class="csf-item"><span class="csf-player" style="color:var(--cartographer);">Cartographer</span> &mdash; ' + item.name + '</div>';
+      });
+    }
+    claimedEl.innerHTML = chtml;
+
+    // Threshold peek
+    var peekEl = document.getElementById('threshold-peek');
+    if (game.threshold.length === 0) {
+      peekEl.innerHTML = '<h4>The Threshold</h4><p style="color:var(--text-dim);font-style:italic;font-size:0.9rem;">Empty. Everything has been claimed.</p>';
+    } else {
+      var thtml = '<h4>The Threshold</h4>';
+      game.threshold.forEach(function(item) {
+        thtml += '<div class="tp-item">' + item.name + ' <span style="color:var(--text-dim);font-size:0.8rem;">&mdash; ' + item.category + '</span></div>';
+      });
+      peekEl.innerHTML = thtml;
+    }
+
+    showScreen('screen-midpoint');
+  }
+
+  function continueToRound4() {
+    game.round = 4;
+    game.firstPlayer = 1 - game.firstPlayer;
+    beginRound();
+  }
+
+  /* ================================================================
+     SCORING
+     The reveal the game has been building toward. Players discover
+   that the metrics they never saw during play — alignment, mutual
+   care, generosity — were being measured all along.
+     ================================================================ */
+  function showScoring() {
+    var content = document.getElementById('scoring-content');
+    var keeperItems = game.keeper.items;
+    var cartItems = game.cartographer.items;
+    var keeperCost = keeperItems.reduce(function(s, i) { return s + i.cost; }, 0);
+    var cartCost = cartItems.reduce(function(s, i) { return s + i.cost; }, 0);
+
+    // 1. EQUILIBRIUM (0–40): Balance of emotional weight spent
+    var asymmetry = Math.abs(keeperCost - cartCost);
+    var maxAsymmetry = 12;
+    var asymScore = Math.round(Math.max(0, (1 - asymmetry / maxAsymmetry)) * 40);
+
+    // 2. GENEROSITY (0–25): How often players chose to let things pass
+    var totalPassed = game.keeper.passedCount + game.cartographer.passedCount;
+    var maxPassed = 10;
+    var genScore = Math.round(Math.min(totalPassed / maxPassed, 1) * 25);
+
+    // 3. THRESHOLD (0–25): How much was claimed vs. abandoned
+    var totalDealt = Math.min(game.round * 2, 10);
+    var claimedCount = keeperItems.length + cartItems.length;
+    var threshScore = Math.round(Math.max(0, (claimedCount / Math.max(1, totalDealt))) * 25);
+
+    // 4. ALIGNMENT (0–10): Hidden values — did players see things similarly?
+    var alignmentPoints = 0;
+    var allClaimed = keeperItems.concat(cartItems);
+    allClaimed.forEach(function(item) {
+      var diff = Math.abs(item.keeper_value - item.cartographer_value);
+      alignmentPoints += (5 - diff); // max 5 per item
+    });
+    var maxAlignmentPoints = allClaimed.length * 5;
+    var alignmentScore = maxAlignmentPoints > 0
+      ? Math.round((alignmentPoints / maxAlignmentPoints) * 10)
+      : 0;
+
+    var totalScore = asymScore + genScore + threshScore + alignmentScore;
+
+    // Winner: whoever carried LESS weight — gave the other the harder task
+    var winnerText, winnerClass, winReason;
+    if (keeperCost < cartCost) {
+      winnerText = 'The Keeper';
+      winnerClass = 'keeper-name';
+      winReason = 'By carrying less weight, the Keeper gave the Cartographer the harder task \u2014 the burden of choosing. The settlement was never about keeping. It was about who made the other person\u2019s load a little lighter.';
+    } else if (cartCost < keeperCost) {
+      winnerText = 'The Cartographer';
+      winnerClass = 'cartographer-name';
+      winReason = 'By drawing new boundaries with a lighter hand, the Cartographer left room for the Keeper to hold on. The map was never about territory. It was about care.';
+    } else {
+      winnerText = 'Neither';
+      winnerClass = 'tie-name';
+      winReason = 'A rare balance. Neither carried more than the other. In the end, the settlement was not a division but a conversation \u2014 equal, difficult, and shared.';
+    }
+
+    // Build the scoring reveal screen
+    var html = ''
+      + '<div class="scoring-header">'
+      + '  <h2>The Accounting</h2>'
+      + '  <p class="scoring-subtitle">You thought this was about who kept the most. It never was.</p>'
+      + '</div>'
+      + ''
+      + '<div class="score-section" id="score-eq">'
+      + '  <h3><i class="fa-solid fa-scale-balanced"></i>Equilibrium</h3>'
+      + '  <div class="score-card">'
+      + '    <div>'
+      + '      <div class="score-label">Balance of emotional weight</div>'
+      + '      <div class="score-detail">Keeper spent ' + keeperCost + ' hearts. Cartographer spent ' + cartCost + '. Difference: ' + asymmetry + '</div>'
+      + '    </div>'
+      + '    <div class="score-value">' + asymScore + '</div>'
+      + '  </div>'
+      + '</div>'
+      + ''
+      + '<div class="score-section" id="score-gen">'
+      + '  <h3><i class="fa-solid fa-hand-holding-heart"></i>Generosity</h3>'
+      + '  <div class="score-card">'
+      + '    <div>'
+      + '      <div class="score-label">What you let go</div>'
+      + '      <div class="score-detail">Keeper released ' + game.keeper.passedCount + ' items. Cartographer released ' + game.cartographer.passedCount + '. Total: ' + totalPassed + '</div>'
+      + '    </div>'
+      + '    <div class="score-value">' + genScore + '</div>'
+      + '  </div>'
+      + '</div>'
+      + ''
+      + '<div class="score-section" id="score-th">'
+      + '  <h3><i class="fa-solid fa-heart-crack"></i>Threshold</h3>'
+      + '  <div class="score-card">'
+      + '    <div>'
+      + '      <div class="score-label">What was claimed vs. abandoned</div>'
+      + '      <div class="score-detail">' + game.threshold.length + ' item' + (game.threshold.length !== 1 ? 's' : '') + ' left unclaimed. ' + claimedCount + ' of ' + totalDealt + ' found a home.</div>'
+      + '    </div>'
+      + '    <div class="score-value">' + threshScore + '</div>'
+      + '  </div>'
+      + '</div>'
+      + ''
+      + '<div class="score-section" id="score-al">'
+      + '  <h3><i class="fa-solid fa-hands-holding"></i>Alignment <span style="font-size:0.75rem;color:var(--text-dim);font-weight:400;">(hidden during play)</span></h3>'
+      + '  <div class="score-card">'
+      + '    <div>'
+      + '      <div class="score-label">How similarly you valued what you shared</div>'
+      + '      <div class="score-detail">Every item carried a hidden meaning for each of you. When you agreed on what mattered, you were never truly divided.</div>'
+      + '    </div>'
+      + '    <div class="score-value">' + alignmentScore + '</div>'
+      + '  </div>'
+      + '</div>'
+      + ''
+      + '<div class="divider-bar"></div>'
+      + ''
+      + '<div class="score-section" id="score-total">'
+      + '  <div class="score-card" style="border-color:var(--accent);background:#1a1820;">'
+      + '    <div>'
+      + '      <div class="score-label" style="font-size:1.15rem;color:var(--accent);">Total Settlement Score</div>'
+      + '      <div class="score-detail" style="color:var(--text-muted);">How well you divided a life together</div>'
+      + '    </div>'
+      + '    <div class="score-value" style="font-size:2.8rem;">' + totalScore + '</div>'
+      + '  </div>'
+      + '</div>'
+      + ''
+      + '<div class="divider-bar"></div>'
+      + ''
+      + '<div class="final-reveal" id="final-reveal">'
+      + '  <div class="final-label">The one who made it easier</div>'
+      + '  <div class="winner-name ' + winnerClass + '">' + winnerText + '</div>'
+      + '  <div class="win-reason">' + winReason + '</div>'
+      + '</div>'
+      + ''
+      + '<div class="divider-bar"></div>'
+      + ''
+      + '<div class="inventory-overview" id="inventory-section">'
+      + '  <div class="inventory-column keeper-col">'
+      + '    <h4><i class="fa-solid fa-hand-holding-heart" style="margin-right:6px;"></i>The Keeper\'s Things</h4>'
+      + (keeperItems.length === 0
+        ? '<div class="inventory-item" style="font-style:italic;">Nothing claimed</div>'
+        : keeperItems.map(function(i) {
+            return '<div class="inventory-item"><strong>' + i.name + '</strong> <span>&mdash; ' + i.category + '</span></div>';
+          }).join(''))
+      + '  </div>'
+      + '  <div class="inventory-column cartographer-col">'
+      + '    <h4><i class="fa-solid fa-map" style="margin-right:6px;"></i>The Cartographer\'s Things</h4>'
+      + (cartItems.length === 0
+        ? '<div class="inventory-item" style="font-style:italic;">Nothing claimed</div>'
+        : cartItems.map(function(i) {
+            return '<div class="inventory-item"><strong>' + i.name + '</strong> <span>&mdash; ' + i.category + '</span></div>';
+          }).join(''))
+      + '  </div>'
+      + '</div>';
+
+    if (game.threshold.length > 0) {
+      html += '<div class="threshold-remainder" id="threshold-remainder">'
+        + '  <h4><i class="fa-solid fa-heart-crack" style="margin-right:6px;"></i>Left at the Threshold</h4>'
+        + game.threshold.map(function(i) {
+            return '<div class="inventory-item">' + i.name + ' <span>&mdash; ' + i.category + '</span></div>';
+          }).join('')
+        + '</div>';
+    }
+
+    html += '<div style="text-align:center;margin-top:48px;padding-bottom:40px;">'
+      + '  <button class="btn" onclick="restartGame()">Play Again</button>'
+      + '  <p style="margin-top:16px;font-size:0.82rem;color:var(--text-dim);">Every settlement tells a different story.</p>'
+      + '</div>';
+
+    content.innerHTML = html;
+    showScreen('screen-scoring');
+
+    // Staggered reveal — each metric appears in sequence
+    var sections = ['score-eq', 'score-gen', 'score-th', 'score-al', 'score-total'];
+    sections.forEach(function(id, i) {
+      var el = document.getElementById(id);
+      if (el) {
+        setTimeout(function() { el.classList.add('visible'); }, 600 + i * 800);
+      }
+    });
+
+    // Final reveal after all scores shown
+    var finalDelay = 600 + sections.length * 800 + 400;
+    setTimeout(function() {
+      var fr = document.getElementById('final-reveal');
+      if (fr) fr.classList.add('visible');
+    }, finalDelay);
+
+    // Inventory after the winner reveal
+    setTimeout(function() {
+      var inv = document.getElementById('inventory-section');
+      if (inv) inv.classList.add('visible');
+      var tr = document.getElementById('threshold-remainder');
+      if (tr) tr.classList.add('visible');
+    }, finalDelay + 1600);
+  }
+
+  function restartGame() {
+    showScreen('screen-title');
+    resetGame();
+  }
+
+  /* ================================================================
+     BACKGROUND PARTICLES
+     Dust motes — the residue of a shared life, drifting upward.
+     ================================================================ */
+  var canvas = document.getElementById('bg-canvas');
+  var ctx = canvas.getContext('2d');
+  var particles = [];
+
+  function initCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    particles = [];
+
+    var count = Math.min(45, Math.floor(window.innerWidth * window.innerHeight / 28000));
+    for (var i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.max(0.8, Math.random() * 2.2),
+        vx: (Math.random() - 0.5) * 0.12,
+        vy: -Math.random() * 0.18 - 0.04,
+        alpha: Math.random() * 0.2 + 0.05,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function drawParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Subtle radial glow — warmth at the center
+    var cx = canvas.width * 0.5;
+    var cy = canvas.height * 0.35;
+    var outerR = Math.max(1, canvas.width * 0.65);
+    var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, outerR);
+    grad.addColorStop(0, 'rgba(30, 27, 40, 0.25)');
+    grad.addColorStop(1, 'rgba(12, 11, 16, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    var t = Date.now() * 0.001;
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      var flicker = Math.sin(t * 0.8 + p.phase) * 0.12 + 0.88;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, Math.max(0.5, p.r), 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(196, 154, 108, ' + (p.alpha * flicker).toFixed(3) + ')';
+      ctx.fill();
+
+      p.x += p.vx + Math.sin(t * 0.4 + p.phase) * 0.04;
+      p.y += p.vy;
+
+      // Wrap around edges
+      if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+      if (p.x < -10) p.x = canvas.width + 10;
+      if (p.x > canvas.width + 10) p.x = -10;
+    }
+
+    requestAnimationFrame(drawParticles);
+  }
+
+  window.addEventListener('resize', function() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+
+  /* ================================================================
+     KEYBOARD SUPPORT
+     ================================================================ */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      var focused = document.activeElement;
+      if (focused && (focused.classList.contains('item-card') || focused.classList.contains('threshold-item'))) {
+        focused.click();
+      }
+    }
+  });
+
+  /* ================================================================
+     INIT
+     ================================================================ */
+  initCanvas();
+  drawParticles();
+  showScreen('screen-title');
+  </script>
+</body>
+</html>

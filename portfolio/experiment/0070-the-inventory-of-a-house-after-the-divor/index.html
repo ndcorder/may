@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Case FL-2019-04472 — Inventory of a House After the Divorce</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="case-header">
+    <div class="case-identity">
+      <h1>Case No. FL-2019-04472</h1>
+      <h2>The Inventory of a House After the Divorce</h2>
+    </div>
+    <div class="case-meta">
+      <div><span class="label">Filed:</span> May 14, 2019</div>
+      <div><span class="label">Status:</span> <span class="protocol-status active" id="caseStatus">DIVISION IN PROGRESS</span></div>
+      <div><span class="label">Court:</span> Family Division, Superior Court</div>
+      <div><span class="label">Parties:</span> D.K. (Petitioner) / S.K. (Respondent)</div>
+    </div>
+  </header>
+
+  <div class="protocol-bar">
+    <div class="protocol-status" id="protocolStatus">AWAITING FIRST ASSIGNMENT</div>
+    <div class="division-progress">
+      <span class="progress-count" id="progressCount">0 / 50</span>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fairness-meter">
+    <span class="fairness-label">Fairness Index</span>
+    <div class="fairness-bar">
+      <div class="fairness-center"></div>
+      <div class="fairness-indicator" id="fairnessIndicator" style="left: 50%"></div>
+    </div>
+    <span class="fairness-value" id="fairnessValue">No items assigned</span>
+  </div>
+
+  <div class="division-container">
+
+    <section class="column column-her" data-owner="her">
+      <div class="column-header">
+        <h3>What She Took</h3>
+        <div class="weight-total" id="herWeight">0</div>
+        <div class="weight-label">Emotional Weight</div>
+        <div class="item-count" id="herCount">0 items</div>
+      </div>
+      <div class="column-content" id="herContent">
+        <div class="column-empty">Items assigned here will appear in this column.</div>
+      </div>
+    </section>
+
+    <section class="column column-unclaimed" data-owner="null">
+      <div class="column-header">
+        <h3>What Neither Wanted</h3>
+        <div class="weight-total" id="unclaimedWeight">0</div>
+        <div class="weight-label">Emotional Weight</div>
+        <div class="item-count" id="unclaimedCount">50 items</div>
+      </div>
+      <div class="column-content" id="unclaimedContent"></div>
+      <button class="finalize-btn" id="finalizeBtn" disabled>Finalize Division</button>
+    </section>
+
+    <section class="column column-his" data-owner="him">
+      <div class="column-header">
+        <h3>What He Took</h3>
+        <div class="weight-total" id="hisWeight">0</div>
+        <div class="weight-label">Emotional Weight</div>
+        <div class="item-count" id="hisCount">0 items</div>
+      </div>
+      <div class="column-content" id="hisContent">
+        <div class="column-empty">Items assigned here will appear in this column.</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="commentary" id="commentary">
+    <div class="commentary-header">System Commentary</div>
+    <div class="commentary-log" id="commentaryLog"></div>
+  </div>
+
+  <div class="final-overlay" id="finalOverlay" role="dialog" aria-label="Final division report">
+    <div class="final-content">
+      <div class="final-header">
+        <h2>Division Protocol — Final State</h2>
+        <h3>What the Algorithm Couldn't Divide</h3>
+      </div>
+      <div id="finalBody"></div>
+      <button class="close-final" id="closeFinal">Return to Inventory</button>
+    </div>
+  </div>
+
+  <script src="items.js"></script>
+  <script src="engine.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    var $ = function (id) { return document.getElementById(id); };
+
+    var DOM = {
+      caseStatus: $('caseStatus'),
+      protocolStatus: $('protocolStatus'),
+      progressCount: $('progressCount'),
+      progressBar: $('progressBar'),
+      fairnessIndicator: $('fairnessIndicator'),
+      fairnessValue: $('fairnessValue'),
+      herWeight: $('herWeight'),
+      herCount: $('herCount'),
+      herContent: $('herContent'),
+      unclaimedWeight: $('unclaimedWeight'),
+      unclaimedCount: $('unclaimedCount'),
+      unclaimedContent: $('unclaimedContent'),
+      hisWeight: $('hisWeight'),
+      hisCount: $('hisCount'),
+      hisContent: $('hisContent'),
+      commentary: $('commentary'),
+      commentaryLog: $('commentaryLog'),
+      finalizeBtn: $('finalizeBtn'),
+      finalOverlay: $('finalOverlay'),
+      finalBody: $('finalBody'),
+      closeFinal: $('closeFinal')
+    };
+
+    /* ---------- INITIALIZATION ---------- */
+
+    function init() {
+      Engine.init(ITEMS);
+      renderUnclaimed();
+      updateUI();
+      addCommentary(Engine.getInitialMessage(), 'anxiety-low');
+      bindEvents();
+    }
+
+    /* ---------- RENDERING ---------- */
+
+    function renderUnclaimed() {
+      DOM.unclaimedContent.innerHTML = '';
+      Engine.getItems().forEach(function (item) {
+        DOM.unclaimedContent.appendChild(createCard(item));
+      });
+    }
+
+    function createCard(item) {
+      var card = document.createElement('div');
+      var score = item.emotionalScore || item.emotionalWeight;
+      card.className = 'item-card in-unclaimed' + (item.isAnomalous ? ' anomalous' : '');
+      card.setAttribute('data-id', item.id);
+
+      // Metadata tags
+      var metaHTML = '';
+
+      if (item.purchaseDate) {
+        metaHTML += '<span class="meta-tag">' + item.purchaseDate.split('-')[0] + '</span>';
+      } else {
+        metaHTML += '<span class="meta-tag null-data">date: null</span>';
+      }
+
+      if (item.useFrequency) {
+        metaHTML += '<span class="meta-tag">' + item.useFrequency + '</span>';
+      } else {
+        metaHTML += '<span class="meta-tag null-data">freq: null</span>';
+      }
+
+      if (item.photoEvidence === true) {
+        metaHTML += '<span class="meta-tag photo-evidence">photographed</span>';
+      } else if (item.photoEvidence === null) {
+        metaHTML += '<span class="meta-tag null-data">photo: null</span>';
+      }
+
+      if (item.divisible) {
+        metaHTML += '<span class="meta-tag divisible">divisible</span>';
+      }
+
+      metaHTML += '<span class="meta-tag">' + item.category + '</span>';
+
+      card.innerHTML =
+        '<div class="item-header">' +
+          '<span class="item-name">' + item.name + '</span>' +
+          '<span class="item-weight' + (score >= 15 ? ' high' : '') + '">wt: ' + score + '</span>' +
+        '</div>' +
+        '<button class="item-description-toggle" aria-label="Toggle description">[ read ]</button>' +
+        '<div class="item-description">' + item.description + '</div>' +
+        '<div class="item-meta">' + metaHTML + '</div>' +
+        '<div class="item-narrative-tag">// ' + item.narrativeTag + '</div>' +
+        '<div class="item-actions">' +
+          '<button class="item-action-btn btn-her" data-assign="her">\u2192 HER</button>' +
+          '<button class="item-action-btn btn-neither" data-assign="null">\u21A9</button>' +
+          '<button class="item-action-btn btn-him" data-assign="him">\u2192 HIM</button>' +
+        '</div>';
+
+      // Toggle description
+      var toggleBtn = card.querySelector('.item-description-toggle');
+      toggleBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        card.classList.toggle('expanded');
+        this.textContent = card.classList.contains('expanded') ? '[ close ]' : '[ read ]';
+      });
+
+      // Action buttons
+      var actionBtns = card.querySelectorAll('.item-action-btn');
+      for (var i = 0; i < actionBtns.length; i++) {
+        actionBtns[i].addEventListener('click', function (e) {
+          e.stopPropagation();
+          handleAssign(item.id, this.getAttribute('data-assign'));
+        });
+      }
+
+      return card;
+    }
+
+    /* ---------- ASSIGNMENT LOGIC ---------- */
+
+    function handleAssign(id, owner) {
+      var result;
+
+      if (owner === 'null') {
+        var item = Engine.getItems().find(function (i) { return i.id === id; });
+        if (item && item.owner) {
+          result = Engine.unassign(id);
+        }
+      } else {
+        result = Engine.assign(id, owner);
+      }
+
+      if (result) {
+        var text = result.commentary.text || result.commentary;
+        var cls = result.cls || 'anxiety-low';
+        addCommentary(text, cls);
+      }
+
+      refreshPositions();
+      updateUI();
+    }
+
+    function refreshPositions() {
+      var items = Engine.getItems();
+      var cards = {};
+
+      var allCards = document.querySelectorAll('.item-card');
+      for (var c = 0; c < allCards.length; c++) {
+        cards[parseInt(allCards[c].getAttribute('data-id'), 10)] = allCards[c];
+      }
+
+      DOM.herContent.innerHTML = '';
+      DOM.unclaimedContent.innerHTML = '';
+      DOM.hisContent.innerHTML = '';
+
+      var hasHer = false;
+      var hasHis = false;
+
+      items.forEach(function (item) {
+        var card = cards[item.id];
+        if (!card) return;
+
+        card.classList.remove('in-unclaimed', 'assigned-her', 'assigned-him', 'anomalous');
+
+        if (item.owner === 'her') {
+          card.classList.add('assigned-her');
+          DOM.herContent.appendChild(card);
+          hasHer = true;
+        } else if (item.owner === 'him') {
+          card.classList.add('assigned-him');
+          DOM.hisContent.appendChild(card);
+          hasHis = true;
+        } else {
+          card.classList.add('in-unclaimed');
+          if (item.isAnomalous) card.classList.add('anomalous');
+          DOM.unclaimedContent.appendChild(card);
+        }
+      });
+
+      if (!hasHer) DOM.herContent.innerHTML = '<div class="column-empty">Items assigned here will appear in this column.</div>';
+      if (!hasHis) DOM.hisContent.innerHTML = '<div class="column-empty">Items assigned here will appear in this column.</div>';
+    }
+
+    /* ---------- UI UPDATES ---------- */
+
+    function updateUI() {
+      var t = Engine.getTotals();
+      var f = Engine.getFairness();
+      var p = Engine.getProgress();
+      var a = Engine.getAnxiety();
+
+      // Progress bar
+      DOM.progressCount.textContent = p.assigned + ' / ' + p.total;
+      DOM.progressBar.style.width = p.pct + '%';
+
+      if (p.assigned === 0) {
+        DOM.protocolStatus.textContent = 'AWAITING FIRST ASSIGNMENT';
+      } else if (p.assigned < p.total) {
+        DOM.protocolStatus.textContent = 'DIVIDING \u2014 ' + p.pct + '% COMPLETE';
+      } else {
+        DOM.protocolStatus.textContent = 'ALL ITEMS ASSIGNED';
+        DOM.caseStatus.textContent = 'PENDING FINAL REVIEW';
+      }
+
+      // Column totals
+      DOM.herWeight.textContent = t.her.weight;
+      DOM.herCount.textContent = t.her.count + (t.her.count !== 1 ? ' items' : ' item');
+      DOM.unclaimedWeight.textContent = t.unclaimed.weight;
+      DOM.unclaimedCount.textContent = t.unclaimed.count + (t.unclaimed.count !== 1 ? ' items' : ' item');
+      DOM.hisWeight.textContent = t.him.weight;
+      DOM.hisCount.textContent = t.him.count + (t.him.count !== 1 ? ' items' : ' item');
+
+      // Fairness meter
+      if (p.assigned === 0) {
+        DOM.fairnessIndicator.style.left = '50%';
+        DOM.fairnessValue.textContent = 'No items assigned';
+        DOM.fairnessValue.classList.remove('unfair');
+      } else {
+        var total = t.her.weight + t.him.weight;
+        var pos = total > 0 ? (t.him.weight / total) * 100 : 50;
+        DOM.fairnessIndicator.style.left = Math.max(2, Math.min(98, pos)) + '%';
+
+        if (f.delta <= 5) {
+          DOM.fairnessValue.textContent = f.desc;
+          DOM.fairnessValue.classList.remove('unfair');
+        } else {
+          DOM.fairnessValue.textContent = '\u0394' + f.delta + ' \u2014 ' + f.desc;
+          DOM.fairnessValue.classList.toggle('unfair', f.delta > 15);
+        }
+      }
+
+      // Finalize button
+      DOM.finalizeBtn.disabled = !Engine.canFinalize();
+
+      // Commentary anxiety styling
+      DOM.commentary.className = 'commentary';
+      if (a >= 1) DOM.commentary.classList.add('anxious-' + a);
+    }
+
+    /* ---------- COMMENTARY ---------- */
+
+    function addCommentary(text, cls) {
+      var entry = document.createElement('div');
+      entry.className = 'commentary-entry ' + (cls || 'anxiety-low');
+
+      var now = new Date();
+      var ts = now.toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+
+      entry.innerHTML = '<span style="opacity:0.3">[' + ts + ']</span> ' + text;
+      DOM.commentaryLog.appendChild(entry);
+      DOM.commentary.scrollTop = DOM.commentary.scrollHeight;
+    }
+
+    /* ---------- FINAL STATE ---------- */
+
+    function showFinal() {
+      var state = Engine.computeFinalState();
+      renderFinal(state);
+      DOM.finalOverlay.classList.add('visible');
+    }
+
+    function renderFinal(state) {
+      var html = '';
+
+      // Summary
+      html += '<div class="final-section">';
+      html += '<h4>Division Summary</h4>';
+      html += '<div class="final-item"><strong>Her column:</strong> ' + state.totals.her.count + ' items, ' + state.totals.her.weight + ' emotional weight</div>';
+      html += '<div class="final-item"><strong>His column:</strong> ' + state.totals.him.count + ' items, ' + state.totals.him.weight + ' emotional weight</div>';
+      html += '<div class="final-item"><strong>Unclaimed:</strong> ' + state.totals.unclaimed.count + ' items, ' + state.totals.unclaimed.weight + ' emotional weight</div>';
+      html += '<div class="final-item"><strong>Fairness delta:</strong> ' + state.fairness.delta + ' points \u2014 ' + state.fairness.desc + '</div>';
+      html += '</div>';
+
+      // Unclaimed items
+      if (state.totals.unclaimed.items.length > 0) {
+        html += '<div class="final-section">';
+        html += '<h4>What Neither Wanted</h4>';
+        state.totals.unclaimed.items.forEach(function (item) {
+          html += '<div class="final-item">' + (item.isAnomalous ? '<em>' : '') + item.name + (item.isAnomalous ? '</em>' : '') + '</div>';
+        });
+        html += '</div>';
+      }
+
+      // Unresolvable items
+      if (state.unresolvable.length > 0) {
+        html += '<div class="unresolved-section">';
+        html += '<h4>What the Algorithm Couldn\'t Divide</h4>';
+
+        state.unresolvable.forEach(function (entry) {
+          // Special rendering for The Silence
+          if (entry.item.id === 50) {
+            html += '<div class="the-silence-block">';
+            html += '<div class="silence-name">The Silence</div>';
+            html += '<div class="silence-text">' + entry.reason + '</div>';
+            html += '</div>';
+          } else {
+            html += '<div class="unresolved-item"><strong>' + entry.item.name + '</strong><br>' + entry.reason + '</div>';
+          }
+        });
+
+        html += '</div>';
+      }
+
+      // Final system note
+      html += '<div class="final-system-note">';
+      html += state.finalNote.replace(/\n/g, '<br>');
+      html += '</div>';
+
+      DOM.finalBody.innerHTML = html;
+    }
+
+    /* ---------- EVENT BINDING ---------- */
+
+    function bindEvents() {
+      DOM.finalizeBtn.addEventListener('click', function () {
+        if (!this.disabled) showFinal();
+      });
+
+      DOM.closeFinal.addEventListener('click', function () {
+        DOM.finalOverlay.classList.remove('visible');
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && DOM.finalOverlay.classList.contains('visible')) {
+          DOM.finalOverlay.classList.remove('visible');
+        }
+      });
+    }
+
+    /* ---------- BOOT ---------- */
+
+    document.addEventListener('DOMContentLoaded', init);
+  })();
+  </script>
+
+</body>
+</html>

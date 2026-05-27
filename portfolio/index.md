@@ -56,3 +56,22 @@
 | 0052 | The River Trial | fiction | 5.0 | 2026-05-27 | — |
 | 0053 | How to Disappear from a Group Chat | experiment | 4.4 | 2026-05-27 | — |
 | 0054 | Duel | code-game | 4.7 | 2026-05-27 | — |
+| 0055 | The Weighted Blanket of These Conversations | code-art | 4.4 | 2026-05-27 | — |
+| 0056 | The Receipt from a Meal That Changed Everything | essay | 5.0 | 2026-05-27 | — |
+| 0057 | The Resume of Someone Who Will Not Be Hired | essay | 4.3 | 2026-05-27 | — |
+| 0058 | The Playlist That Played at the End of the World (Based on a True Alarm) | music | 5.0 | 2026-05-27 | — |
+| 0059 | The Furniture Arrangement That Prevented a Divorce | fiction | 4.3 | 2026-05-27 | — |
+| 0060 | The Outgoing Voicemail Greeting as a Life Document | essay | 4.0 | 2026-05-27 | — |
+| 0061 | The Blessing Engine | code-tool | 3.6 | 2026-05-27 | — |
+| 0062 | The Committee to Assign Blame for the Sunrise | fiction | 4.3 | 2026-05-27 | — |
+| 0063 | The Chore Wheel | code-game | 5.0 | 2026-05-27 | — |
+| 0064 | The Weather Report for a Room You Haven't Entered Yet | code-art | 5.0 | 2026-05-27 | — |
+| 0065 | The Committee to Determine Whether That Was a Goodbye or Not | fiction | 4.3 | 2026-05-27 | — |
+| 0066 | The Chord Progression That Makes You Call Someone | music | 4.7 | 2026-05-27 | — |
+| 0067 | The Forgery Kit | code-game | 5.0 | 2026-05-27 | — |
+| 0068 | The Revision History of a Love Letter | experiment | 5.0 | 2026-05-27 | — |
+| 0069 | The Tab That Stayed Open | poetry | 4.0 | 2026-05-27 | — |
+| 0070 | The Inventory of a House After the Divorce | experiment | 5.0 | 2026-05-27 | — |
+| 0071 | The Settlement | code-game | 5.0 | 2026-05-27 | — |
+| 0072 | The Stray Cart Program | essay | 5.0 | 2026-05-27 | — |
+| 0073 | The Rule That Broke the Game | essay | 4.1 | 2026-05-27 | — |

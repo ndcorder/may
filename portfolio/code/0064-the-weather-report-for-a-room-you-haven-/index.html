@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Weather Report for a Room You Haven't Entered Yet</title>
+  <style>
+    :root {
+      --bg: #080b12;
+      --fg: #c8cdd5;
+      --muted: #4a5568;
+      --accent: #c9935a;
+      --card: #0e131c;
+      --border: #1a2333;
+      --radar-bg: #060910;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Courier New', 'Consolas', 'Liberation Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .bg-blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(140px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.15;
+    }
+
+    .bg-blob-1 {
+      width: 350px; height: 350px;
+      background: rgba(201, 147, 90, 0.15);
+      top: -80px; left: -80px;
+      animation: blobFloat1 25s ease-in-out infinite;
+    }
+
+    .bg-blob-2 {
+      width: 280px; height: 280px;
+      background: rgba(90, 130, 180, 0.12);
+      bottom: -60px; right: -60px;
+      animation: blobFloat2 30s ease-in-out infinite;
+    }
+
+    @keyframes blobFloat1 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(50px, 35px); }
+    }
+    @keyframes blobFloat2 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-40px, -25px); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 40px 20px 0;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    header h1 {
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    header p {
+      font-size: 11px;
+      color: var(--muted);
+      font-style: italic;
+      letter-spacing: 0.5px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--fg);
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 14px 16px;
+      resize: vertical;
+      min-height: 60px;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(201, 147, 90, 0.08);
+    }
+
+    textarea::placeholder {
+      color: #2d3748;
+      font-style: italic;
+    }
+
+    .radar-section {
+      position: relative;
+      background: var(--radar-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .radar-section::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.04) 2px,
+        rgba(0, 0, 0, 0.04) 4px
+      );
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    #radarCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .empty-state {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #1e2d3d;
+      z-index: 1;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+
+    .empty-state.hidden { opacity: 0; }
+
+    .empty-state p {
+      font-size: 11px;
+      letter-spacing: 1px;
+      line-height: 1.8;
+    }
+
+    .readings-row {
+      display: flex;
+      gap: 0;
+      margin-bottom: 14px;
+    }
+
+    .reading {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-right: none;
+      padding: 10px 8px;
+      text-align: center;
+      transition: background 0.4s ease;
+    }
+
+    .reading:last-child { border-right: 1px solid var(--border); }
+
+    .reading-label {
+      display: block;
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .reading-value {
+      display: block;
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--accent);
+      transition: color 0.4s ease;
+    }
+
+    .forecast-section {
+      margin-bottom: 8px;
+    }
+
+    .forecast-section h2 {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      font-weight: 400;
+      margin-bottom: 10px;
+    }
+
+    .forecast-grid {
+      display: flex;
+      gap: 8px;
+    }
+
+    .forecast-day {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px 8px;
+      transition: background 0.4s ease, transform 0.2s ease;
+    }
+
+    .forecast-day:hover {
+      background: #141b28;
+      transform: translateY(-1px);
+    }
+
+    .fd-name {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .fd-icon {
+      font-size: 22px;
+      margin-bottom: 8px;
+      opacity: 0.8;
+    }
+
+    .fd-high, .fd-low {
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .fd-desc {
+      font-size: 8px;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.4;
+      min-height: 30px;
+    }
+
+    .ticker-wrap {
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .ticker-label {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      background: var(--accent);
+      color: var(--bg);
+      font-size: 8px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      z-index: 3;
+    }
+
+    .ticker-track {
+      overflow: hidden;
+      margin-left: 70px;
+      position: relative;
+    }
+
+    .ticker-track::before,
+    .ticker-track::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 30px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .ticker-track::before {
+      left: 0;
+      background: linear-gradient(to right, var(--card), transparent);
+    }
+
+    .ticker-track::after {
+      right: 0;
+      background: linear-gradient(to left, var(--card), transparent);
+    }
+
+    .ticker-content {
+      display: flex;
+      white-space: nowrap;
+      animation: tickerScroll var(--ticker-duration, 60s) linear infinite;
+      font-size: 11px;
+      color: var(--fg);
+      letter-spacing: 0.3px;
+      padding: 2px 0;
+    }
+
+    .ticker-content span {
+      flex-shrink: 0;
+      padding-right: 60px;
+    }
+
+    .ticker-content span::after {
+      content: ' /// ';
+      color: var(--accent);
+      margin-left: 60px;
+    }
+
+    @keyframes tickerScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 9px;
+      color: #1a2333;
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 20px 12px 0; }
+      header h1 { font-size: 12px; letter-spacing: 2px; }
+      .readings-row { flex-wrap: wrap; }
+      .reading { flex: 1 1 33%; border-right: 1px solid var(--border); border-bottom: none; }
+      .reading:nth-child(3n) { border-right: none; }
+      .forecast-grid { flex-wrap: wrap; }
+      .forecast-day { flex: 1 1 100%; }
+      .fd-desc { min-height: auto; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ticker-content { animation-duration: 120s !important; }
+      .bg-blob { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+
+  <div class="container">
+    <header>
+      <h1>The Weather Report for a Room You Haven't Entered Yet</h1>
+      <p>A microclimate forecast for interior spaces</p>
+    </header>
+
+    <section class="input-group">
+      <label for="roomInput">Describe the room</label>
+      <textarea id="roomInput" rows="2" placeholder="e.g. my grandmother's kitchen, 3pm, the year she stopped remembering my name" aria-label="Room description for weather generation"></textarea>
+    </section>
+
+    <section class="radar-section" aria-label="Weather radar visualization">
+      <div class="empty-state" id="emptyState">
+        <p>Awaiting atmospheric data...</p>
+        <p>Describe a room to generate its weather</p>
+      </div>
+      <canvas id="radarCanvas"></canvas>
+    </section>
+
+    <div class="readings-row" id="readingsRow">
+      <div class="reading">
+        <span class="reading-label">Humidity</span>
+        <span class="reading-value" id="vHum">--</span>
+      </div>
+      <div class="reading">
+        <span class="reading-label">Pressure</span>
+        <span class="reading-value" id="vPres">--</span>
+      </div>
+      <div class="reading">
+        <span class="reading-label">Wind</span>
+        <span class="reading-value" id="vWind">--</span>
+      </div>
+      <div class="reading">
+        <span class="reading-label">Visibility</span>
+        <span class="reading-value" id="vVis">--</span>
+      </div>
+      <div class="reading">
+        <span class="reading-label">Cloud</span>
+        <span class="reading-value" id="vCloud">--</span>
+      </div>
+      <div class="reading">
+        <span class="reading-label">Temp</span>
+        <span class="reading-value" id="vTemp">--</span>
+      </div>
+    </div>
+
+    <section class="forecast-section">
+      <h2>Five-Day Outlook</h2>
+      <div class="forecast-grid" id="forecastGrid"></div>
+    </section>
+
+    <div class="ticker-wrap">
+      <div class="ticker-label">Forecast</div>
+      <div class="ticker-track">
+        <div class="ticker-content" id="tickerContent">
+          <span>INITIALIZE WEATHER SEQUENCE: Describe a room above to generate its microclimate forecast. All atmospheric readings will populate once spatial data is received.</span>
+        </div>
+      </div>
+    </div>
+
+    <footer>LOCALIZED INTERIOR ATMOSPHERIC MONITORING SYSTEM v2.4</footer>
+  </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    'use strict';
+
+    /* ===== LEXICON ===== */
+    var lexicon = {
+      rooms: {
+        kitchen: { humidity: 0.62, wind: 0.22, temp: 20, stability: 0.4, precip: 'steam', tags: ['cooking','warm','domestic','steam','lingering'] },
+        bedroom: { humidity: 0.42, wind: 0.08, temp: 17, stability: 0.72, precip: 'dust', tags: ['intimate','still','private','rest','quiet'] },
+        bathroom: { humidity: 0.82, wind: 0.12, temp: 23, stability: 0.28, precip: 'mist', tags: ['water','mirror','solitude','steam','reflection'] },
+        living: { humidity: 0.48, wind: 0.16, temp: 19, stability: 0.52, precip: 'dust', tags: ['gathering','memory','lived','familiar','conversation'] },
+        dining: { humidity: 0.44, wind: 0.13, temp: 18, stability: 0.58, precip: 'none', tags: ['formal','expectation','together','waiting','place'] },
+        basement: { humidity: 0.72, wind: 0.04, temp: 13, stability: 0.8, precip: 'fog', tags: ['buried','hidden','damp','forgotten','beneath'] },
+        attic: { humidity: 0.28, wind: 0.2, temp: 32, stability: 0.35, precip: 'dust', tags: ['stored','dusty','hot','abandoned','memories'] },
+        hallway: { humidity: 0.38, wind: 0.28, temp: 16, stability: 0.38, precip: 'none', tags: ['passage','transition','between','brief','echo'] },
+        closet: { humidity: 0.34, wind: 0.02, temp: 14, stability: 0.85, precip: 'none', tags: ['small','dark','hidden','contained','kept'] },
+        garage: { humidity: 0.42, wind: 0.18, temp: 11, stability: 0.55, precip: 'dust', tags: ['tools','oil','neglect','cold','mechanical'] },
+        garden: { humidity: 0.58, wind: 0.35, temp: 15, stability: 0.28, precip: 'rain', tags: ['growth','seasons','open','earth','tending'] },
+        porch: { humidity: 0.52, wind: 0.32, temp: 14, stability: 0.32, precip: 'mist', tags: ['threshold','watching','between','waiting','evening'] },
+        library: { humidity: 0.36, wind: 0.06, temp: 18, stability: 0.75, precip: 'dust', tags: ['quiet','knowledge','still','paper','concentration'] },
+        church: { humidity: 0.3, wind: 0.1, temp: 15, stability: 0.8, precip: 'none', tags: ['sacred','echo','vaulted','solemn','stone'] },
+        hospital: { humidity: 0.42, wind: 0.12, temp: 21, stability: 0.6, precip: 'mist', tags: ['clinical','antiseptic','waiting','monitoring','beep'] },
+        office: { humidity: 0.32, wind: 0.14, temp: 22, stability: 0.68, precip: 'dust', tags: ['fluorescent','routine','paper','deadline','hum'] }
+      },
+      emotions: {
+        grief: { humidity: 0.82, pressure: -6, wind: -0.14, visibility: 0.28, cloud: 0.82, precip: 'rain', stability: 0.2 },
+        sad: { humidity: 0.72, pressure: -4, wind: -0.08, visibility: 0.38, cloud: 0.72, precip: 'rain', stability: 0.28 },
+        happy: { humidity: 0.38, pressure: 3, wind: 0.08, visibility: 0.88, cloud: 0.12, precip: 'none', stability: 0.68 },
+        lonely: { humidity: 0.58, pressure: -3, wind: -0.06, visibility: 0.42, cloud: 0.52, precip: 'fog', stability: 0.38 },
+        angry: { humidity: 0.52, pressure: 8, wind: 0.26, visibility: 0.58, cloud: 0.68, precip: 'thunderstorm', stability: 0.08 },
+        fear: { humidity: 0.68, pressure: -7, wind: 0.2, visibility: 0.28, cloud: 0.88, precip: 'fog', stability: 0.12 },
+        nostalgic: { humidity: 0.56, pressure: -1, wind: -0.1, visibility: 0.48, cloud: 0.46, precip: 'mist', stability: 0.58 },
+        calm: { humidity: 0.38, pressure: 2, wind: -0.06, visibility: 0.82, cloud: 0.08, precip: 'none', stability: 0.78 },
+        tense: { humidity: 0.52, pressure: 5, wind: 0.12, visibility: 0.48, cloud: 0.58, precip: 'thunderstorm', stability: 0.2 },
+        love: { humidity: 0.52, pressure: 1, wind: 0.04, visibility: 0.78, cloud: 0.22, precip: 'none', stability: 0.58 },
+        dread: { humidity: 0.72, pressure: -9, wind: 0.16, visibility: 0.22, cloud: 0.92, precip: 'fog', stability: 0.08 },
+        hope: { humidity: 0.32, pressure: 4, wind: 0.12, visibility: 0.82, cloud: 0.12, precip: 'none', stability: 0.58 },
+        shame: { humidity: 0.62, pressure: -5, wind: -0.06, visibility: 0.28, cloud: 0.72, precip: 'fog', stability: 0.32 },
+        tired: { humidity: 0.52, pressure: -2, wind: -0.12, visibility: 0.42, cloud: 0.62, precip: 'fog', stability: 0.48 },
+        anxious: { humidity: 0.58, pressure: -3, wind: 0.14, visibility: 0.32, cloud: 0.58, precip: 'none', stability: 0.22 }
+      },
+      weatherMods: {
+        forgotten: { visibility: 0.2, pressure: -5, humidity: 0.12, stability: 0.25, precip: 'fog' },
+        remember: { visibility: 0.82, pressure: 2, cloud: -0.2, stability: 0.15 },
+        stopped: { wind: -0.12, pressure: -4, stability: 0.1 },
+        always: { stability: 0.12, cloud: 0.12 },
+        never: { wind: 0.1, precip: 'none', visibility: 0.22 },
+        empty: { humidity: -0.08, wind: 0.12, visibility: 0.78, cloud: 0.12 },
+        silence: { wind: -0.1, pressure: 2, stability: 0.12 },
+        waiting: { pressure: -1, cloud: 0.12, stability: 0.08 },
+        cold: { temp: -4, humidity: 0.08, precip: 'snow' },
+        warm: { temp: 3, humidity: 0.05 },
+        dark: { visibility: 0.22, cloud: 0.18, temp: -2 },
+        light: { visibility: 0.12, cloud: -0.08, temp: 2 },
+        broken: { stability: -0.12, pressure: -2, wind: 0.06 },
+        lost: { visibility: -0.2, pressure: -3, stability: -0.1 },
+        quiet: { wind: -0.08, humidity: 0.05, stability: 0.1 },
+        old: { humidity: 0.06, cloud: 0.08, stability: 0.08 },
+        young: { temp: 2, wind: 0.04, cloud: -0.06 },
+        dying: { pressure: -7, stability: -0.2, humidity: 0.12 },
+        birth: { pressure: 3, wind: 0.08, visibility: 0.1 },
+        music: { wind: 0.1, stability: 0.08 },
+        water: { humidity: 0.18, precip: 'rain' },
+        fire: { temp: 4, humidity: -0.1, wind: 0.1 },
+        garden: { humidity: 0.1, precip: 'mist', temp: 1 },
+        mirror: { visibility: 0.1, stability: -0.05 },
+        window: { wind: 0.1, visibility: 0.12, cloud: -0.1 },
+        door: { wind: 0.12, stability: -0.08 },
+        stair: { wind: 0.08, stability: -0.04 },
+        photograph: { visibility: -0.15, stability: 0.1, precip: 'dust' },
+        memory: { visibility: -0.1, stability: 0.05, cloud: 0.08 },
+        child: { temp: 2, wind: 0.06, stability: -0.06 },
+        mother: { humidity: 0.08, stability: 0.05, temp: 1 },
+        father: { pressure: 2, wind: 0.04, stability: -0.03 },
+        grandmother: { humidity: 0.1, stability: 0.08, temp: -1, cloud: 0.06 },
+        grandfather: { pressure: -1, stability: 0.1, wind: -0.04 },
+        alone: { humidity: -0.05, pressure: -2, visibility: 0.6, stability: 0.15 },
+        name: { visibility: -0.08, pressure: -1, stability: -0.03 },
+        death: { pressure: -8, stability: -0.15, humidity: 0.1, precip: 'fog' },
+        sleep: { wind: -0.08, temp: -2, stability: 0.12, cloud: 0.08 },
+        laugh: { wind: 0.08, visibility: 0.1, stability: -0.04 },
+        cry: { humidity: 0.15, pressure: -2, precip: 'rain' },
+        time: { pressure: -1, stability: -0.05 },
+        year: { pressure: -2, stability: -0.08 }
+      },
+      time: {
+        morning: { temp: 4, visibility: 0.12, cloud: -0.12, wind: 0.04 },
+        noon: { temp: 8, visibility: 0.18, cloud: -0.18, humidity: -0.08 },
+        afternoon: { temp: 6, visibility: 0.1, cloud: -0.1 },
+        evening: { temp: -2, visibility: -0.12, cloud: 0.12, humidity: 0.04 },
+        night: { temp: -6, visibility: -0.22, cloud: 0.22, humidity: 0.08, wind: -0.06 },
+        midnight: { temp: -8, visibility: -0.32, cloud: 0.32, humidity: 0.12, stability: -0.1 },
+        dawn: { temp: -4, visibility: 0.08, cloud: 0.08, humidity: 0.08, stability: 0.05 },
+        dusk: { temp: -3, visibility: -0.15, cloud: 0.18, humidity: 0.06 },
+        '3am': { temp: -7, visibility: -0.28, cloud: 0.28, humidity: 0.1, stability: -0.12 },
+        '3pm': { temp: 6, visibility: 0.08, cloud: -0.08, wind: 0.06 },
+        '5am': { temp: -5, visibility: 0.05, cloud: 0.12, humidity: 0.1 },
+        twilight: { temp: -2, visibility: -0.1, cloud: 0.15 }
+      },
+      seasons: {
+        spring: { temp: 2, humidity: 0.1, wind: 0.08, precip: 'rain' },
+        summer: { temp: 6, humidity: -0.05, visibility: 0.1, precip: 'thunderstorm' },
+        fall: { temp: -2, humidity: 0.05, wind: 0.1, cloud: 0.12 },
+        winter: { temp: -6, humidity: 0.12, visibility: -0.1, cloud: 0.2, precip: 'snow' },
+        autumn: { temp: -3, humidity: 0.06, wind: 0.08, cloud: 0.15, precip: 'mist' }
+      }
+    };
+
+    /* ===== COMPOUND PHRASES =====
+       Multi-word phrases detected before individual token parsing.
+       These produce stronger, more specific weather modifications. */
+    var compounds = [
+      { pattern: /stopped\s+remember/i, mod: { wind: -0.18, pressure: -6, visibility: -0.2, stability: 0.08, precip: 'fog' }, label: 'atmospheric thinning' },
+      { pattern: /used\s+to/i, mod: { pressure: -3, stability: -0.1, cloud: 0.1 }, label: 'absence formation' },
+      { pattern: /no\s+longer/i, mod: { wind: -0.1, pressure: -4, visibility: -0.15 }, label: 'cessation front' },
+      { pattern: /not\s+anymore/i, mod: { pressure: -3, wind: -0.08, stability: -0.12 }, label: 'discontinuity' },
+      { pattern: /the\s+year\s+/i, mod: { pressure: -3, stability: -0.1, cloud: 0.1 }, label: 'temporal distance' },
+      { pattern: /used\s+to\s+be/i, mod: { pressure: -4, stability: -0.12, cloud: 0.12, visibility: -0.1 }, label: 'former-state depression' },
+      { pattern: /has\s+been/i, mod: { stability: 0.1, cloud: 0.08, humidity: 0.05 }, label: 'persistent condition' },
+      { pattern: /don't\s+know|doesn't\s+know/i, mod: { visibility: -0.2, pressure: -5, cloud: 0.15, precip: 'fog' }, label: 'cognitive occlusion' }
+    ];
+
+    /* ===== PARSER ===== */
+    function parseInput(input) {
+      var lower = input.toLowerCase().replace(/[\u2018\u2019]/g, "'");
+      var tokens = lower.split(/[\s,;.\-!?]+/).filter(Boolean);
+
+      var rooms = [];
+      var emotions = [];
+      var mods = [];
+      var timeMatch = null;
+      var seasonMatch = null;
+      var compoundHits = [];
+
+      // Compound phrase detection first
+      compounds.forEach(function(c) {
+        if (c.pattern.test(lower)) {
+          compoundHits.push(c);
+        }
+      });
+
+      tokens.forEach(function(tok, i) {
+        for (var r in lexicon.rooms) {
+          if (tok === r || tok === r + 's' || tok === r + "'s") rooms.push({ key: r, i: i });
+        }
+        for (var e in lexicon.emotions) {
+          if (tok === e || (tok.length > 4 && e.length > 4 && levenshtein(tok, e) <= 1)) emotions.push({ key: e, i: i });
+        }
+        for (var m in lexicon.weatherMods) {
+          if (tok === m || (tok.length > 5 && m.length > 5 && levenshtein(tok, m) <= 1)) mods.push({ key: m, i: i });
+        }
+        for (var t in lexicon.time) {
+          if (tok === t) timeMatch = t;
+        }
+        for (var s in lexicon.seasons) {
+          if (tok === s) seasonMatch = s;
+        }
+      });
+
+      // Check for number + am/pm pattern
+      var timeRe = /(\d{1,2})\s*(am|pm)/i;
+      var tm = lower.match(timeRe);
+      if (tm) {
+        var key = tm[1] + tm[2].toLowerCase();
+        if (lexicon.time[key]) timeMatch = key;
+      }
+
+      // Season from phrases
+      if (!seasonMatch) {
+        if (/spring/i.test(lower)) seasonMatch = 'spring';
+        else if (/summer/i.test(lower)) seasonMatch = 'summer';
+        else if (/fall|autumn/i.test(lower)) seasonMatch = 'autumn';
+        else if (/winter/i.test(lower)) seasonMatch = 'winter';
+      }
+
+      // Year mentions add temporal distance
+      var yearRe = /(?:year|the\s+)?(\d{4})/i;
+      var ym = lower.match(yearRe);
+      if (ym) {
+        var yr = parseInt(ym[1]);
+        var now = new Date().getFullYear();
+        var dist = Math.abs(now - yr);
+        if (dist > 5) mods.push({ key: 'old', i: -1 });
+        if (dist > 20) mods.push({ key: 'forgotten', i: -1 });
+      }
+
+      return { rooms: rooms, emotions: emotions, mods: mods, timeMatch: timeMatch, seasonMatch: seasonMatch, compoundHits: compoundHits, tokens: tokens, raw: lower };
+    }
+
+    function levenshtein(a, b) {
+      if (a.length === 0) return b.length;
+      if (b.length === 0) return a.length;
+      var m = [];
+      for (var i = 0; i <= b.length; i++) m[i] = [i];
+      for (var j = 0; j <= a.length; j++) m[0][j] = j;
+      for (var i = 1; i <= b.length; i++) {
+        for (var j = 1; j <= a.length; j++) {
+          m[i][j] = b[i-1] === a[j-1]
+            ? m[i-1][j-1]
+            : Math.min(m[i-1][j-1]+1, m[i][j-1]+1, m[i-1][j]+1);
+        }
+      }
+      return m[b.length][a.length];
+    }
+
+    /* ===== WEATHER GENERATOR ===== */
+    function generateWeather(parsed) {
+      var w = {
+        humidity: 0.5,
+        pressure: 1013,
+        windSpeed: 0.35,
+        windDir: 45,
+        visibility: 0.65,
+        cloudCover: 0.4,
+        precipitation: 'none',
+        temperature: 18,
+        stability: 0.5,
+        roomTags: [],
+        roomKey: null,
+        compoundLabels: []
+      };
+
+      // Room base
+      if (parsed.rooms.length > 0) {
+        var room = lexicon.rooms[parsed.rooms[0].key];
+        w.humidity = room.humidity;
+        w.windSpeed = room.wind;
+        w.temperature = room.temp;
+        w.stability = room.stability;
+        w.precipitation = room.precip;
+        w.roomTags = room.tags;
+        w.roomKey = parsed.rooms[0].key;
+      }
+
+      // Compound phrases — strong modifiers
+      parsed.compoundHits.forEach(function(ch) {
+        var mod = ch.mod;
+        if (mod.visibility !== undefined) w.visibility = clamp01(w.visibility + mod.visibility * 0.5);
+        if (mod.pressure !== undefined) w.pressure += mod.pressure * 0.8;
+        if (mod.humidity !== undefined) w.humidity = clamp01(w.humidity + mod.humidity * 0.4);
+        if (mod.stability !== undefined) w.stability = clamp01(w.stability + mod.stability * 0.5);
+        if (mod.wind !== undefined) w.windSpeed = clamp01(w.windSpeed + mod.wind * 0.5);
+        if (mod.cloud !== undefined) w.cloudCover = clamp01(w.cloudCover + mod.cloud * 0.4);
+        if (mod.precip && mod.precip !== 'none') w.precipitation = mod.precip;
+        w.compoundLabels.push(ch.label);
+      });
+
+      // Emotions — weighted blend
+      if (parsed.emotions.length > 0) {
+        var e = lexicon.emotions[parsed.emotions[0].key];
+        var str = Math.min(1, parsed.emotions.length * 0.4 + 0.4);
+        w.humidity = lerp(w.humidity, e.humidity, str * 0.5);
+        w.pressure += (e.pressure || 0) * str;
+        w.windSpeed = lerp(w.windSpeed, clamp01(w.windSpeed + (e.wind || 0)), str * 0.4);
+        w.visibility = lerp(w.visibility, e.visibility, str * 0.5);
+        w.cloudCover = lerp(w.cloudCover, e.cloud, str * 0.5);
+        w.stability = lerp(w.stability, e.stability, str * 0.5);
+        if (e.precip && e.precip !== 'none' && Math.random() < str) w.precipitation = e.precip;
+      }
+
+      // Individual modifiers
+      parsed.mods.forEach(function(m) {
+        var mod = lexicon.weatherMods[m.key];
+        if (!mod) return;
+        if (mod.visibility !== undefined) w.visibility = clamp01(w.visibility + mod.visibility * 0.3);
+        if (mod.pressure !== undefined) w.pressure += mod.pressure * 0.5;
+        if (mod.humidity !== undefined) w.humidity = clamp01(w.humidity + mod.humidity * 0.3);
+        if (mod.stability !== undefined) w.stability = clamp01(w.stability + mod.stability * 0.3);
+        if (mod.wind !== undefined) w.windSpeed = clamp01(w.windSpeed + mod.wind * 0.3);
+        if (mod.cloud !== undefined) w.cloudCover = clamp01(w.cloudCover + mod.cloud * 0.3);
+        if (mod.temp !== undefined) w.temperature += mod.temp * 0.5;
+        if (mod.precip && mod.precip !== 'none' && Math.random() < 0.4) w.precipitation = mod.precip;
+      });
+
+      // Time
+      if (parsed.timeMatch) {
+        var t = lexicon.time[parsed.timeMatch];
+        if (t) {
+          if (t.temp !== undefined) w.temperature += t.temp * 0.5;
+          if (t.visibility !== undefined) w.visibility = clamp01(w.visibility + t.visibility * 0.3);
+          if (t.cloud !== undefined) w.cloudCover = clamp01(w.cloudCover + t.cloud * 0.3);
+          if (t.humidity !== undefined) w.humidity = clamp01(w.humidity + t.humidity * 0.3);
+          if (t.wind !== undefined) w.windSpeed = clamp01(w.windSpeed + t.wind * 0.2);
+          if (t.stability !== undefined) w.stability = clamp01(w.stability + t.stability * 0.3);
+        }
+      }
+
+      // Season
+      if (parsed.seasonMatch) {
+        var s = lexicon.seasons[parsed.seasonMatch];
+        if (s) {
+          if (s.temp !== undefined) w.temperature += s.temp * 0.5;
+          if (s.humidity !== undefined) w.humidity = clamp01(w.humidity + s.humidity * 0.3);
+          if (s.wind !== undefined) w.windSpeed = clamp01(w.windSpeed + s.wind * 0.2);
+          if (s.visibility !== undefined) w.visibility = clamp01(w.visibility + s.visibility * 0.2);
+          if (s.cloud !== undefined) w.cloudCover = clamp01(w.cloudCover + s.cloud * 0.2);
+          if (s.precip && s.precip !== 'none' && Math.random() < 0.3) w.precipitation = s.precip;
+        }
+      }
+
+      // Input complexity adds instability
+      if (parsed.tokens.length > 12) w.stability -= 0.06;
+      if (parsed.tokens.length > 20) w.stability -= 0.05;
+
+      // Clamp everything
+      w.humidity = clamp01(w.humidity);
+      w.pressure = clamp(w.pressure, 970, 1045);
+      w.windSpeed = clamp01(w.windSpeed);
+      w.visibility = clamp01(w.visibility);
+      w.cloudCover = clamp01(w.cloudCover);
+      w.stability = clamp01(w.stability);
+      w.temperature = clamp(w.temperature, -10, 42);
+
+      // Wind direction from input hash
+      var h = 0;
+      parsed.tokens.forEach(function(t) { for (var i = 0; i < t.length; i++) h = ((h << 5) - h) + t.charCodeAt(i) | 0; });
+      w.windDir = Math.abs(h) % 360;
+
+      // Atmospheric classification
+      w.atmosColor = getAtmosColor(w);
+
+      return w;
+    }
+
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+    function clamp01(v) { return clamp(v, 0, 1); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function getAtmosColor(w) {
+      var temp = w.temperature;
+      var hum = w.humidity;
+      var prec = w.precipitation;
+
+      if (temp < 2) {
+        if (prec === 'snow') return { r: 90, g: 130, b: 210, label: 'Cryospheric Drift' };
+        return { r: 130, g: 155, b: 210, label: 'Crystalline High' };
+      }
+      if (temp > 30) {
+        if (hum > 0.6) return { r: 225, g: 155, b: 85, label: 'Tropical Low' };
+        return { r: 245, g: 185, b: 105, label: 'Continental Heat' };
+      }
+      if (temp > 22) {
+        return { r: 225, g: 175, b: 115, label: 'Subtropical Ridge' };
+      }
+      if (temp > 14) {
+        if (w.cloudCover > 0.7) return { r: 105, g: 145, b: 180, label: 'Maritime Overcast' };
+        if (prec === 'rain') return { r: 90, g: 130, b: 190, label: 'Cyclonic Depression' };
+        if (prec === 'thunderstorm') return { r: 175, g: 105, b: 185, label: 'Convective Instability' };
+        if (hum > 0.6) return { r: 155, g: 185, b: 165, label: 'Humid Maritime' };
+        return { r: 155, g: 185, b: 215, label: 'Temperate High' };
+      }
+      if (temp > 5) {
+        if (prec === 'fog') return { r: 145, g: 165, b: 185, label: 'Advection Fog' };
+        return { r: 120, g: 160, b: 200, label: 'Polar Maritime' };
+      }
+      return { r: 115, g: 150, b: 205, label: 'Subpolar Trough' };
+    }
+
+    /* ===== FORECAST GENERATOR ===== */
+    function generateForecast(weather, parsed) {
+      var days = ['Tomorrow', 'In Two Days', 'Day Three', 'Day Four', 'Day Five'];
+      var types = [
+        { name: 'Clear', icon: '\u2600', minC: 0, maxC: 25 },
+        { name: 'Partly Cloudy', icon: '\u26C5', minC: -2, maxC: 22 },
+        { name: 'Overcast', icon: '\u2601', minC: -4, maxC: 18 },
+        { name: 'Light Rain', icon: '\uD83C\uDF27', minC: 0, maxC: 16 },
+        { name: 'Heavy Rain', icon: '\uD83C\uDF27', minC: 2, maxC: 14 },
+        { name: 'Thunderstorm', icon: '\u26C8', minC: 8, maxC: 24 },
+        { name: 'Snow', icon: '\u2744', minC: -8, maxC: 2 },
+        { name: 'Fog', icon: '\uD83C\uDF2B', minC: -2, maxC: 14 },
+        { name: 'Dust', icon: '\uD83C\uDF2C', minC: 10, maxC: 30 },
+        { name: 'Mist', icon: '\uD83C\uDF2B', minC: 0, maxC: 16 },
+        { name: 'Haze', icon: '\uD83C\uDF24', minC: 12, maxC: 28 }
+      ];
+
+      // Build location-specific references from parsed content
+      var locRef = buildLocationRef(parsed);
+      var outlook = [];
+
+      for (var i = 0; i < 5; i++) {
+        var variance = 1 - weather.stability;
+        var seed = Math.sin(i * 127.1 + weather.pressure * 0.1) * 43758.5453;
+        var r = seed - Math.floor(seed);
+
+        var tempDelta = (r - 0.5) * 12 * variance;
+        var high = Math.round(weather.temperature + tempDelta + 3);
+        var low = Math.round(weather.temperature + tempDelta - 4);
+
+        // Pick weather type
+        var typeIndex;
+        if (weather.precipitation === 'thunderstorm' && r < 0.3 + variance * 0.3) typeIndex = 5;
+        else if (weather.precipitation === 'rain' && r < 0.3 + variance * 0.2) typeIndex = r < 0.15 ? 4 : 3;
+        else if (weather.precipitation === 'snow' && weather.temperature < 5) typeIndex = 6;
+        else if (weather.precipitation === 'fog' && r < 0.4) typeIndex = 7;
+        else if (weather.precipitation === 'dust' && r < 0.3) typeIndex = 8;
+        else if (weather.precipitation === 'mist' && r < 0.35) typeIndex = 9;
+        else if (weather.cloudCover > 0.7) typeIndex = r < 0.5 ? 2 : 1;
+        else if (weather.cloudCover > 0.4) typeIndex = 1;
+        else typeIndex = r < 0.3 ? 1 : 0;
+
+        if (weather.visibility < 0.3 && r < 0.4) typeIndex = weather.temperature < 5 ? 10 : 7;
+
+        var type = types[typeIndex];
+
+        // Generate description with location references
+        var desc = buildForecastDesc(i, type, weather, parsed, locRef);
+
+        outlook.push({
+          name: days[i],
+          icon: type.icon,
+          high: high,
+          low: low,
+          desc: desc
+        });
+      }
+
+      return outlook;
+    }
+
+    function buildLocationRef(parsed) {
+      // Extract specific references from the input for forecast localization
+      var refs = [];
+      if (parsed.rooms.length > 0) refs.push(lexicon.rooms[parsed.rooms[0].key].tags);
+      // Look for specific furniture/object words
+      var objects = ['telephone', 'radio', 'television', 'table', 'chair', 'bed', 'stove', 'refrigerator', 'clock', 'lamp', 'window', 'door', 'mirror', 'picture', 'photograph', 'book', 'piano', 'couch', 'sofa', 'desk'];
+      objects.forEach(function(obj) {
+        if (parsed.raw.indexOf(obj) !== -1) refs.push(obj);
+      });
+      return refs;
+    }
+
+    function buildForecastDesc(dayIndex, type, weather, parsed, locRef) {
+      var roomName = weather.roomKey || 'interior';
+      var corner = ['southeast', 'northwest', 'northeast', 'southwest', 'center'][dayIndex];
+      var surface = ['where the telephone used to be', 'near the window that faces the street', 'along the far wall', 'in the corner by the door', 'beneath the shelf that held photographs'][dayIndex];
+
+      // Use detected objects to localize
+      if (locRef.length > 1 && typeof locRef[locRef.length - 1] === 'string') {
+        var obj = locRef[locRef.length - 1];
+        surface = 'near the ' + obj + ' that occupies the ' + corner + ' corner';
+      }
+
+      var descs = [];
+
+      if (weather.stability < 0.3) {
+        descs = [
+          'Unsettled. ' + type.name.toLowerCase() + ' giving way to unclear conditions ' + surface + '.',
+          type.name + '. Instability index elevated. Expect sudden changes ' + surface + ' without warning.',
+          'Volatile. ' + type.name.toLowerCase() + ' conditions may intensify. The ' + corner + ' remains under advisory.',
+          type.name + ' with periodic clearing. Pressure systems incompatible. Monitor ' + surface + '.',
+          'Continued ' + type.name.toLowerCase() + '. No stabilization predicted. The ' + roomName + ' atmosphere remains untrustworthy.'
+        ];
+      } else if (weather.visibility < 0.35) {
+        descs = [
+          type.name + '. Visibility ' + surface + ' remains compromised indefinitely.',
+          'Low clouds, ' + type.name.toLowerCase() + '. What was placed ' + surface + ' may not be recoverable.',
+          type.name + ' persisting. Fog advisory extended for the ' + corner + ' quadrant.',
+          'Dense ' + type.name.toLowerCase() + '. The ' + roomName + ' retains its opacity through the forecast period.',
+          type.name + '. No improvement expected. Conditions ' + surface + ' are now considered permanent.'
+        ];
+      } else if (weather.humidity > 0.7) {
+        descs = [
+          type.name + ' and humid. Moisture accumulating ' + surface + '. Condensation on all surfaces holding memory.',
+          type.name + '. Saturation levels in the ' + corner + ' approaching capacity. The air has weight.',
+          'Continued ' + type.name.toLowerCase() + '. Humidity settling into the ' + roomName + ' like something that has decided to stay.',
+          type.name + '. Damp conditions. What was dry ' + surface + ' is now permeable.',
+          type.name + ' with heavy moisture. The forecast for grief-humidity remains unchanged through the outlook period.'
+        ];
+      } else if (weather.pressure < 1005) {
+        descs = [
+          type.name + '. Barometric readings ' + surface + ' continue to fall. Instruments cannot explain the pressure drop.',
+          'Deep low pressure. ' + type.name + ' conditions as the ' + roomName + ' atmosphere thins beyond expected parameters.',
+          type.name + '. Pressure deficit growing ' + surface + '. The room is generating its own weather from insufficient air.',
+          type.name + ' developing. Atmospheric thinning detected. The ' + corner + ' corner exists in a different pressure system.',
+          type.name + '. The low will not lift. ' + surface + ' now operates under its own meteorological rules.'
+        ];
+      } else {
+        descs = [
+          type.name + '. Conditions holding ' + surface + '. No significant change in the ' + roomName + ' climate system.',
+          type.name + ' continuing. The ' + corner + ' remains stable, or stable enough to seem permanent.',
+          type.name + ' expected. Moderate air movement ' + surface + '. Temperatures within the range of rooms where things are still decided.',
+          type.name + '. Fair conditions, if fairness is the right word for what the ' + roomName + ' produces.',
+          type.name + '. Extended outlook: the weather in this room will not surprise you. It has not surprised you for some time.'
+        ];
+      }
+
+      return descs[dayIndex % descs.length];
+    }
+
+    /* ===== TICKER GENERATOR ===== */
+    function generateTicker(weather, parsed) {
+      var items = [];
+
+      var humPct = Math.round(weather.humidity * 100);
+      var humDesc = weather.humidity > 0.75 ? 'elevated' : weather.humidity > 0.5 ? 'moderate' : 'below average';
+      items.push('Relative humidity at ' + humPct + '% \u2014 ' + humDesc + ' for this type of interior space. ' +
+        (weather.humidity > 0.6
+          ? 'Condensation likely on surfaces holding memories. Saturation point approaching.'
+          : 'A dryness that makes the air feel like something that has been catalogued and filed.'));
+
+      var pressDesc = weather.pressure < 1005 ? 'falling rapidly' : weather.pressure < 1015 ? 'dropping slightly' : weather.pressure > 1025 ? 'holding above seasonal norms' : 'within expected range';
+      items.push('Barometric pressure ' + Math.round(weather.pressure) + ' hPa and ' + pressDesc + '. ' +
+        (weather.pressure < 1010
+          ? 'Instruments detect a low-pressure system that forecast models cannot fully explain. The room is pulling air from somewhere that does not exist on any map.'
+          : 'Atmospheric stability uncommon in spaces with this much history. Readings suggest the weather here was decided long ago and has not been revised.'));
+
+      var windDesc = weather.windSpeed > 0.5 ? 'significant' : weather.windSpeed > 0.25 ? 'measurable' : 'negligible';
+      items.push('Wind speed ' + (weather.windSpeed * 30).toFixed(1) + ' km/h \u2014 ' + windDesc + ' interior air movement from the ' + getCardinalDir(weather.windDir) + '. ' +
+        (weather.windSpeed > 0.4
+          ? 'Gusts correspond to doors that were never properly closed. Drafts originate from hallways leading to rooms that have since been repurposed.'
+          : 'The air holds still, as if listening for something it was trained to expect.'));
+
+      var visDesc = weather.visibility > 0.7 ? 'excellent' : weather.visibility > 0.4 ? 'reduced' : 'severely limited';
+      items.push('Visibility ' + visDesc + ' at ' + (weather.visibility * 12).toFixed(1) + ' meters. ' +
+        (weather.visibility < 0.4
+          ? 'Fog advisory in effect. The far corners of the room exist only in theory. Shapes may or may not be furniture.'
+          : 'Conditions clear enough to see what has been placed on every surface, whether you want to or not.'));
+
+      var tempDesc = weather.temperature > 25 ? 'unseasonably warm' : weather.temperature > 15 ? 'mild' : weather.temperature > 5 ? 'cool' : 'unusually cold';
+      items.push('Temperature ' + tempDesc + ' at ' + Math.round(weather.temperature) + ' degrees. ' +
+        (weather.temperature > 22
+          ? 'The warmth of a space still being lived in, or recently abandoned. Heat signature suggests presence.'
+          : weather.temperature < 10
+          ? 'A cold that settles into surfaces, into photographs, into the gaps between what is said and what is meant.'
+          : 'Ambient temperature within the range of rooms where people once gathered.'));
+
+      if (weather.precipitation !== 'none') {
+        var precipPhrases = {
+          rain: 'Interior precipitation detected. Rain falling from no visible source, accumulating in the low places where conversations used to pool.',
+          snow: 'Snowfall reported. Fine crystalline particles descending through the room\u2019s atmosphere, settling on surfaces that have not been touched in years.',
+          fog: 'Dense fog advisory. The room is generating its own weather system. Visibility drops to arm\u2019s length. The floor plan is now theoretical.',
+          mist: 'Light mist forming at floor level. Atmospheric moisture creating a boundary layer between the present room and the room as it once was.',
+          thunderstorm: 'Severe interior weather warning. Convective activity detected. Potential for sudden illumination of things previously unseen in this space.',
+          dust: 'Particulate matter suspended throughout. Dust from surfaces, from fabric, from skin cells. The room is slowly becoming its own weather, composed of what it has lost.',
+          steam: 'Steam formation observed. Warmth and moisture rising from unspecified sources. Layers of transparency and opacity forming at different altitudes within the room.'
+        };
+        items.push(precipPhrases[weather.precipitation] || 'Precipitation type unclassified. Monitor conditions.');
+      }
+
+      if (weather.stability < 0.3) {
+        items.push('Weather instability index: CRITICAL. Conditions may change without warning. This room exists in a state of atmospheric vulnerability that forecasters describe as unprecedented in interior monitoring.');
+      } else if (weather.stability > 0.7) {
+        items.push('Atmospheric stability index: HIGH. Conditions are locked in place. Whatever weather this room has, it will keep. Some forecasts are also sentences.');
+      }
+
+      items.push('Classification: ' + weather.atmosColor.label + '. ' + getAtmosDescription(weather.atmosColor.label) + '.');
+
+      // Compound-specific observations
+      if (weather.compoundLabels.length > 0) {
+        var label = weather.compoundLabels[0];
+        var compoundObs = {
+          'atmospheric thinning': 'Atmospheric thinning confirmed \u2014 pressure drops the instruments cannot explain. The air grows less dense in places where memory was recently removed.',
+          'absence formation': 'Absence formation detected. The space where something used to be is now generating its own micro-pressure system.',
+          'cessation front': 'Cessation front moving through the interior. Areas where activity stopped retain different atmospheric density than surrounding space.',
+          'temporal distance': 'Temporal distance measured at significant levels. The year described operates under different meteorological rules than the present.',
+          'former-state depression': 'Former-state depression entrenched. The gap between what was and what is has created a permanent low-pressure pocket.',
+          'persistent condition': 'Persistent condition noted. The room\u2019s atmosphere has accepted its current state as baseline.',
+          'cognitive occlusion': 'Cognitive occlusion advisory. Visibility reduction correlates with unrecognition. The room sees clearly what its occupants cannot.'
+        };
+        if (compoundObs[label]) items.push(compoundObs[label]);
+      }
+
+      // Room-specific observation
+      if (weather.roomTags.length > 0) {
+        var tag = weather.roomTags[Math.floor(Math.abs(weather.pressure) % weather.roomTags.length)];
+        var tagEffects = {
+          cooking: 'Warmth from unspecified heat sources. Air thick with the memory of meals.',
+          warm: 'Ambient warmth that does not correlate with the thermostat.',
+          domestic: 'Domestic weather patterns \u2014 small-scale systems that repeat daily without variation.',
+          steam: 'Moisture rising from surfaces that have no reason to be warm.',
+          lingering: 'Air movement suggests something that has not fully left.',
+          intimate: 'Air circulation minimal. The room keeps its weather close.',
+          still: 'Near-zero air movement. The atmosphere is holding its breath.',
+          private: 'Closed-system meteorology. No exchange with exterior conditions.',
+          quiet: 'Sound-dampening atmosphere. The weather makes no noise, which is its own kind of noise.',
+          hidden: 'Atmospheric pockets in places the light does not reach.',
+          damp: 'Moisture content above structural norms.',
+          forgotten: 'Stable air mass that has not been disturbed in measurable time.',
+          buried: 'Subterranean atmospheric conditions. Pressure from above.',
+          gathering: 'Convergent air flows. The room pulls atmosphere toward its center.',
+          memory: 'Particulate matter consistent with stored recollection.',
+          familiar: 'The weather here knows you. Readings reflect patterns established through repetition.',
+          conversation: 'Residual air currents from speech patterns no longer active in this space.',
+          passage: 'Transitional atmosphere. The weather here is not meant to be inhabited.',
+          threshold: 'Boundary conditions detected. Interior and exterior weather negotiating terms.',
+          waiting: 'Pre-storm conditions that have not resolved. The atmosphere is expecting something.',
+          evening: 'Light levels affecting atmospheric density. The room dims and the weather changes shape.'
+        };
+        if (tagEffects[tag]) items.push(tagEffects[tag]);
+      }
+
+      items.push('EXTENDED OUTLOOK: The emotional barometer does not follow standard models. This room\u2019s weather may persist for decades, or clear in the time it takes to turn a doorknob. Historical data suggests rooms of this type retain atmospheric imprints long after their occupants have become part of the climate system.');
+
+      return items;
+    }
+
+    function getCardinalDir(deg) {
+      var dirs = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
+      return dirs[Math.round(deg / 45) % 8];
+    }
+
+    function getAtmosDescription(label) {
+      var descs = {
+        'Crystalline High': 'The air sharpens and refracts, each breath a small prism',
+        'Cryospheric Drift': 'Slow-moving frozen systems that preserve rather than destroy',
+        'Continental Heat': 'A warmth that flattens everything beneath it',
+        'Tropical Low': 'Heavy, saturated air pressing against the skin like a memory',
+        'Subtropical Ridge': 'Settled warmth with no movement predicted in the extended outlook',
+        'Temperate High': 'Fair conditions with occasional reminders that weather exists',
+        'Maritime Overcast': 'Grey light filtering through layers of accumulated atmosphere',
+        'Cyclonic Depression': 'Spiraling low pressure drawing everything toward its quiet center',
+        'Convective Instability': 'Unstable air creating conditions for sudden change',
+        'Humid Maritime': 'Moisture-laden systems making the air heavier than it should be',
+        'Polar Maritime': 'Cool, clear air moving slowly across the interior landscape',
+        'Advection Fog': 'Warm air over cool surfaces, creating uncertainty at ground level',
+        'Subpolar Trough': 'Extended cold that redefines what the room can hold'
+      };
+      return descs[label] || 'Conditions that defy standard classification';
+    }
+
+    /* ===== RADAR RENDERER ===== */
+    function RadarRenderer(canvas) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d');
+      this.width = 800;
+      this.height = 520;
+      this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = this.width * this.dpr;
+      canvas.height = this.height * this.dpr;
+      canvas.style.width = '100%';
+      canvas.style.height = 'auto';
+      this.ctx.scale(this.dpr, this.dpr);
+      this.cx = this.width / 2;
+      this.cy = this.height / 2;
+
+      this.time = 0;
+      this.weather = null;
+      this.particles = [];
+      this.pressureRings = [];
+      this.windVectors = [];
+      this._seed = 42;
+    }
+
+    RadarRenderer.prototype.hash = function(x) {
+      x = ((x >> 16) ^ x) * 0x45d9f3b;
+      x = ((x >> 16) ^ x) * 0x45d9f3b;
+      x = (x >> 16) ^ x;
+      return x;
+    };
+
+    RadarRenderer.prototype.seededRandom = function() {
+      this._seed++;
+      return (this.hash(this._seed) & 0x7fffffff) / 0x7fffffff;
+    };
+
+    RadarRenderer.prototype.setWeather = function(weather) {
+      this.weather = weather;
+      this.particles = [];
+      if (weather) {
+        this._seed = Math.floor(weather.pressure * 7 + weather.humidity * 100);
+        this.generatePressureRings();
+        this.generateWindVectors();
+        this.initParticles();
+      }
+    };
+
+    RadarRenderer.prototype.generatePressureRings = function() {
+      this.pressureRings = [];
+      for (var i = 0; i < 7; i++) {
+        this.pressureRings.push({
+          baseR: 50 + i * 48,
+          phase: i * 1.3,
+          amplitude: 8 + this.seededRandom() * 12,
+          freq: 2 + this.seededRandom() * 3,
+          speed: 0.003 + this.seededRandom() * 0.006
+        });
+      }
+    };
+
+    RadarRenderer.prototype.generateWindVectors = function() {
+      this.windVectors = [];
+      for (var i = 0; i < 20; i++) {
+        this.windVectors.push({
+          x: 60 + this.seededRandom() * (this.width - 120),
+          y: 50 + this.seededRandom() * (this.height - 100),
+          len: 25 + this.seededRandom() * 40,
+          phase: this.seededRandom() * Math.PI * 2,
+          speed: 0.008 + this.seededRandom() * 0.015
+        });
+      }
+    };
+
+    RadarRenderer.prototype.initParticles = function() {
+      if (!this.weather) return;
+      this.particles = [];
+
+      var type = this.weather.precipitation;
+      var count = type === 'none' ? 40 :
+                 type === 'rain' ? 160 :
+                 type === 'thunderstorm' ? 220 :
+                 type === 'snow' ? 110 :
+                 type === 'fog' ? 90 :
+                 type === 'dust' ? 70 :
+                 type === 'steam' ? 80 :
+                 type === 'mist' ? 100 : 60;
+
+      for (var i = 0; i < count; i++) {
+        this.particles.push(this.createParticle(type));
+      }
+    };
+
+    RadarRenderer.prototype.createParticle = function(type) {
+      var ws = this.weather ? this.weather.windSpeed : 0.3;
+      var wdRad = this.weather ? this.weather.windDir * Math.PI / 180 : 0;
+      var p = {
+        x: this.seededRandom() * this.width,
+        y: this.seededRandom() * this.height,
+        vx: 0, vy: 0,
+        size: 1,
+        opacity: 1,
+        life: 1,
+        decay: 0.001
+      };
+
+      switch (type) {
+        case 'rain':
+          p.vx = Math.cos(wdRad) * ws * 1.5 + this.seededRandom() * 0.3;
+          p.vy = 3.5 + this.seededRandom() * 3;
+          p.size = 1 + this.seededRandom() * 0.5;
+          p.opacity = 0.25 + this.seededRandom() * 0.3;
+          p.decay = 0;
+          break;
+        case 'snow':
+          p.vx = Math.cos(wdRad) * ws * 0.5 + (this.seededRandom() - 0.5) * 0.4;
+          p.vy = 0.4 + this.seededRandom() * 0.8;
+          p.size = 1.5 + this.seededRandom() * 3;
+          p.opacity = 0.2 + this.seededRandom() * 0.25;
+          p.wobble = this.seededRandom() * Math.PI * 2;
+          p.wobbleSpeed = 0.02 + this.seededRandom() * 0.03;
+          p.decay = 0;
+          break;
+        case 'fog':
+          p.vx = (this.seededRandom() - 0.5) * 0.2;
+          p.vy = (this.seededRandom() - 0.5) * 0.08;
+          p.size = 40 + this.seededRandom() * 80;
+          p.opacity = 0.02 + this.seededRandom() * 0.03;
+          p.decay = 0;
+          break;
+        case 'thunderstorm':
+          p.vx = Math.cos(wdRad) * ws * 2 + this.seededRandom() * 0.5;
+          p.vy = 5 + this.seededRandom() * 4;
+          p.size = 1 + this.seededRandom() * 0.8;
+          p.opacity = 0.3 + this.seededRandom() * 0.3;
+          p.decay = 0;
+          break;
+        case 'dust':
+          p.vx = Math.cos(wdRad) * ws * 0.6 + (this.seededRandom() - 0.5) * 0.3;
+          p.vy = -0.15 + (this.seededRandom() - 0.5) * 0.3;
+          p.size = 1 + this.seededRandom() * 2;
+          p.opacity = 0.15 + this.seededRandom() * 0.25;
+          p.decay = 0.0003;
+          break;
+        case 'steam':
+          p.vx = (this.seededRandom() - 0.5) * 0.15;
+          p.vy = -0.4 - this.seededRandom() * 0.6;
+          p.size = 3 + this.seededRandom() * 5;
+          p.opacity = 0.06 + this.seededRandom() * 0.08;
+          p.decay = 0.0008;
+          break;
+        case 'mist':
+          p.vx = (this.seededRandom() - 0.5) * 0.25;
+          p.vy = 0.08 + this.seededRandom() * 0.15;
+          p.size = 20 + this.seededRandom() * 40;
+          p.opacity = 0.02 + this.seededRandom() * 0.03;
+          p.decay = 0;
+          break;
+        default:
+          p.vx = Math.cos(wdRad) * ws * 0.2;
+          p.vy = Math.sin(wdRad) * ws * 0.2;
+          p.size = 0.8;
+          p.opacity = 0.1 + this.seededRandom() * 0.1;
+          p.decay = 0.0005;
+      }
+      return p;
+    };
+
+    RadarRenderer.prototype.update = function() {
+      this.time++;
+      if (!this.weather) return;
+
+      for (var i = 0; i < this.particles.length; i++) {
+        var p = this.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+
+        if (p.wobble !== undefined) {
+          p.wobble += p.wobbleSpeed;
+          p.x += Math.sin(p.wobble) * 0.4;
+        }
+
+        if (p.y > this.height + 10 || p.y < -20 || p.x > this.width + 20 || p.x < -20 || p.life <= 0) {
+          var np = this.createParticle(this.weather.precipitation);
+          var type = this.weather.precipitation;
+          if (type === 'rain' || type === 'thunderstorm' || type === 'snow') {
+            np.y = -5;
+            np.x = Math.random() * this.width;
+          } else if (type === 'steam') {
+            np.y = this.height + 5;
+            np.x = this.cx + (Math.random() - 0.5) * 300;
+          } else {
+            np.y = Math.random() * this.height;
+            np.x = Math.random() * this.width;
+          }
+          this.particles[i] = np;
+        }
+      }
+    };
+
+    RadarRenderer.prototype.render = function() {
+      var ctx = this.ctx;
+      ctx.clearRect(0, 0, this.width, this.height);
+
+      if (!this.weather) {
+        this.renderEmpty();
+        return;
+      }
+
+      this.renderAtmosphere();
+      this.renderGrid();
+      this.renderRadarSweep();
+      this.renderPressureRings();
+      this.renderWeatherCells();
+      this.renderParticles();
+      this.renderWindVectors();
+      this.renderVisOverlay();
+      this.renderFrame();
+      this.renderLabels();
+    };
+
+    RadarRenderer.prototype.renderEmpty = function() {
+      var ctx = this.ctx;
+      var grad = ctx.createRadialGradient(this.cx, this.cy, 0, this.cx, this.cy, 350);
+      grad.addColorStop(0, '#0a0e15');
+      grad.addColorStop(1, '#060910');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, this.width, this.height);
+
+      ctx.strokeStyle = 'rgba(30, 50, 70, 0.15)';
+      ctx.lineWidth = 0.5;
+      for (var x = 0; x <= this.width; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.height); ctx.stroke();
+      }
+      for (var y = 0; y <= this.height; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.width, y); ctx.stroke();
+      }
+
+      // Idle sweep — slightly brighter to show the radar is alive
+      var angle = this.time * 0.005;
+      ctx.save();
+      ctx.translate(this.cx, this.cy);
+      ctx.rotate(angle);
+      var sg = ctx.createLinearGradient(0, 0, 280, 0);
+      sg.addColorStop(0, 'rgba(201, 147, 90, 0.06)');
+      sg.addColorStop(1, 'rgba(201, 147, 90, 0)');
+      ctx.fillStyle = sg;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, 280, -0.05, 0.05);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    };
+
+    RadarRenderer.prototype.renderAtmosphere = function() {
+      var ctx = this.ctx;
+      var c = this.weather.atmosColor;
+      var intensity = this.weather.cloudCover * 0.12;
+      var grad = ctx.createRadialGradient(this.cx, this.cy, 0, this.cx, this.cy, 380);
+      grad.addColorStop(0, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + intensity + ')');
+      grad.addColorStop(0.6, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + (intensity * 0.4) + ')');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, this.width, this.height);
+    };
+
+    RadarRenderer.prototype.renderGrid = function() {
+      var ctx = this.ctx;
+      ctx.strokeStyle = 'rgba(30, 55, 80, 0.18)';
+      ctx.lineWidth = 0.5;
+      for (var x = 0; x <= this.width; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.height); ctx.stroke();
+      }
+      for (var y = 0; y <= this.height; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.width, y); ctx.stroke();
+      }
+    };
+
+    RadarRenderer.prototype.renderRadarSweep = function() {
+      var ctx = this.ctx;
+      var angle = this.time * 0.008;
+      var c = this.weather.atmosColor;
+      ctx.save();
+      ctx.translate(this.cx, this.cy);
+      ctx.rotate(angle);
+      var sg = ctx.createLinearGradient(0, 0, 300, 0);
+      sg.addColorStop(0, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',0.08)');
+      sg.addColorStop(1, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',0)');
+      ctx.fillStyle = sg;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, 300, -0.06, 0.06);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Trailing glow
+      ctx.save();
+      ctx.translate(this.cx, this.cy);
+      for (var i = 1; i <= 4; i++) {
+        var ta = angle - i * 0.04;
+        ctx.save();
+        ctx.rotate(ta);
+        ctx.globalAlpha = 0.03 / i;
+        var tg = ctx.createLinearGradient(0, 0, 300, 0);
+        tg.addColorStop(0, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',1)');
+        tg.addColorStop(1, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',0)');
+        ctx.fillStyle = tg;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, 300, -0.04, 0.04);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.restore();
+    };
+
+    RadarRenderer.prototype.renderPressureRings = function() {
+      var ctx = this.ctx;
+      var c = this.weather.atmosColor;
+      var inst = 1 - this.weather.stability;
+      var self = this;
+
+      this.pressureRings.forEach(function(ring) {
+        ctx.beginPath();
+        var steps = 80;
+        for (var i = 0; i <= steps; i++) {
+          var angle = (i / steps) * Math.PI * 2;
+          var wobble = Math.sin(angle * ring.freq + self.time * ring.speed + ring.phase) * ring.amplitude * (0.5 + inst * 0.5);
+          var radius = Math.max(1, ring.baseR + wobble);
+          var x = self.cx + Math.cos(angle) * radius;
+          var y = self.cy + Math.sin(angle) * radius;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+
+        var alpha = 0.08 + (1 - ring.baseR / 380) * 0.12;
+        ctx.strokeStyle = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + alpha + ')';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      });
+    };
+
+    RadarRenderer.prototype.renderWeatherCells = function() {
+      var ctx = this.ctx;
+      var cc = this.weather.cloudCover;
+      if (cc < 0.2) return;
+
+      var savedSeed = this._seed;
+      this._seed = Math.floor(this.weather.pressure * 3 + this.weather.humidity * 100);
+
+      var cellCount = Math.floor(cc * 10) + 2;
+      for (var i = 0; i < cellCount; i++) {
+        var cx = 80 + this.seededRandom() * (this.width - 160);
+        var cy = 60 + this.seededRandom() * (this.height - 120);
+        var r = 30 + this.seededRandom() * 80;
+        var intensity = cc * 0.08 + this.seededRandom() * 0.05;
+
+        var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        if (this.weather.precipitation === 'thunderstorm') {
+          grad.addColorStop(0, 'rgba(180, 100, 190, ' + intensity + ')');
+          grad.addColorStop(1, 'rgba(180, 100, 190, 0)');
+        } else if (this.weather.precipitation === 'rain' || this.weather.precipitation === 'mist') {
+          grad.addColorStop(0, 'rgba(80, 120, 180, ' + intensity + ')');
+          grad.addColorStop(1, 'rgba(80, 120, 180, 0)');
+        } else {
+          grad.addColorStop(0, 'rgba(120, 150, 180, ' + intensity + ')');
+          grad.addColorStop(1, 'rgba(120, 150, 180, 0)');
+        }
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      this._seed = savedSeed;
+    };
+
+    RadarRenderer.prototype.renderParticles = function() {
+      var ctx = this.ctx;
+      var type = this.weather.precipitation;
+      var c = this.weather.atmosColor;
+
+      for (var i = 0; i < this.particles.length; i++) {
+        var p = this.particles[i];
+        ctx.globalAlpha = p.opacity * Math.min(1, p.life * 3);
+
+        if (type === 'fog' || type === 'mist') {
+          var grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+          grad.addColorStop(0, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + p.opacity + ')');
+          grad.addColorStop(1, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
+        } else if (type === 'rain' || type === 'thunderstorm') {
+          ctx.strokeStyle = 'rgba(150, 180, 220, ' + p.opacity + ')';
+          ctx.lineWidth = p.size * 0.6;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x - p.vx * 2, p.y - p.vy * 2);
+          ctx.stroke();
+        } else if (type === 'snow') {
+          ctx.fillStyle = 'rgba(220, 230, 245, ' + p.opacity + ')';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (type === 'dust') {
+          ctx.fillStyle = 'rgba(200, 180, 140, ' + p.opacity + ')';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (type === 'steam') {
+          var grad2 = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
+          grad2.addColorStop(0, 'rgba(220, 220, 230, ' + p.opacity + ')');
+          grad2.addColorStop(1, 'rgba(220, 220, 230, 0)');
+          ctx.fillStyle = grad2;
+          ctx.fillRect(p.x - p.size * 2, p.y - p.size * 2, p.size * 4, p.size * 4);
+        } else {
+          ctx.fillStyle = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + p.opacity + ')';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+    };
+
+    RadarRenderer.prototype.renderWindVectors = function() {
+      var ctx = this.ctx;
+      var ws = this.weather.windSpeed;
+      var wdRad = this.weather.windDir * Math.PI / 180;
+      var c = this.weather.atmosColor;
+      var alpha = 0.12 + ws * 0.2;
+      var self = this;
+
+      this.windVectors.forEach(function(v) {
+        var wobble = Math.sin(self.time * v.speed + v.phase) * 0.3;
+        var angle = wdRad + wobble;
+        var len = v.len * (0.5 + ws * 0.8);
+        var ex = v.x + Math.cos(angle) * len;
+        var ey = v.y + Math.sin(angle) * len;
+
+        ctx.strokeStyle = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + alpha + ')';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(v.x, v.y);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        var headLen = 6;
+        var ha1 = angle + Math.PI * 0.82;
+        var ha2 = angle - Math.PI * 0.82;
+        ctx.beginPath();
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex + Math.cos(ha1) * headLen, ey + Math.sin(ha1) * headLen);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex + Math.cos(ha2) * headLen, ey + Math.sin(ha2) * headLen);
+        ctx.stroke();
+      });
+    };
+
+    RadarRenderer.prototype.renderVisOverlay = function() {
+      var ctx = this.ctx;
+      var vis = this.weather.visibility;
+      if (vis >= 0.8) return;
+
+      var alpha = (1 - vis) * 0.25;
+      var grad = ctx.createRadialGradient(this.cx, this.cy, vis * 150, this.cx, this.cy, 450);
+      grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, ' + alpha + ')');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, this.width, this.height);
+    };
+
+    RadarRenderer.prototype.renderFrame = function() {
+      var ctx = this.ctx;
+      var c = this.weather ? this.weather.atmosColor : { r: 201, g: 147, b: 90 };
+      ctx.strokeStyle = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',0.3)';
+      ctx.lineWidth = 1;
+
+      var m = 15;
+      var s = 25;
+      ctx.beginPath(); ctx.moveTo(m, m + s); ctx.lineTo(m, m); ctx.lineTo(m + s, m); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(this.width - m - s, m); ctx.lineTo(this.width - m, m); ctx.lineTo(this.width - m, m + s); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(m, this.height - m - s); ctx.lineTo(m, this.height - m); ctx.lineTo(m + s, this.height - m); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(this.width - m - s, this.height - m); ctx.lineTo(this.width - m, this.height - m); ctx.lineTo(this.width - m, this.height - m - s); ctx.stroke();
+    };
+
+    RadarRenderer.prototype.renderLabels = function() {
+      var ctx = this.ctx;
+      if (!this.weather) return;
+      var c = this.weather.atmosColor;
+
+      ctx.font = '9px "Courier New", monospace';
+      ctx.fillStyle = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',0.5)';
+      ctx.textAlign = 'left';
+      var roomName = this.weather.roomKey ? this.weather.roomKey.toUpperCase() : 'UNKNOWN INTERIOR';
+      ctx.fillText('LOC: ' + roomName, 22, 30);
+
+      ctx.textAlign = 'right';
+      ctx.fillText(this.weather.atmosColor.label.toUpperCase(), this.width - 22, 30);
+
+      ctx.textAlign = 'left';
+      var now = new Date();
+      var ts = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0') + ' UTC';
+      ctx.fillText(ts, 22, this.height - 20);
+
+      ctx.textAlign = 'right';
+      var stabLabel = this.weather.stability < 0.3 ? 'UNSTABLE' : this.weather.stability < 0.6 ? 'MODERATE' : 'STABLE';
+      ctx.fillText('STABILITY: ' + stabLabel, this.width - 22, this.height - 20);
+    };
+
+    /* ===== UI CONTROLLER ===== */
+    var currentWeather = null;
+    var renderer = null;
+    var debounceTimer = null;
+
+    var canvas = document.getElementById('radarCanvas');
+    var input = document.getElementById('roomInput');
+    var emptyState = document.getElementById('emptyState');
+    var tickerEl = document.getElementById('tickerContent');
+
+    renderer = new RadarRenderer(canvas);
+    renderEmptyForecast();
+
+    input.addEventListener('input', function() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(processInput, 600);
+    });
+
+    function loop() {
+      renderer.update();
+      renderer.render();
+      requestAnimationFrame(loop);
+    }
+    loop();
+
+    function processInput() {
+      var text = input.value.trim();
+      if (!text) {
+        currentWeather = null;
+        renderer.setWeather(null);
+        emptyState.classList.remove('hidden');
+        resetReadings();
+        renderEmptyForecast();
+        setTicker(['INITIALIZE WEATHER SEQUENCE: Describe a room above to generate its microclimate forecast. All atmospheric readings will populate once spatial data is received.']);
+        return;
+      }
+
+      var parsed = parseInput(text);
+      currentWeather = generateWeather(parsed);
+
+      renderer.setWeather(currentWeather);
+      emptyState.classList.add('hidden');
+
+      updateReadings(currentWeather);
+      renderForecast(currentWeather, parsed);
+
+      var tickerItems = generateTicker(currentWeather, parsed);
+      setTicker(tickerItems);
+    }
+
+    function updateReadings(w) {
+      document.getElementById('vHum').textContent = Math.round(w.humidity * 100) + '%';
+      document.getElementById('vPres').textContent = Math.round(w.pressure) + ' hPa';
+      document.getElementById('vWind').textContent = (w.windSpeed * 30).toFixed(1) + ' km/h';
+      document.getElementById('vVis').textContent = (w.visibility * 12).toFixed(1) + ' m';
+      document.getElementById('vCloud').textContent = Math.round(w.cloudCover * 100) + '%';
+      document.getElementById('vTemp').textContent = Math.round(w.temperature) + '\u00B0C';
+    }
+
+    function resetReadings() {
+      var ids = ['vHum','vPres','vWind','vVis','vCloud','vTemp'];
+      for (var i = 0; i < ids.length; i++) {
+        document.getElementById(ids[i]).textContent = '--';
+      }
+    }
+
+    function renderEmptyForecast() {
+      var grid = document.getElementById('forecastGrid');
+      var days = ['Tomorrow', 'In Two Days', 'Day Three', 'Day Four', 'Day Five'];
+      var html = '';
+      for (var i = 0; i < days.length; i++) {
+        html += '<div class="forecast-day">' +
+          '<div class="fd-name">' + days[i] + '</div>' +
+          '<div class="fd-icon" style="opacity:0.2">--</div>' +
+          '<div class="fd-high">&nbsp;</div>' +
+          '<div class="fd-low">&nbsp;</div>' +
+          '<div class="fd-desc">Awaiting data</div>' +
+        '</div>';
+      }
+      grid.innerHTML = html;
+    }
+
+    function renderForecast(w, parsed) {
+      var grid = document.getElementById('forecastGrid');
+      var forecast = generateForecast(w, parsed);
+      var html = '';
+      for (var i = 0; i < forecast.length; i++) {
+        var d = forecast[i];
+        html += '<div class="forecast-day">' +
+          '<div class="fd-name">' + d.name + '</div>' +
+          '<div class="fd-icon">' + d.icon + '</div>' +
+          '<div class="fd-high">' + d.high + '\u00B0</div>' +
+          '<div class="fd-low">' + d.low + '\u00B0</div>' +
+          '<div class="fd-desc">' + d.desc + '</div>' +
+        '</div>';
+      }
+      grid.innerHTML = html;
+    }
+
+    function setTicker(items) {
+      var duration = Math.max(40, items.join(' ').length * 0.15);
+      var html = '';
+      for (var i = 0; i < items.length; i++) {
+        html += '<span>' + items[i] + '</span>';
+      }
+      tickerEl.innerHTML = html + html;
+      tickerEl.style.animationDuration = duration + 's';
+      tickerEl.style.animation = 'none';
+      void tickerEl.offsetHeight;
+      tickerEl.style.animation = 'tickerScroll ' + duration + 's linear infinite';
+    }
+
+  });
+  </script>
+</body>
+</html>

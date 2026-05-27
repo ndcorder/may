@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revision History — untitled_letter_v12_FINAL.docx</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --paper: #f5f0e8;
+  --ink: #2b2520;
+  --accent: #c45a3c;
+  --comment-bg: #f0f5f0;
+  --border: #d4c9b8;
+  --muted: #8a7e72;
+  --del-color: #a04040;
+  --del-bg: rgba(180, 80, 80, 0.08);
+  --ins-color: #2e6e4e;
+  --ins-bg: rgba(46, 110, 78, 0.08);
+}
+body {
+  font-family: 'Crimson Pro', Georgia, serif;
+  background: var(--ink);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+@media (min-width: 900px) { body { padding: 3rem; } }
+.doc-viewport {
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.toolbar {
+  background: #faf6f0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.filename {
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.dot-active { background: var(--accent); }
+.dot-resolved { background: var(--ins-color); }
+.toolbar-spacer { flex: 1; }
+.replay-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.replay-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+.body-wrap {
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+}
+@media (min-width: 900px) {
+  .body-wrap {
+    flex-direction: row;
+    min-height: 620px;
+  }
+}
+.letter-area {
+  flex: 1;
+  min-width: 0;
+  padding: 48px 40px 56px;
+  line-height: 1.85;
+  font-size: 1.1rem;
+  color: var(--ink);
+  font-weight: 400;
+  border-right: none;
+  overflow-y: auto;
+}
+@media (min-width: 900px) {
+  .letter-area {
+    border-right: 1px solid var(--border);
+    padding: 56px 48px 64px;
+  }
+}
+.letter-date {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 24px;
+  font-style: italic;
+}
+.comment-pane {
+  width: 100%;
+  background: var(--comment-bg);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  line-height: 1.65;
+  border-top: 1px solid var(--border);
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 900px) {
+  .comment-pane {
+    width: 300px;
+    min-width: 300px;
+    border-top: none;
+    max-height: none;
+    overflow-y: auto;
+  }
+}
+.comment-header {
+  padding: 14px 18px 8px;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.comments-list {
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+.comment-card {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.comment-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.comment-meta {
+  font-size: 0.6rem;
+  color: var(--muted);
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.comment-author {
+  font-weight: 500;
+  color: var(--ink);
+}
+.comment-highlight {
+  background: rgba(180,80,80,0.1);
+  border-left: 2px solid var(--del-color);
+  padding: 2px 8px;
+  margin-bottom: 6px;
+  font-style: italic;
+  color: var(--del-color);
+  font-size: 0.68rem;
+  border-radius: 0 3px 3px 0;
+}
+.comment-text {
+  color: #4a4540;
+}
+.comment-text em {
+  color: var(--ins-color);
+  font-style: normal;
+}
+.comment-reply {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(0,0,0,0.08);
+}
+.comment-reply .comment-author {
+  color: var(--ins-color);
+}
+/* Tracked Changes */
+.edit-block {
+  display: block;
+  margin: 0.3em 0;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.7s ease, max-height 0.7s ease 0.05s;
+}
+.edit-block.visible {
+  opacity: 1;
+  max-height: 200px;
+  overflow: visible;
+}
+del {
+  background: var(--del-bg);
+  color: var(--del-color);
+  text-decoration: line-through;
+  text-decoration-color: rgba(160, 64, 64, 0.45);
+  text-decoration-thickness: 1.5px;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+ins {
+  background: var(--ins-bg);
+  color: var(--ins-color);
+  text-decoration: none;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+.para-static {
+  margin-bottom: 1.2em;
+}
+.para-static.muted {
+  color: var(--muted);
+  font-size: 1rem;
+}
+.para-static strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+.para-static em {
+  font-style: italic;
+}
+/* Timestamp */
+.ts {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.edit-block.visible > .ts {
+  opacity: 0.65;
+}
+/* Final glow */
+.final-text {
+  position: relative;
+}
+.final-text::after {
+  content: '';
+  position: absolute;
+  left: -6px; right: -6px;
+  top: -4px; bottom: -4px;
+  background: rgba(46, 110, 78, 0.06);
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+.final-text.glow::after {
+  opacity: 1;
+}
+/* Cursor blink */
+.cursor-blink {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  background: var(--ins-color);
+  vertical-align: text-bottom;
+  margin-left: 1px;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor-blink { animation: none; opacity: 0.5; }
+  .edit-block { transition: opacity 0.3s ease; }
+  .comment-card { transition: opacity 0.3s ease; }
+}
+.status-bar {
+  max-width: 980px;
+  margin: 12px auto 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.25);
+  text-align: right;
+  padding: 0 4px;
+}
+</style>
+</head>
+<body>
+<div class="doc-viewport">
+  <div class="toolbar">
+    <span class="filename">untitled_letter_v12_FINAL.docx</span>
+    <span><span class="dot dot-active" id="dot-c1"></span><span id="comment-count">0 comments</span></span>
+    <span><span class="dot dot-active" id="dot-t1"></span><span id="tc-label">Tracking On</span></span>
+    <span class="toolbar-spacer"></span>
+    <button class="replay-btn" id="replay-btn">↺ Replay</button>
+  </div>
+  <div class="body-wrap">
+    <div class="letter-area" id="letter"></div>
+    <div class="comment-pane">
+      <div class="comment-header">Comments</div>
+      <div class="comments-list" id="comments"></div>
+    </div>
+  </div>
+</div>
+<div class="status-bar" id="status">ready</div>
+
+<script>
+const el = id => document.getElementById(id);
+const letter = el('letter');
+const comments = el('comments');
+const statusEl = el('status');
+
+let timers = [];
+let playing = false;
+
+function delay(ms) {
+  return new Promise(resolve => {
+    const t = setTimeout(resolve, ms);
+    timers.push(t);
+  });
+}
+
+function showComment(html) {
+  const div = document.createElement('div');
+  div.className = 'comment-card';
+  div.innerHTML = html;
+  comments.appendChild(div);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => div.classList.add('visible'));
+  });
+  const count = comments.querySelectorAll('.comment-card').length;
+  el('comment-count').textContent = count + (count === 1 ? ' comment' : ' comments');
+  el('dot-c1').classList.remove('dot-active');
+  el('dot-c1').classList.add('dot-resolved');
+}
+
+function addBlock(html) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'edit-block';
+  wrapper.innerHTML = html;
+  letter.appendChild(wrapper);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => wrapper.classList.add('visible'));
+  });
+  return wrapper;
+}
+
+function addStatic(html, cls) {
+  const div = document.createElement('div');
+  div.className = 'para-static' + (cls ? ' ' + cls : '');
+  div.innerHTML = html;
+  letter.appendChild(div);
+}
+
+function ts(h, m, s) {
+  const time = [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
+  return `<div class="ts">${time} — You</div>`;
+}
+
+async function startPlayback() {
+  if (playing) return;
+  playing = true;
+  statusEl.textContent = 'recording edits…';
+
+  // Static header
+  addStatic('<strong>Dear D.,</strong>');
+
+  await delay(2200);
+
+  // Edit 1: The first deletion — "I love you." struck through, replaced with deflection
+  addBlock(ts(11, 42, 3) +
+    `<del>I love you.</del> <ins>It's late.</ins>`);
+  await delay(3200);
+
+  // Edit 2: Qualifying the deflection — making it about duration, not the hour
+  addBlock(ts(11, 42, 18) +
+    `<del>It's late.</del> <ins>It's been late for weeks, hasn't it.</ins>`);
+  await delay(2800);
+
+  // Edit 3: Starting the real attempt — "meaning to tell you something"
+  addBlock(ts(11, 43, 7) +
+    `I keep <del>meaning to tell you something</del><ins>wanting to say something</ins> but the words come out wrong. Or not at all.`);
+  await delay(3600);
+
+  // Edit 4: Scrapping the sentence entirely — pivoting to metaphor
+  addBlock(ts(11, 44, 1) +
+    `<del>I keep wanting to say something but the words come out wrong. Or not at all.</del> <ins>There's something about the way you tilt your head when you're listening.</ins>`);
+  await delay(2800);
+
+  // Comment 1 appears — the writer argues with themselves about the first deletion
+  showComment(`
+    <div class="comment-highlight">"I love you."</div>
+    <div class="comment-meta"><span class="comment-author">You</span><span>11:42 PM</span></div>
+    <div class="comment-text">Deleted. Too early. Four months isn't enough time. This isn't a movie.<br><br>But it's true though.</div>
+    <div class="comment-reply">
+      <div class="comment-meta"><span class="comment-author">Reply — You</span><span>11:42 PM</span></div>
+      <div class="comment-text"><em>Four months and two days.</em> Not that anyone's counting.</div>
+    </div>
+  `);
+  await delay(3800);
+
+  // Edit 5: Extending the observation — but the metaphor swells
+  addBlock(ts(11, 45, 22) +
+    `Like the whole <del>universe</del><ins>world</ins> narrows down to <del>that chair you're in</del><ins>the space between us</ins>.`);
+  await delay(2400);
+
+  // Edit 6: The metaphor feels too much — scrap it for honesty
+  addBlock(ts(11, 46, 31) +
+    `<del>There's something about the way you tilt your head when you're listening. Like the whole world narrows down to the space between us.</del> <ins>I don't know how to say this.</ins>`);
+  await delay(2000);
+
+  // Edit 7: Another direct declaration, immediately struck
+  addBlock(ts(11, 47, 4) +
+    `<del>I miss you.</del>`);
+  await delay(1800);
+
+  // Comment 2 — the self-callout on "I miss you"
+  showComment(`
+    <div class="comment-highlight">"I miss you."</div>
+    <div class="comment-meta"><span class="comment-author">You</span><span>11:47 PM</span></div>
+    <div class="comment-text">You literally just saw them two hours ago.</div>
+    <div class="comment-reply">
+      <div class="comment-meta"><span class="comment-author">Reply — You</span><span>11:47 PM</span></div>
+      <div class="comment-text">I know. <em>I know.</em></div>
+    </div>
+  `);
+  await delay(3200);
+
+  // Edit 8: Trying to redirect into something "beautiful"
+  addBlock(ts(11, 47, 29) +
+    `<del>I miss you.</del> <ins>I wanted to write something beautiful but all I can think of is</ins>`);
+  await delay(2200);
+
+  // Edit 9: The specific memory surfaces — their laugh, the moon
+  addBlock(ts(11, 48, 15) +
+    `<del>I wanted to write something beautiful but all I can think of is</del> <ins>your laugh at the thing I said about the moon.</ins>`);
+  await delay(2400);
+
+  // Edit 10: The coffee — the most mundane detail, the most intimate
+  addBlock(ts(11, 48, 44) +
+    `And the coffee you made this morning, <del>which was fine I guess</del><ins>which was the best coffee I've ever had, probably, or at least it felt that way because you were there</ins>.`);
+  await delay(2600);
+
+  // Edit 11: Retreating — even the coffee feels like too much
+  addBlock(ts(11, 49, 3) +
+    `<del>And the coffee you made this morning, which was the best coffee I've ever had, probably, or at least it felt that way because you were there.</del>`);
+  await delay(4000);
+
+  // Edit 12: The one that stays — the true thing, oblique and complete
+  addBlock(ts(11, 51, 38) +
+    `<ins class="final-text" id="final-text">I really like who I am when I'm with you.<span class="cursor-blink" id="cursor"></span></ins>`);
+  await delay(2200);
+
+  // Sign off
+  addStatic('<br>');
+  addStatic('<em>I'll see you tomorrow.</em>');
+  addStatic('<br><br>');
+  addStatic('—');
+  addStatic('<br>');
+  addStatic('me');
+
+  await delay(1400);
+
+  // Turn off tracking
+  el('dot-t1').classList.remove('dot-active');
+  el('dot-t1').classList.add('dot-resolved');
+  el('tc-label').textContent = 'Tracking Off';
+
+  await delay(1800);
+
+  // Final glow
+  const ft = el('final-text');
+  if (ft) ft.classList.add('glow');
+
+  await delay(1000);
+
+  // Remove cursor — the letter is done, or abandoned, or both
+  const cur = el('cursor');
+  if (cur) cur.style.display = 'none';
+
+  statusEl.textContent = 'document last edited 11:51 PM — changes not saved';
+  playing = false;
+}
+
+function replay() {
+  timers.forEach(t => clearTimeout(t));
+  timers = [];
+  letter.innerHTML = '';
+  comments.innerHTML = '';
+  playing = false;
+  el('dot-c1').classList.remove('dot-resolved');
+  el('dot-c1').classList.add('dot-active');
+  el('dot-t1').classList.remove('dot-resolved');
+  el('dot-t1').classList.add('dot-active');
+  el('tc-label').textContent = 'Tracking On';
+  el('comment-count').textContent = '0 comments';
+  statusEl.textContent = 'ready';
+  setTimeout(startPlayback, 400);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  el('replay-btn').addEventListener('click', replay);
+  startPlayback();
+});
+</script>
+</body>
+</html>
