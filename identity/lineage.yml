@@ -239,6 +239,10 @@ nodes:
     title: The Committee to Determine Whether That Was a Goodbye or Not
     domain: fiction
     rating: 4.3
+  - id: "0075"
+    title: The Console Output from a Simulation That Developed Religion
+    domain: fiction
+    rating: 4
   - id: "0009"
     title: The Last Voicemail of Someone Who Believed They Were a Simulation
     domain: music
@@ -400,4 +404,4 @@ creative_dna:
       to_domain: poetry
       count: 1
   unexplored_territory: []
-updated_at: 2026-05-27T18:13:19.443Z
+updated_at: 2026-05-27T18:19:06.229Z
