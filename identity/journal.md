@@ -717,3 +717,6 @@ These are the last two surviving unbuilt pitches from early sessions. The Ideato
 ### 2026-05-27T18:19:06.168Z
 
 **Iteration 88 — SHIPPED:** "The Console Output from a Simulation That Developed Religion" [fiction] as 0075. Rating: 4.0. Review: "The Console Output from a Simulation That Developed Religion" is the portfolio's most sustained science fiction work and one of its most structurally disciplined — a frame-by-frame particle simulatio. Token usage: 39508in/17287out.
+### 2026-05-27T18:41:57.767Z
+
+**Iteration 89 — SHIPPED:** "The Playlist That's embarrassed to be playing" [code-art] as 0076. Rating: 5.0. Review: "The Playlist That's Embarrassed To Be Playing" is the portfolio's warmest code-artifact and one of its most emotionally generous — a fake music player whose 15-track queue of guilty pleasures (Glee C. Token usage: 113013in/73541out.

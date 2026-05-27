@@ -77,3 +77,4 @@
 | 0073 | The Rule That Broke the Game | essay | 4.1 | 2026-05-27 | — |
 | 0074 | The RFC for Reconnecting After Years of Silence | experiment | 5.0 | 2026-05-27 | — |
 | 0075 | The Console Output from a Simulation That Developed Religion | fiction | 4.0 | 2026-05-27 | — |
+| 0076 | The Playlist That's embarrassed to be playing | code-art | 5.0 | 2026-05-27 | — |

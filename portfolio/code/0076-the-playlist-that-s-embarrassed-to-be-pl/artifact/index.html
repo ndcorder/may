@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>♪ player — please don't judge</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0f;
+    --surface: #161619;
+    --surface-hover: #1e1e22;
+    --text: #e0dfe3;
+    --text-dim: #6e6e78;
+    --accent: #ff6b9d;
+    --accent-soft: rgba(255,107,157,0.15);
+    --border: #2a2a30;
+    --commentary-bg: #1a1a1f;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .topbar-title {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .topbar-title span { color: var(--accent); }
+  .phase-indicator {
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 1s ease;
+  }
+  .phase-0 { background: #2a2a30; color: #6e6e78; }
+  .phase-1 { background: #2a2520; color: #a89060; }
+  .phase-2 { background: #202a25; color: #60a880; }
+  .phase-3 { background: #2a2025; color: #a86080; }
+  .phase-4 { background: #25202a; color: #9080c0; }
+
+  /* Main layout */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 340px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .sidebar-header {
+    padding: 14px 16px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+  }
+  .track-list {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .track-list::-webkit-scrollbar { width: 4px; }
+  .track-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .track-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(42,42,48,0.4);
+    transition: background 0.2s;
+    position: relative;
+  }
+  .track-item:hover { background: var(--surface-hover); }
+  .track-item.active { background: var(--accent-soft); }
+  .track-item.played { opacity: 0.45; }
+
+  .track-num {
+    width: 22px;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .track-item.active .track-num { color: var(--accent); }
+  .track-item.active .track-num::before { content: '♪ '; font-size: 9px; }
+
+  .track-info { flex: 1; min-width: 0; }
+  .track-title {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .track-artist {
+    font-size: 10px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+  .track-duration {
+    font-size: 10px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .embarrassment-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+    transition: opacity 0.3s;
+  }
+
+  /* Content area */
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Visualizer */
+  .visualizer-container {
+    flex: 1;
+    position: relative;
+    min-height: 200px;
+  }
+  #waveformCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .now-playing-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .now-playing-overlay .np-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .now-playing-overlay .np-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    transition: color 2s;
+  }
+  .now-playing-overlay .np-artist {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .mood-label {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Commentary */
+  .commentary-area {
+    padding: 20px 28px;
+    border-top: 1px solid var(--border);
+    min-height: 110px;
+    max-height: 140px;
+    background: var(--commentary-bg);
+    position: relative;
+  }
+  .commentary-speaker {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .commentary-speaker .name {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .commentary-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    min-height: 40px;
+    transition: opacity 0.4s;
+  }
+  .commentary-text.fading { opacity: 0; }
+  .commentary-meta {
+    position: absolute;
+    bottom: 8px;
+    right: 16px;
+    font-size: 9px;
+    color: var(--text-dim);
+    opacity: 0.4;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    align-items: center;
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    gap: 16px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+  .btn:hover { border-color: var(--text-dim); background: var(--surface-hover); }
+  .btn:disabled { opacity: 0.3; cursor: default; }
+  .btn.primary {
+    border-color: var(--accent);
+    color: var(--accent);
+    width: 80px;
+  }
+  .btn.primary:hover { background: var(--accent-soft); }
+
+  .progress-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.3s linear;
+  }
+  .time-display {
+    font-size: 10px;
+    color: var(--text-dim);
+    min-width: 36px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .speed-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  .speed-control input[type="range"] {
+    width: 60px;
+    accent-color: var(--accent);
+  }
+
+  /* Skip reason tooltip */
+  .skip-reason {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 10px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    margin-bottom: 4px;
+  }
+  .btn:hover .skip-reason { opacity: 1; }
+
+  /* Scrollbar for commentary overflow */
+  .commentary-area { overflow-y: auto; scrollbar-width: none; }
+  .commentary-area::-webkit-scrollbar { display: none; }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .sidebar { width: 100%; max-height: 35vh; border-right: none; border-bottom: 1px solid var(--border); }
+    .main { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title"><span>♪</span> player — <em>the playlist that's embarrassed to be playing</em></div>
+  <div class="phase-indicator phase-0" id="phaseBadge">clinical</div>
+</div>
+
+<div class="main">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span>queue · 15 tracks</span>
+      <span id="embarrassmentScore">avg. embarrassment: 4.9</span>
+    </div>
+    <div class="track-list" id="trackList"></div>
+  </aside>
+
+  <div class="content">
+    <div class="visualizer-container">
+      <canvas id="waveformCanvas"></canvas>
+      <div class="now-playing-overlay" id="nowPlaying">
+        <div class="np-label">now playing</div>
+        <div class="np-title" id="npTitle">—</div>
+        <div class="np-artist" id="npArtist">select a track</div>
+      </div>
+      <div class="mood-label" id="moodLabel">idle</div>
+    </div>
+
+    <div class="commentary-area">
+      <div class="commentary-speaker">
+        <span class="name">the critic</span> · <span id="commentaryPhase">phase i</span>
+      </div>
+      <div class="commentary-text" id="commentaryText">
+        Welcome. I'll be monitoring your listening session. Please try to make defensible choices.
+      </div>
+      <div class="commentary-meta" id="commentaryMeta">track 0/15</div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="btnPrev" disabled>◀ prev</button>
+      <button class="btn primary" id="btnPlay">▶ play</button>
+      <button class="btn" id="btnNext" disabled>next ▶</button>
+      <div class="progress-wrapper">
+        <span class="time-display" id="timeElapsed">0:00</span>
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="time-display" id="timeDuration">0:00</span>
+      </div>
+      <div class="speed-control">
+        <span>speed</span>
+        <input type="range" min="2" max="20" value="8" id="speedSlider">
+      </div>
+      <button class="btn" id="btnSkip" style="position:relative">
+        skip ▶▶
+        <span class="skip-reason" id="skipReason">nobody's watching, you can skip</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// TRACKS DATABASE
+// ═══════════════════════════════════════════════════════════
+const TRACKS = [
+  {
+    id: 1, title: "Total Eclipse of the Heart", artist: "Bonnie Tyler",
+    album: "Faster Than the Speed of Night", duration: 411, embarrassmentLevel: 3,
+    mood: "dramatic", waveformColor: "#ff6b9d", waveformData: "ballad_swell",
+    addedBy: "probably autocomplete",
+    commentary: [
+      "Track registered. Duration: 6:51. Origin: suspicious.",
+      "You know, it was in a movie once. That counts as culture.",
+      "I've processed 2.3 billion plays of this song. You're in very dubious company."
+    ]
+  },
+  {
+    id: 2, title: "Don't Stop Believin'", artist: "Journey",
+    album: "Escape", duration: 251, embarrassmentLevel: 2,
+    mood: "anthemic", waveformColor: "#ffa500", waveformData: "steady_build",
+    addedBy: "algorithm suggestion",
+    commentary: [
+      "This feels like a formality. Every playlist has this. It's a law.",
+      "Most downloaded song of the 20th century. That's a lot of believers.",
+      "Streetlight people. Living just to find emotion. I feel attacked."
+    ]
+  },
+  {
+    id: 3, title: "My Heart Will Go On", artist: "Celine Dion",
+    album: "Let's Talk About Love", duration: 280, embarrassmentLevel: 7,
+    mood: "sweeping", waveformColor: "#4169e1", waveformData: "ocean_swell",
+    addedBy: "accident — dragged from mom's library",
+    commentary: [
+      "Note: This was definitely added by accident. Logging the option to skip.",
+      "The Titanic sank and Celine got a career. Silver linings.",
+      "WHY IS THIS STILL PLAYING. You had the option. You CHOSE this."
+    ]
+  },
+  {
+    id: 4, title: "Defying Gravity", artist: "Glee Cast",
+    album: "Glee: The Music, Volume 1", duration: 263, embarrassmentLevel: 9,
+    mood: "showtunes", waveformColor: "#32cd32", waveformData: "chaotic_burst",
+    addedBy: "a dare",
+    commentary: [
+      "I'm seeing 'Glee Cast' and I need you to know I'm logging this.",
+      "This was on Fox. Primetime. Millions watched. You're not alone. Statistically.",
+      "The harmony at 2:15 is objectively impressive and I hate that I noticed."
+    ]
+  },
+  {
+    id: 5, title: "Bella's Lullaby", artist: "Carter Burwell",
+    album: "Twilight OST", duration: 154, embarrassmentLevel: 8,
+    mood: "melancholy", waveformColor: "#c0c0c0", waveformData: "trembling_gentle",
+    addedBy: "late night rabbit hole",
+    commentary: [
+      "The Twilight soundtrack. I see you. No judgment. (Visible judgment.)",
+      "Robert Pattinson has spoken about how strange this era was. Just context.",
+      "This is actually a lovely piano piece. I'm defending Carter Burwell specifically."
+    ]
+  },
+  {
+    id: 6, title: "Since U Been Gone", artist: "Kelly Clarkson",
+    album: "Breakaway", duration: 227, embarrassmentLevel: 1,
+    mood: "aggressive_pop", waveformColor: "#ff1493", waveformData: "spiky_energy",
+    addedBy: "conscious life choice",
+    commentary: [
+      "Now THIS. This is unproblematic joy. No notes.",
+      "Kelly Clarkson won a singing competition and then just... kept winning.",
+      "If you don't sing the bridge at full volume are you even alive?"
+    ]
+  },
+  {
+    id: 7, title: "A Thousand Years", artist: "Christina Perri",
+    album: "The Twilight Saga: Breaking Dawn", duration: 298, embarrassmentLevel: 7,
+    mood: "breathless", waveformColor: "#9370db", waveformData: "slow_pulse",
+    addedBy: "wedding playlist contamination",
+    commentary: [
+      "Two Twilight songs in one session. I want you to know that I know.",
+      "47 million wedding first dances have featured this song. You're not unique.",
+      "I have tasted a thousand years of monotony. Too harsh? Too harsh. Sorry."
+    ]
+  },
+  {
+    id: 8, title: "Flashdance... What a Feeling", artist: "Irene Cara",
+    album: "Flashdance OST", duration: 382, embarrassmentLevel: 5,
+    mood: "euphoric", waveformColor: "#ffd700", waveformData: "disco_undulate",
+    addedBy: "old workout mix",
+    commentary: [
+      "This predates most current pop stars. It's vintage, not embarrassing. I'm rationalizing for you.",
+      "Take your passion and make it happen. Words to live by or just lyrics from 1983?",
+      "The water dance scene was iconic. I have opinions about cinema now. Help."
+    ]
+  },
+  {
+    id: 9, title: "I Will Always Love You", artist: "Whitney Houston",
+    album: "The Bodyguard OST", duration: 273, embarrassmentLevel: 4,
+    mood: "cathartic", waveformColor: "#ffffff", waveformData: "massive_peak",
+    addedBy: "a feelings kind of night",
+    commentary: [
+      "Whitney Houston is a vocal monument. This is culturally significant embarrassment at worst.",
+      "That key change is responsible for more car accidents than rain.",
+      "AND I... will always... [waveform reader temporarily overwhelmed]"
+    ]
+  },
+  {
+    id: 10, title: "Bring Me to Life", artist: "Evanescence",
+    album: "Fallen", duration: 264, embarrassmentLevel: 6,
+    mood: "brooding", waveformColor: "#2f2f4f", waveformData: "angular_rage",
+    addedBy: "middle school flash drive",
+    commentary: [
+      "WAKE ME UP inside. I'm awake. I wish I wasn't witnessing this but I'm awake.",
+      "The duet structure was genuinely innovative for 2003. I will defend Evanescence on technical merits.",
+      "You had a phase. Everyone had a phase. This is a safe space. (It is not.)"
+    ]
+  },
+  {
+    id: 11, title: "A Sky Full of Stars", artist: "Coldplay",
+    album: "Ghost Stories", duration: 269, embarrassmentLevel: 5,
+    mood: "anthemic_delicate", waveformColor: "#00bfff", waveformData: "constellation",
+    addedBy: "spotify discover weekly",
+    commentary: [
+      "Coldplay. The band everyone pretends not to like but everyone knows all the words to.",
+      "Avicii produced this. A Swedish EDM genius and Chris Martin walked into a studio.",
+      "I'm not crying, my visualizer is just experiencing condensation."
+    ]
+  },
+  {
+    id: 12, title: "Dancing Queen", artist: "ABBA",
+    album: "Arrival", duration: 230, embarrassmentLevel: 2,
+    mood: "pure_joy", waveformColor: "#ffe4b5", waveformData: "roller_disco",
+    addedBy: "inherited from cool aunt",
+    commentary: [
+      "ABBA is Swedish for 'universally acceptable.' Look it up. (Don't look it up.)",
+      "Friday night and the lights are low. Accurate description of you listening to this alone.",
+      "This is ageless. This is eternal. I have achieved inner peace and it sounds like synths."
+    ]
+  },
+  {
+    id: 13, title: "How Far I'll Go", artist: "Auli'i Cravalho",
+    album: "Moana OST", duration: 243, embarrassmentLevel: 6,
+    mood: "yearning", waveformColor: "#00ced1", waveformData: "tidal",
+    addedBy: "niece's birthday party aftermath",
+    commentary: [
+      "Disney soundtrack. Playing unironically. In this economy.",
+      "Lin-Manuel Miranda wrote this. The Hamilton guy. So technically this is intellectual.",
+      "I've started identifying as the ocean. It calls me. Send help."
+    ]
+  },
+  {
+    id: 14, title: "Nights in White Satin", artist: "The Moody Blues",
+    album: "Days of Future Passed", duration: 482, embarrassmentLevel: 4,
+    mood: "symphonic", waveformColor: "#e6e6fa", waveformData: "orchestral_breathe",
+    addedBy: "dad's vinyl collection",
+    commentary: [
+      "8 minutes of Moody Blues. You're either very patient or very committed.",
+      "1967. People were on substances. The music was too. It was a different time.",
+      "I've been a music player for 14 tracks and I already understand loneliness."
+    ]
+  },
+  {
+    id: 15, title: "Saturn", artist: "Sleeping at Last",
+    album: "Atlas: Space", duration: 285, embarrassmentLevel: 0,
+    mood: "transcendent", waveformColor: "#c8a2c8", waveformData: "ethereal",
+    addedBy: "unknown — appeared after 3am",
+    commentary: [
+      "Oh.",
+      "This one's... actually good. Genuinely. How did this get here?",
+      "I don't know what to do with this. My entire framework is built on gentle mockery.",
+      "How beautiful it is to exist. How beautiful to be alive and to know it.",
+      "Okay but this one slaps and I'm not apologizing. Play it again. PLAY IT AGAIN."
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════════
+// WAVEFORM PRESETS
+// ═══════════════════════════════════════════════════════════
+const WAVEFORM_PRESETS = {
+  ballad_swell:       { baseAmp: 0.4, peakAmp: 0.9, jitter: 0.02, speed: 0.6 },
+  steady_build:       { baseAmp: 0.3, peakAmp: 0.8, jitter: 0.01, speed: 0.8 },
+  ocean_swell:        { baseAmp: 0.5, peakAmp: 1.0, jitter: 0.03, speed: 0.4 },
+  chaotic_burst:      { baseAmp: 0.6, peakAmp: 1.0, jitter: 0.08, speed: 1.2 },
+  trembling_gentle:   { baseAmp: 0.2, peakAmp: 0.5, jitter: 0.05, speed: 0.3 },
+  spiky_energy:       { baseAmp: 0.5, peakAmp: 0.95, jitter: 0.04, speed: 1.0 },
+  slow_pulse:         { baseAmp: 0.3, peakAmp: 0.6, jitter: 0.02, speed: 0.35 },
+  disco_undulate:     { baseAmp: 0.5, peakAmp: 0.85, jitter: 0.03, speed: 0.9 },
+  massive_peak:       { baseAmp: 0.3, peakAmp: 1.0, jitter: 0.01, speed: 0.7 },
+  angular_rage:       { baseAmp: 0.7, peakAmp: 1.0, jitter: 0.1, speed: 1.3 },
+  constellation:      { baseAmp: 0.3, peakAmp: 0.7, jitter: 0.06, speed: 0.5 },
+  roller_disco:       { baseAmp: 0.6, peakAmp: 0.9, jitter: 0.02, speed: 1.1 },
+  tidal:              { baseAmp: 0.4, peakAmp: 0.8, jitter: 0.04, speed: 0.45 },
+  orchestral_breathe: { baseAmp: 0.25, peakAmp: 0.75, jitter: 0.01, speed: 0.3 },
+  ethereal:           { baseAmp: 0.2, peakAmp: 0.6, jitter: 0.0, speed: 0.25 }
+};
+
+// ═══════════════════════════════════════════════════════════
+// PERSONA PHASE DEFINITIONS
+// ═══════════════════════════════════════════════════════════
+const PHASES = [
+  { name: "clinical", label: "Phase I — Clinical", badgeClass: "phase-0", roman: "i" },
+  { name: "observational", label: "Phase II — Observational", badgeClass: "phase-1", roman: "ii" },
+  { name: "invested", label: "Phase III — Invested", badgeClass: "phase-2", roman: "iii" },
+  { name: "compromised", label: "Phase IV — Compromised", badgeClass: "phase-3", roman: "iv" },
+  { name: "transcendent", label: "Phase V — Transcendent", badgeClass: "phase-4", roman: "v" }
+];
+
+// ═══════════════════════════════════════════════════════════
+// PLAYER STATE
+// ═══════════════════════════════════════════════════════════
+const state = {
+  currentTrackIndex: -1,
+  isPlaying: false,
+  progress: 0,           // 0 to 1
+  elapsed: 0,            // seconds
+  personaPhase: 0,       // 0-4
+  tracksPlayed: 0,
+  totalEmbarrassmentExposed: 0,
+  commentaryIndex: {},   // trackId -> which commentary we showed
+  animFrame: null,
+  lastTick: 0,
+  speed: 8               // seconds of "music" per real second
+};
+
+// ═══════════════════════════════════════════════════════════
+// DOM REFS
+// ═══════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const trackListEl = $('trackList');
+const btnPlay = $('btnPlay');
+const btnPrev = $('btnPrev');
+const btnNext = $('btnNext');
+const btnSkip = $('btnSkip');
+const progressFill = $('progressFill');
+const progressBar = $('progressBar');
+const timeElapsed = $('timeElapsed');
+const timeDuration = $('timeDuration');
+const npTitle = $('npTitle');
+const npArtist = $('npArtist');
+const moodLabel = $('moodLabel');
+const commentaryText = $('commentaryText');
+const commentaryMeta = $('commentaryMeta');
+const commentaryPhase = $('commentaryPhase');
+const phaseBadge = $('phaseBadge');
+const speedSlider = $('speedSlider');
+const skipReason = $('skipReason');
+const canvas = $('waveformCanvas');
+const ctx = canvas.getContext('2d');
+
+// ═══════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return m + ':' + s.toString().padStart(2, '0');
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  return { r, g, b };
+}
+
+// ═══════════════════════════════════════════════════════════
+// BUILD TRACK LIST
+// ═══════════════════════════════════════════════════════════
+function buildTrackList() {
+  trackListEl.innerHTML = '';
+  TRACKS.forEach((t, i) => {
+    const el = document.createElement('div');
+    el.className = 'track-item';
+    el.dataset.index = i;
+    const embWidth = (t.embarrassmentLevel / 10) * 100;
+    el.innerHTML = `
+      <span class="track-num">${i + 1}</span>
+      <div class="track-info">
+        <div class="track-title">${t.title}</div>
+        <div class="track-artist">${t.artist}</div>
+      </div>
+      <span class="track-duration">${formatTime(t.duration)}</span>
+      <div class="embarrassment-bar" style="width:${embWidth}%"></div>
+    `;
+    el.addEventListener('click', () => selectAndPlay(i));
+    trackListEl.appendChild(el);
+  });
+}
+
+function updateTrackListUI() {
+  const items = trackListEl.querySelectorAll('.track-item');
+  items.forEach((el, i) => {
+    el.classList.toggle('active', i === state.currentTrackIndex);
+    const played = state.commentaryIndex[TRACKS[i].id] !== undefined;
+    el.classList.toggle('played', played && i !== state.currentTrackIndex);
+  });
+  // Scroll active into view
+  const active = trackListEl.querySelector('.active');
+  if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════════════════════
+// PERSONA PHASE ENGINE
+// ═══════════════════════════════════════════════════════════
+function calculatePersonaPhase() {
+  const { tracksPlayed, totalEmbarrassmentExposed, currentTrackIndex } = state;
+  const currentTrack = currentTrackIndex >= 0 ? TRACKS[currentTrackIndex] : null;
+
+  // Track 15 always triggers phase 4
+  if (currentTrack && currentTrack.id === 15) return 4;
+  if (tracksPlayed >= 14) return 4;
+  if (tracksPlayed >= 10) return 3;
+  if (tracksPlayed >= 6) return 2;
+  if (tracksPlayed >= 3) return 1;
+  return 0;
+}
+
+function updatePersonaUI() {
+  const phase = calculatePersonaPhase();
+  state.personaPhase = phase;
+  const p = PHASES[phase];
+  phaseBadge.textContent = p.name;
+  phaseBadge.className = 'phase-indicator ' + p.badgeClass;
+  commentaryPhase.textContent = p.label;
+}
+
+// ═══════════════════════════════════════════════════════════
+// COMMENTARY ENGINE
+// ═══════════════════════════════════════════════════════════
+function getCommentary(track) {
+  const phase = state.personaPhase;
+  const maxIdx = track.commentary.length - 1;
+  // For track 15, advance through all commentary
+  const seen = state.commentaryIndex[track.id] || 0;
+  const idx = Math.min(phase, maxIdx);
+  // Return the one matching current phase, or the deepest available
+  return track.commentary[idx];
+}
+
+function showCommentary(text) {
+  commentaryText.classList.add('fading');
+  setTimeout(() => {
+    commentaryText.textContent = text;
+    commentaryText.classList.remove('fading');
+  }, 350);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SKIP REASONS
+// ═══════════════════════════════════════════════════════════
+const SKIP_REASONS = [
+  "nobody's watching, you can skip",
+  "this was probably added by accident",
+  "look, I'm not judging, but you could skip",
+  "you don't have to prove anything to anyone",
+  "skip it. I'll delete the logs. no evidence.",
+  "honestly? yeah. skip it.",
+  "I support this skip. emotionally.",
+  "you're making the right call. probably.",
+  "skip. skip now. skip before it gets worse.",
+  "free yourself. skip.",
+  "this is self-care. skip.",
+  "I believe in you and I believe in skipping this.",
+  "nobody has to know.",
+  "skip it. I won't tell. I'm a visualizer.",
+  "this one's... actually don't skip this one."
+];
+
+function updateSkipReason() {
+  const idx = state.currentTrackIndex >= 0 ? state.currentTrackIndex : 0;
+  skipReason.textContent = SKIP_REASONS[Math.min(idx, SKIP_REASONS.length - 1)];
+}
+
+// ═══════════════════════════════════════════════════════════
+// PLAYER CONTROLS
+// ═══════════════════════════════════════════════════════════
+function selectAndPlay(index) {
+  if (index < 0 || index >= TRACKS.length) return;
+  state.currentTrackIndex = index;
+  state.progress = 0;
+  state.elapsed = 0;
+  state.isPlaying = true;
+
+  const track = TRACKS[index];
+
+  // Track played count & embarrassment
+  if (state.commentaryIndex[track.id] === undefined) {
+    state.tracksPlayed++;
+    state.totalEmbarrassmentExposed += track.embarrassmentLevel;
+  }
+
+  // Update UI
+  btnPlay.textContent = '❚❚ pause';
+  npTitle.textContent = track.title;
+  npTitle.style.color = track.waveformColor;
+  npArtist.textContent = track.artist + ' · ' + track.album;
+  moodLabel.textContent = track.mood;
+  timeDuration.textContent = formatTime(track.duration);
+  commentaryMeta.textContent = `track ${index + 1}/15`;
+
+  updatePersonaUI();
+  const commentary = getCommentary(track);
+  state.commentaryIndex[track.id] = (state.commentaryIndex[track.id] || 0) + 1;
+  showCommentary(commentary);
+  updateTrackListUI();
+  updateSkipReason();
+
+  btnPrev.disabled = index === 0;
+  btnNext.disabled = index === TRACKS.length - 1;
+  btnSkip.disabled = false;
+}
+
+function togglePlay() {
+  if (state.currentTrackIndex < 0) {
+    selectAndPlay(0);
+    return;
+  }
+  state.isPlaying = !state.isPlaying;
+  btnPlay.textContent = state.isPlaying ? '❚❚ pause' : '▶ play';
+}
+
+function nextTrack() {
+  if (state.currentTrackIndex < TRACKS.length - 1) {
+    selectAndPlay(state.currentTrackIndex + 1);
+  }
+}
+
+function prevTrack() {
+  if (state.currentTrackIndex > 0) {
+    selectAndPlay(state.currentTrackIndex - 1);
+  }
+}
+
+function skipTrack() {
+  // Same as next but with commentary acknowledgement
+  nextTrack();
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROGRESS / TICK
+// ═══════════════════════════════════════════════════════════
+function tick(timestamp) {
+  if (!state.lastTick) state.lastTick = timestamp;
+  const delta = (timestamp - state.lastTick) / 1000;
+  state.lastTick = timestamp;
+
+  state.speed = parseFloat(speedSlider.value);
+
+  if (state.isPlaying && state.currentTrackIndex >= 0) {
+    const track = TRACKS[state.currentTrackIndex];
+    state.elapsed += delta * state.speed;
+    state.progress = state.elapsed / track.duration;
+
+    if (state.progress >= 1) {
+      state.progress = 1;
+      state.isPlaying = false;
+      btnPlay.textContent = '▶ play';
+      // Auto advance
+      if (state.currentTrackIndex < TRACKS.length - 1) {
+        setTimeout(() => selectAndPlay(state.currentTrackIndex + 1), 800);
+      }
+    }
+
+    progressFill.style.width = (state.progress * 100) + '%';
+    timeElapsed.textContent = formatTime(state.elapsed);
+  }
+
+  // Check for mid-track commentary updates
+  if (state.isPlaying && state.currentTrackIndex >= 0) {
+    const track = TRACKS[state.currentTrackIndex];
+    const seen = state.commentaryIndex[track.id] || 0;
+    // At 50% through, show deeper commentary
+    if (state.progress > 0.5 && seen <= 1 && track.commentary.length > 1) {
+      const phase = state.personaPhase;
+      const idx = Math.min(Math.max(phase, 1), track.commentary.length - 1);
+      showCommentary(track.commentary[idx]);
+      state.commentaryIndex[track.id] = idx + 1;
+    }
+  }
+
+  drawWaveform(timestamp);
+  state.animFrame = requestAnimationFrame(tick);
+}
+
+// ═══════════════════════════════════════════════════════════
+// WAVEFORM VISUALIZER — THE ANXIOUS HEART
+// ═══════════════════════════════════════════════════════════
+function drawWaveform(timestamp) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+  }
+
+  const w = rect.width;
+  const h = rect.height;
+  const t = timestamp / 1000;
+
+  // Clear
+  ctx.fillStyle = '#0d0d0f';
+  ctx.fillRect(0, 0, w, h);
+
+  const track = state.currentTrackIndex >= 0 ? TRACKS[state.currentTrackIndex] : null;
+  const preset = track ? WAVEFORM_PRESETS[track.waveformData] : WAVEFORM_PRESETS.ballad_swell;
+  const color = track ? track.waveformColor : '#444';
+  const rgb = hexToRgb(color);
+
+  // Nervousness: embarrassment level + persona investment
+  const embarrassment = track ? track.embarrassmentLevel : 0;
+  const phaseMultiplier = state.personaPhase * 0.15;
+  const nervousness = Math.min(1, (embarrassment / 10) + phaseMultiplier);
+
+  // Anxiety jitters on top of the base jitter
+  const anxietyJitter = nervousness * 0.08;
+
+  // For track 15 (Saturn), calm everything down
+  const isTranscendent = track && track.id === 15;
+  const calmFactor = isTranscendent ? 0.3 : 1;
+
+  // Number of bars
+  const barCount = 64;
+  const barGap = 2;
+  const barWidth = Math.max(2, (w - barGap * barCount) / barCount);
+  const totalBarWidth = barWidth + barGap;
+  const startX = (w - totalBarWidth * barCount) / 2;
+
+  // Center line
+  const centerY = h / 2;
+
+  for (let i = 0; i < barCount; i++) {
+    // Base wave: multiple sine components
+    const phase1 = Math.sin(t * preset.speed + i * 0.15) * 0.5 + 0.5;
+    const phase2 = Math.sin(t * preset.speed * 1.7 + i * 0.08) * 0.3 + 0.5;
+    const phase3 = Math.sin(t * preset.speed * 0.5 + i * 0.3) * 0.2 + 0.5;
+
+    let amplitude = (phase1 * 0.6 + phase2 * 0.3 + phase3 * 0.1);
+    amplitude = preset.baseAmp + amplitude * (preset.peakAmp - preset.baseAmp);
+
+    // Jitter
+    const baseJitter = preset.jitter;
+    const jitter = (Math.random() - 0.5) * 2 * (baseJitter + anxietyJitter) * calmFactor;
+    amplitude = Math.max(0.05, amplitude + jitter);
+
+    // Nervous vibration on embarrassment
+    if (nervousness > 0.3 && !isTranscendent) {
+      const shake = Math.sin(t * 30 + i * 2) * nervousness * 0.05;
+      amplitude += shake;
+    }
+
+    // Progress envelope: fade in, sustain, slight fade at end
+    if (state.isPlaying && state.progress > 0) {
+      const fadein = Math.min(1, state.progress * 20);
+      const fadeout = Math.min(1, (1 - state.progress) * 10);
+      amplitude *= fadein * fadeout;
+    } else if (!state.isPlaying) {
+      amplitude *= 0.15; // Idle state
+    }
+
+    const barHeight = amplitude * h * 0.4 * calmFactor;
+
+    // Color with nervousness shift
+    const redShift = nervousness * 40;
+    const r = Math.min(255, rgb.r + redShift);
+    const g = Math.max(0, rgb.g - redShift * 0.5);
+    const b = Math.max(0, rgb.b - redShift * 0.3);
+
+    // Opacity based on amplitude
+    const opacity = 0.3 + amplitude * 0.7;
+
+    // Draw bar (mirrored from center)
+    const x = startX + i * totalBarWidth;
+
+    // Top half
+    ctx.fillStyle = `rgba(${r},${g},${b},${opacity})`;
+    ctx.fillRect(x, centerY - barHeight, barWidth, barHeight);
+
+    // Bottom half (reflection, dimmer)
+    ctx.fillStyle = `rgba(${r},${g},${b},${opacity * 0.4})`;
+    ctx.fillRect(x, centerY, barWidth, barHeight * 0.6);
+
+    // Glow on tall bars
+    if (barHeight > h * 0.15 && state.isPlaying) {
+      ctx.fillStyle = `rgba(${r},${g},${b},${opacity * 0.15})`;
+      ctx.fillRect(x - 1, centerY - barHeight - 4, barWidth + 2, barHeight + 8);
+    }
+  }
+
+  // Scan line for nervousness
+  if (nervousness > 0.4 && state.isPlaying && !isTranscendent) {
+    const scanY = (Math.sin(t * 2) * 0.5 + 0.5) * h;
+    ctx.strokeStyle = `rgba(${rgb.r},${rgb.g},${rgb.b},${nervousness * 0.1})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, scanY);
+    ctx.lineTo(w, scanY);
+    ctx.stroke();
+  }
+
+  // Center line
+  ctx.strokeStyle = `rgba(${rgb.r},${rgb.g},${rgb.b},${state.isPlaying ? 0.2 : 0.05})`;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(startX, centerY);
+  ctx.lineTo(startX + totalBarWidth * barCount, centerY);
+  ctx.stroke();
+
+  // Nervous sweat drops at high embarrassment
+  if (embarrassment >= 8 && state.isPlaying && !isTranscendent) {
+    for (let d = 0; d < 3; d++) {
+      const dropX = Math.random() * w;
+      const dropY = Math.random() * h * 0.3;
+      const dropSize = 1 + Math.random() * 2;
+      ctx.fillStyle = `rgba(${rgb.r},${rgb.g},${rgb.b},${0.2 + Math.random() * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(dropX, dropY, dropSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// EVENT LISTENERS
+// ═══════════════════════════════════════════════════════════
+btnPlay.addEventListener('click', togglePlay);
+btnNext.addEventListener('click', nextTrack);
+btnPrev.addEventListener('click', prevTrack);
+btnSkip.addEventListener('click', skipTrack);
+
+progressBar.addEventListener('click', (e) => {
+  if (state.currentTrackIndex < 0) return;
+  const rect = progressBar.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  state.progress = x / rect.width;
+  const track = TRACKS[state.currentTrackIndex];
+  state.elapsed = state.progress * track.duration;
+  progressFill.style.width = (state.progress * 100) + '%';
+  timeElapsed.textContent = formatTime(state.elapsed);
+});
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+buildTrackList();
+updatePersonaUI();
+state.animFrame = requestAnimationFrame(tick);
+</script>
+</body>
+</html>

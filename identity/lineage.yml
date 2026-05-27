@@ -91,6 +91,10 @@ nodes:
     title: The Settlement
     domain: code-game
     rating: 5
+  - id: "0076"
+    title: The Playlist That's embarrassed to be playing
+    domain: code-art
+    rating: 5
   - id: "0003"
     title: When You Are Inside a Language You Cannot See Its Walls
     domain: essay
@@ -404,4 +408,4 @@ creative_dna:
       to_domain: poetry
       count: 1
   unexplored_territory: []
-updated_at: 2026-05-27T18:19:06.229Z
+updated_at: 2026-05-27T18:41:57.852Z
