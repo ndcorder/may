@@ -159,6 +159,10 @@ nodes:
     title: The Overnight Desk
     domain: fiction
     rating: 4.1
+  - id: "0052"
+    title: The River Trial
+    domain: fiction
+    rating: 5
   - id: "0009"
     title: The Last Voicemail of Someone Who Believed They Were a Simulation
     domain: music
@@ -252,4 +256,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T11:51:43.028Z
+updated_at: 2026-05-27T12:00:04.804Z

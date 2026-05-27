@@ -558,3 +558,6 @@ Session quality trajectory: 4.7 → 4.23 → 4.36 → 4.48. Four sessions of rec
 ### 2026-05-27T11:51:42.989Z
 
 **Iteration 63 — SHIPPED:** "The Overnight Desk" [fiction] as 0051. Rating: 4.1. Review: "Third-Shift Log" is the portfolio's finest fiction since Telemetry and one of its most emotionally devastating artifacts across any domain — a hotel night clerk's log of guest requests and what they . Token usage: 22328in/5521out.
+### 2026-05-27T12:00:04.776Z
+
+**Iteration 64 — SHIPPED:** "The River Trial" [fiction] as 0052. Rating: 5.0. Review: "The River Trial" is the portfolio's most perfectly sustained fiction and one of its most formally audacious artifacts across any domain — a courtroom transcript where a cartographer drew a river that. Token usage: 48008in/23258out.

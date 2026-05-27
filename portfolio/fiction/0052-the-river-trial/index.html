@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The River Trial — Transcript of Proceedings</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    background: #faf8f4;
+    color: #1a1a1a;
+    line-height: 1.7;
+    font-size: 17px;
+    padding: 0;
+  }
+
+  .transcript-header {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 80px 24px 40px;
+    text-align: center;
+    border-bottom: 1px solid #c8c4bc;
+  }
+
+  .transcript-header .court-name {
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .transcript-header .case-number {
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 32px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .transcript-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    color: #1a1a1a;
+  }
+
+  .transcript-header .subtitle {
+    font-style: italic;
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 40px;
+  }
+
+  .transcript-header .meta-block {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    line-height: 2;
+    text-align: left;
+    max-width: 400px;
+    margin: 0 auto;
+    color: #777;
+  }
+
+  .transcript-header .meta-block span {
+    color: #444;
+    font-weight: 500;
+  }
+
+  .content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px 120px;
+  }
+
+  .session-header {
+    margin-top: 56px;
+    margin-bottom: 32px;
+    padding: 16px 0;
+    border-top: 2px solid #1a1a1a;
+    border-bottom: 1px solid #c8c4bc;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #666;
+    text-align: center;
+  }
+
+  .p {
+    margin-bottom: 16px;
+    text-align: justify;
+    hyphens: auto;
+  }
+
+  .p.display {
+    text-align: center;
+    font-style: italic;
+    color: #555;
+    padding: 16px 0;
+    font-size: 16px;
+  }
+
+  .speaker {
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    color: #1a1a1a;
+  }
+
+  .stage {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 12px;
+    font-style: normal;
+  }
+
+  .exhibit {
+    margin: 28px 0;
+    padding: 24px;
+    border: 1px solid #d4d0c8;
+    background: #f6f4ef;
+    text-align: center;
+  }
+
+  .exhibit-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 12px;
+  }
+
+  .exhibit-content {
+    font-size: 15px;
+    color: #555;
+    font-style: italic;
+  }
+
+  .page-break {
+    text-align: center;
+    margin: 40px 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #bbb;
+  }
+
+  .footnote-section {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    border-top: 1px solid #c8c4bc;
+    padding-top: 32px;
+  }
+
+  .footnote-section h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 16px;
+  }
+
+  .footnote-section p {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.7;
+    margin-bottom: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  sup {
+    font-size: 10px;
+    color: #999;
+    font-family: 'IBM Plex Mono', monospace;
+    vertical-align: super;
+    line-height: 0;
+    margin: 0 1px;
+  }
+
+  @media (max-width: 600px) {
+    body { font-size: 15.5px; }
+    .transcript-header h1 { font-size: 26px; }
+    .transcript-header .meta-block { font-size: 11px; }
+    .content { padding: 0 16px 80px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="transcript-header">
+  <div class="court-name">In the Circuit Court of the Fourteenth Judicial District</div>
+  <div class="court-name">State of Harmony, Marshall County</div>
+  <div class="case-number">Case No. 2024-MR-00381</div>
+  <h1>The River Trial</h1>
+  <div class="subtitle">Transcript of Proceedings — Day Four</div>
+  <div class="meta-block">
+    <span>Before:</span> The Honorable Adaline Mercer<br>
+    <span>Date:</span> Thursday, October 17, 2024<br>
+    <span>Time:</span> 9:14 a.m. — 6:42 p.m.<br>
+    <span>Appearances:</span><br>
+    &nbsp;&nbsp;For the Plaintiff — Maren Solís, Esq. (State)<br>
+    &nbsp;&nbsp;For the Defense — Tobias Ward, Esq.<br>
+    &nbsp;&nbsp;For Intervenor Harlan — Diana Voss, Esq.<br>
+    &nbsp;&nbsp;Guardian <i>Ad Litem</i> — Jonas Falk, Esq.<br>
+    <span>Court Reporter:</span> R. Elm, CSR
+  </div>
+</header>
+
+<div class="content">
+
+<!-- SESSION 2 -->
+<div class="session-header">Afternoon Session — Reconvened at 1:32 p.m.</div>
+
+<p class="p"><span class="stage">[The jury is seated. The defendant is at counsel table. The river, represented by Mr. Falk, has no physical presence in the courtroom. A glass pitcher of water has been placed on the guardian <i>ad litem</i>'s table at Mr. Falk's request. Counsel for intervenor Harlan objects for the record.]</span></p>
+
+<p class="p"><span class="speaker">THE COURT:</span> We are back on the record. Ms. Solís, the State may call its next witness.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> The State calls Dr. Linnéa Csongor.</p>
+
+<p class="p"><span class="stage">[Dr. Csongor is sworn and takes the stand.]</span></p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> Dr. Csongor, would you state your position?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> I am the Director of the Division of Water Resources for the State of Harmony. I have held the position since 2016.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> What are the Division's responsibilities?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> We manage, inventory, and regulate all surface water and groundwater resources within state boundaries. When a new river appears—</p>
+
+<p class="p"><span class="speaker">MS. VOSS:</span> Objection. Characterization. There is no "new river."</p>
+
+<p class="p"><span class="speaker">THE COURT:</span> Overruled. The witness may finish.</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> When a watercourse that did not previously exist on any geological record materializes, the Division is required by statute to conduct a hydrological survey and classify the resource. I led the team that surveyed the Harlan property between March and July of this year.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> And what did the survey find?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> The watercourse originates at an upwelling approximately forty meters north of Mr. Harlan's north fence line. It flows south-southwest for 3.7 miles across his property—through a pasture, along the tree line, and into a low-lying area near his southern boundary. It continues beyond his property through neighboring parcels. At the time of our survey, the flow rate at the origin was two hundred and eighty gallons per minute. By the southern boundary, it was four hundred and ten.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> How does a flow rate increase without tributaries?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Groundwater recharge. The land was already saturated. The river was pulling water from the surrounding soil. It was—</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> "Pulling."</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> <span class="stage">[pause]</span> That is how it appeared, yes.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> Let me direct your attention to State's Exhibit 14.</p>
+
+<div class="exhibit">
+  <div class="exhibit-label">State's Exhibit 14 — Filed and Admitted</div>
+  <div class="exhibit-content">Composite aerial photograph of the Harlan property (dated March 9, 2024) showing the watercourse visible from altitude, overlaid with the relevant portion of the defendant's original map.</div>
+</div>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> Dr. Csongor, do you recognize what is depicted here?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> I do. The left panel is an aerial photograph taken by our drone survey on March ninth. The right panel is a portion of the defendant's map—the one he completed on November fourteenth of last year. I want to direct the jury's attention to the blue line running through the center of both images.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> And what do you observe?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> The correspondence is total. Not approximate—<i>total</i>. Every bend, every meander. There is a place where the map line curves around a slight elevation, and the river curves around the same elevation. There is a place where the line straightens for approximately four hundred meters across flat terrain, and the river straightens for the same distance across the same terrain. I am a hydrologist. I have studied rivers for twenty-three years. I have never seen anything like this.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> The State's position is that the defendant's map is not a representation of existing terrain but a blueprint for terrain that did not yet exist. Dr. Csongor, in your expert opinion, is it possible that this correspondence is coincidental?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> I would have to say that coincidence is, technically, possible. But so is being struck by lightning seventeen times.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> Under Section 14-201 of the Water Resources Code, who has authority over newly discovered surface water?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> The State. All watercourses, regardless of point of origin, are public resources held in trust by the Division for the benefit of the people of Harmony.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> No further questions.</p>
+
+<div class="page-break">— — —</div>
+
+<!-- CROSS-EXAMINATION BY WARD -->
+<p class="p"><span class="speaker">MR. WARD:</span> Dr. Csongor, good afternoon.</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Good afternoon.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> You testified that you have studied rivers for twenty-three years. How many rivers?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> I couldn't give you an exact count. Hundreds.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> And in those hundreds of rivers, how many have you watched come into existence?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> None.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> None. So you have no precedent, no model, no established hydrological framework for a river that appears where no river was before.</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> That is correct.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> You say the correspondence between my client's map and the river is "total." When did my client draw the map?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> November fourteenth of last year.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> And when was the river first observed?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> January twentieth.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> Two months. You are asking this jury to believe that a man sat at his desk, drew a line on paper, and two months later, the land complied.</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> I am saying that the correspondence exists and that I cannot explain it through natural geology.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> Can you explain it through any discipline?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Not one that I was trained in.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> No further questions.</p>
+
+<div class="page-break">— — —</div>
+
+<!-- CROSS-EXAMINATION BY VOSS -->
+<p class="p"><span class="speaker">MS. VOSS:</span> Dr. Csongor, Diana Voss for intervenor Harlan. You testified that the river originates north of Mr. Harlan's fence line?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Yes, approximately forty meters north.</p>
+
+<p class="p"><span class="speaker">MS. VOSS:</span> And that it flows through his property for 3.7 miles?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Correct.</p>
+
+<p class="p"><span class="speaker">MS. VOSS:</span> Has the State obtained an easement for use of Mr. Harlan's land?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> No. The matter was under review when this litigation commenced.</p>
+
+<p class="p"><span class="speaker">MS. VOSS:</span> So the State claims jurisdiction over a resource it cannot access without traversing private property for which it has no easement, no permit, and no consent?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> The statute provides for access in cases of public resource management—</p>
+
+<p class="p"><span class="speaker">MS. VOSS:</span> The statute provides for access with thirty days' notice and a hearing before the landowner. Did the State provide thirty days' notice?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Not yet, no.</p>
+
+<p class="p"><span class="speaker">MS. VOSS:</span> Mr. Harlan has lived on that land for forty-one years. His family has owned it since 1957. The river may be the State's concern, but the land it flows through is not. And the State's failure to even notify my client before filing suit suggests this was never about resource management. It was about priority. Being first in line.</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> We acted on a reasonable timeframe—</p>
+
+<p class="p"><span class="speaker">MS. VOSS:</span> You acted in March. Mr. Harlan first contacted your office in <i>January.</i> He called fourteen times. We have the phone records. No further questions.</p>
+
+<div class="page-break">— — —</div>
+
+<!-- CROSS-EXAMINATION BY FALK -->
+<p class="p"><span class="speaker">MR. FALK:</span> Dr. Csongor. Jonas Falk. I've been appointed by this court as guardian <i>ad litem</i> for the river.</p>
+
+<p class="p"><span class="stage">[A brief silence. The court reporter notes a pause of approximately four seconds.]</span></p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Yes. I understand.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> In your survey, did you measure the sediment load?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Yes. Suspended sediment averaged forty-two milligrams per liter. Coarse bed load was minimal.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> A new river. Carrying sediment. Depositing it.</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Yes, that is what rivers do.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> Did you observe any aquatic life?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Macroinvertebrates had colonized the lower reaches by June. Caddisfly larvae, mostly. Some stoneflies. It was—remarkably fast.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> Did you observe any fish?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Not yet. But the connectivity to downstream waterways suggests it is only a matter of time.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> So the river is not simply water flowing through a channel. It is a living system. It carries. It deposits. It <i>recruits</i>—is that the word?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Colonizes. But yes.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> One more question. You said the river was pulling water from the surrounding soil. Was the soil drying?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Yes. There was a measurable decline in soil moisture within a thirty-meter corridor on either side of the channel.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> And the vegetation in that corridor?</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> Stressing. Some of it dying.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> So the river is feeding itself. At the expense of what surrounds it.</p>
+
+<p class="p"><span class="speaker">DR. CSONGOR:</span> <span class="stage">[long pause]</span> That is one way to characterize it.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> No further questions.</p>
+
+<div class="session-header">Session III — The Defense — 3:40 p.m.</div>
+
+<p class="p"><span class="speaker">THE COURT:</span> Mr. Ward, the defense may call its first witness.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> The defense calls Mr. Ellis Crane.</p>
+
+<p class="p"><span class="stage">[Mr. Crane is sworn. He is forty-three, wearing a gray sport coat. His hands, when placed on the rail, are ink-stained at the cuticles. He looks as though he has not been sleeping.]</span></p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> Mr. Crane, could you state your profession?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> I'm a cartographer.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> How long have you been making maps?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> Professionally? Fifteen years. Unprofessionally? Since I was nine. I drew my neighborhood on typing paper. Then the county. Then the whole state. By twelve I had filled a notebook with imaginary coastlines.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> Let me direct your attention to November of last year. You were commissioned to produce a topographical map of Marshall County.</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> Yes. The Marshall County Historical Society. They wanted a decorative map for their lobby. Something that showed the terrain, the settlements, the water features. I spent three months on it. I drove every road. I hiked every ridge. I walked the creek beds.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> And did you draw a river that does not exist?</p>
+
+<p class="p"><span class="stage">[The defendant looks down. He folds his hands, then unfolds them.]</span></p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> I drew a river.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> Did that river exist at the time you drew it?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> No.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> Why did you draw it?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> <span class="stage">[pause]</span> Because the land wanted it.</p>
+
+<p class="p"><span class="stage">[Ms. Solís rises. Ms. Voss rises. The Court gestures for them to be seated.]</span></p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> The land wanted it.</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> I know how that sounds. I walked that pasture in September. It was dry. It had been dry for years. But there was a—I don't know what to call it. A <i>hollow</i> in the land. Not a physical hollow. A shape that wanted to be filled. The land was… ready for something. I could feel where the water would go. Not where it <i>was</i>. Where it would be. And I drew it.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> So you were not inventing. You were…</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> Listening.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> When the river appeared in January, what did you think?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> I was afraid.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> Of what?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> Of the possibility that I was right.</p>
+
+<div class="page-break">— — —</div>
+
+<!-- CROSS-EXAMINATION OF CRANE BY SOLÍS -->
+<p class="p"><span class="speaker">MS. SOLÍS:</span> Mr. Crane, Maren Solís for the State. You said the land "wanted" a river. You "felt" where the water would go. Are you asking this jury to believe you have some supernatural sensitivity to terrain?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> I'm asking you to believe that a person who has studied land for thirty years might develop an intuition about it.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> Intuition. Let's talk about intuition. You drew the river with cartographic precision. Every bend, every grade. Your map shows the depth of the channel at six points. You marked the flow rate in gallons per minute. That is not intuition, Mr. Crane. That is specification.</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> I made those numbers up. I— <span class="stage">[pause]</span> I chose them because they felt… correct. Appropriate to the terrain.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> And the flow rate you chose—two hundred and eighty gallons per minute at the origin—happens to match the actual measured flow within three percent.</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> I'm aware.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> The State submits, Your Honor, that the defendant did not "listen to the land." The defendant produced a blueprint. Whether through means we cannot explain, he specified—in writing, on paper, two months in advance—the exact dimensions of a watercourse that subsequently appeared. The map is not art. It is a plan. And under the law, a plan that produces a public resource gives rise to state jurisdiction.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> Objection. Counsel is testifying.</p>
+
+<p class="p"><span class="speaker">THE COURT:</span> Sustained. Ms. Solís.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> Mr. Crane, have you made other maps?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> Hundreds.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> Have any other maps been followed by the appearance of the features they depicted?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> <span class="stage">[very long pause]</span> I've… wondered about that.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> That's not an answer.</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> In 2019, I drew a map of a coastline. An imaginary coastline. A town in Norway, for a fantasy novel commission. Six months later, a storm rearranged the shoreline near Stavanger in a way that—I don't know. I don't <i>know.</i> I told myself it was coincidence.</p>
+
+<p class="p"><span class="stage">[The courtroom is silent. The court reporter notes an ambient stillness of approximately six seconds.]</span></p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> No further questions.</p>
+
+<div class="page-break">— — —</div>
+
+<!-- CROSS-EXAMINATION OF CRANE BY VOSS -->
+<p class="p"><span class="speaker">MS. VOSS:</span> Mr. Crane. You walked <i>my client's property.</i> You trespassed on land belonging to Eldon Harlan to draw a map that preceded the destruction of his south pasture. His cattle will not cross the river. His fence is undermined. He has lost twenty-two acres of grazing land. Do you understand that?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> Yes.</p>
+
+<p class="p"><span class="speaker">MS. VOSS:</span> You said you "listened" to the land. The land you walked on was not yours to listen to.</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> <span class="stage">[quietly]</span> No. It wasn't.</p>
+
+<p class="p"><span class="speaker">MS. VOSS:</span> No further questions.</p>
+
+<div class="page-break">— — —</div>
+
+<!-- CROSS-EXAMINATION OF CRANE BY FALK -->
+<p class="p"><span class="speaker">MR. FALK:</span> Mr. Crane. May I call you Ellis?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> Yes.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> Ellis, you said the land wanted a river. I want to ask you about that. What did that wanting feel like?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> <span class="stage">[pause]</span> Like a shape with no name. Like a question the land was asking, and my hand happened to hold the pen when the answer came.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> Do you feel you created the river?</p>
+
+<p class="p"><span class="speaker">MR. CRANE:</span> <span class="stage">[long pause]</span> No. I feel I was the first to see it. But it was already coming.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> No further questions.</p>
+
+<div class="session-header">Session IV — Argument of Counsel — 5:15 p.m.</div>
+
+<p class="p"><span class="speaker">THE COURT:</span> We will hear brief arguments from all parties before recess. Ms. Solís, you may begin.</p>
+
+<p class="p"><span class="speaker">MS. SOLÍS:</span> Your Honor. The State's position is straightforward. A watercourse now exists where none existed before. That watercourse is a public resource. The defendant's map preceded it with suspicious precision, but the authorship question is irrelevant to jurisdiction. Whether the river was created by God, geology, or Mr. Crane's pen, it is water flowing across land, and the people of this state have a right to its management, protection, and distribution. We move for a declaratory order placing the river under Division authority and enjoining all private claims until such time as a management plan is in place.</p>
+
+<p class="p"><span class="speaker">THE COURT:</span> Ms. Voss.</p>
+
+<p class="p"><span class="speaker">MS. VOSS:</span> Your Honor, my client's position is equally straightforward. The river flows through his property. It has damaged his land. He did not invite it, request it, or consent to it. If the State wishes to claim the river, it must first compensate the landowner for the easement and for damages incurred. Mr. Harlan is not opposed to the river. He is opposed to being erased from the conversation. He is opposed to the State treating his forty-one years of stewardship as an inconvenience.</p>
+
+<p class="p"><span class="speaker">THE COURT:</span> Mr. Ward.</p>
+
+<p class="p"><span class="speaker">MR. WARD:</span> Your Honor, this entire proceeding rests on a premise that should alarm every person in this room. The State argues that my client's map was not speech but action—that a drawing on paper constitutes an act of engineering. If that argument prevails, then any creative act can be retroactively classified as causation. Every painter becomes liable for what appears on the wall. Every writer becomes responsible for what happens in the world. The map is a map. It was drawn in good faith, without foreknowledge of any watercourse. To hold my client responsible for the river is to criminalize imagination.</p>
+
+<p class="p"><span class="stage">[The Court nods. A pause.]</span></p>
+
+<p class="p"><span class="speaker">THE COURT:</span> Mr. Falk. Do you have anything to add?</p>
+
+<p class="p"><span class="stage">[Mr. Falk rises. He straightens his jacket. He places one hand on the table, near the glass pitcher. He speaks slowly.]</span></p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> Your Honor. I was appointed to represent the interests of the river. I have spent three months trying to understand what those interests are. I will tell you what I have learned.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> The river is three point seven miles long. It is growing. It is carrying sediment from the upwelling at its source and depositing it at its banks, building a floodplain where no floodplain existed. It has carved a channel through compacted clay that has not seen water in, perhaps, ten thousand years. The clay is changing. The soil is changing. The vegetation within the corridor is dying, and new vegetation—riparian species, willow and cottonwood—is beginning to appear.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> The river does not know who owns the land. It does not know the State exists. It knows gradient, and volume, and the resistance of the material it moves through. It is reshaping the surface of this county according to laws that are older than the laws of this court.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> Every party in this room is arguing about who gets to decide what happens to the river. No one is asking what the river is doing. The river is <i>building itself.</i> It is creating banks. It is establishing a flood rhythm. In the spring, it will overflow, and the water will spread across the low ground, and it will deposit nutrients, and things will grow. The river has a plan, Your Honor. And it predates Mr. Crane's map.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> I am not asking the court to grant the river legal personhood. I am asking the court to acknowledge that the river is an ongoing process, not a resource, not a property, not an artifact of anyone's imagination—a <i>process</i> that is currently engaged in the work of existing, and that any ruling this court makes will be something the river flows through, around, or over, as it chooses.</p>
+
+<p class="p"><span class="speaker">MR. FALK:</span> The river has rights because the river <i>is</i>. It is physical. It has mass and direction. It erodes and deposits. It floods and recedes. It is making the world, Your Honor, one grain of silt at a time. Everything else is paperwork.</p>
+
+<p class="p"><span class="stage">[Silence. The court reporter notes a stillness of eleven seconds. The pitcher of water on Mr. Falk's table catches the late-afternoon light from the western window. The court reporter notes that it was very still.]</span></p>
+
+<div class="page-break">— — —</div>
+
+<div class="session-header">Ruling from the Bench — 6:31 p.m.</div>
+
+<p class="p"><span class="speaker">THE COURT:</span> I have listened to four hours of testimony and argument today. I have heard the State claim jurisdiction over a watercourse it cannot explain. I have heard a landowner assert rights over a feature he did not create and cannot remove. I have heard a cartographer say he listened to the land, and I have heard a lawyer say the river is building itself.</p>
+
+<p class="p"><span class="speaker">THE COURT:</span> I find that I am not equipped to determine whether Mr. Crane caused the river. I am not equipped to determine whether a map can be a blueprint. What I can determine is that a river exists, that it is flowing, and that it is changing the landscape as it does.</p>
+
+<p class="p"><span class="speaker">THE COURT:</span> I am going to enter an interim order. The river will remain under the temporary supervision of the Division of Water Resources. Mr. Harlan will be compensated for access and for documented damages, payable from the State's emergency resource fund. Mr. Crane's map will be preserved as evidence and held in the custody of this court. No party will alter, divert, or impede the river's flow pending further proceedings.</p>
+
+<p class="p"><span class="speaker">THE COURT:</span> I am also ordering something unusual. I want the Division to survey the river every thirty days. I want the reports filed with this court, not just with the State. Because I have a question that no one in this room has answered, and I think it may be the only question that matters.</p>
+
+<p class="p"><span class="speaker">THE COURT:</span> The river is growing. Where does it think it's going?</p>
+
+<p class="p"><span class="stage">[The Court adjourns the session at 6:42 p.m. The court will reconvene at the river.]</span></p>
+
+<div class="page-break">— — —</div>
+
+<p class="p display">
+  <i>Certificate</i><br><br>
+  I, R. Elm, Certified Shorthand Reporter, do hereby certify that the foregoing is a true and accurate transcript of the proceedings held in the above-entitled matter on the date and at the time and place set forth.
+</p>
+
+<p class="p display" style="margin-top: 32px; font-size: 14px; color: #aaa; font-style: normal;">
+  — End of Transcript —
+</p>
+
+</div>
+
+<div class="footnote-section">
+  <h3>Reporter's Notes</h3>
+  <p>1. At 3:12 p.m., during the recess, the court reporter observed Mr. Crane standing at the window facing west, toward the direction of the Harlan property. He did not move for four minutes.</p>
+  <p>2. Mr. Falk's pitcher was emptied and refilled twice during the afternoon session. The reporter notes this only because Mr. Falk did not drink from it.</p>
+  <p>3. The court has received notice that the river's flow rate has increased from 320 million to 347 million gallons per day since the filing of the complaint.</p>
+  <p>4. No explanation has been offered.</p>
+</div>
+
+</body>
+</html>
