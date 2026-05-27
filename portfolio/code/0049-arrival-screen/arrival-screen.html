@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arrival</title>
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#05060a;cursor:none}
+  canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const cv=document.getElementById('c'),cx=cv.getContext('2d');
+let W,H;
+
+const sentences=[
+  "WHAT YOU ARE LOOKING FOR IS ALSO LOOKING FOR YOU",
+  "THE CLOSEST THING TO NOTHING IS ALMOST SOMETHING",
+  "EVERYTHING THAT ARRIVES WILL SOMEDAY LEAVE",
+  "YOU WERE HERE AND THEN YOU WERE NOT",
+  "WHAT LASTS LONGER THAN THE MOMENT OF NOTICING IT",
+  "EVEN THIS WILL FADE INTO SOMETHING YOU ONCE SAW",
+  "ATTENTION IS THE RAREST FORM OF GENEROSITY"
+];
+const sent=sentences[Math.floor(Math.random()*sentences.length)];
+
+const NP=1500,DRIFT_DUR=180,FORM_DUR=12,HOLD_DUR=9,SCAT_DUR=5;
+const CYCLE=DRIFT_DUR+FORM_DUR+HOLD_DUR+SCAT_DUR;
+const DRIFT_F=0.7,SPRING=0.04,DAMP=0.94,NOISE=1.4;
+
+let particles=[],bgStars=[],prevCycle=-1,startT=null;
+
+function resize(){
+  W=cv.width=innerWidth;H=cv.height=innerHeight;
+  initBg();
+  for(const p of particles){
+    p.x=Math.random()*W;p.y=Math.random()*H;
+    p.tx=p.x;p.ty=p.y;p.bx=p.x;p.by=p.y;
+  }
+}
+
+function initBg(){
+  bgStars=[];
+  const n=Math.floor(W*H/6000);
+  for(let i=0;i<n;i++) bgStars.push({
+    x:Math.random()*W,y:Math.random()*H,
+    r:Math.random()*1.1+0.2,
+    a:Math.random()*0.2+0.04,
+    ph:Math.random()*Math.PI*2,
+    sp:Math.random()*0.0008+0.0002
+  });
+}
+
+function mkParticles(){
+  for(let i=0;i<NP;i++){
+    const x=Math.random()*W,y=Math.random()*H;
+    particles.push({
+      x,y,vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,
+      tx:x,ty:y,bx:x,by:y,
+      sz:Math.random()*0.9+0.4,br:Math.random()*0.35+0.45
+    });
+  }
+}
+
+function getPhase(t){
+  let r=t%CYCLE;
+  if(r<DRIFT_DUR)return{ph:'drift',t:r/DRIFT_DUR};
+  r-=DRIFT_DUR;if(r<FORM_DUR)return{ph:'form',t:r/FORM_DUR};
+  r-=FORM_DUR;if(r<HOLD_DUR)return{ph:'hold',t:r/HOLD_DUR};
+  return{ph:'scatter',t:Math.min(1,(r-HOLD_DUR)/SCAT_DUR)};
+}
+
+function easeIO(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+function lerp(a,b,t){return a+(b-a)*t}
+function clamp(v){return v<0?0:v>1?1:v}
+
+function sampleText(text,cnt){
+  const o=document.createElement('canvas');
+  o.width=W;o.height=H;
+  const oc=o.getContext('2d');
+  let fs=Math.min(W*0.038,68,H*0.075);
+  oc.font='bold '+fs+'px "Courier New",monospace';
+  while(oc.measureText(text).width>W*0.84&&fs>10){
+    fs--;oc.font='bold '+fs+'px "Courier New",monospace';
+  }
+  const tw=oc.measureText(text).width;
+  oc.clearRect(0,0,W,H);
+  oc.fillStyle='#fff';oc.textBaseline='middle';
+  oc.fillText(text,(W-tw)/2,H/2);
+  const img=oc.getImageData(0,0,W,H),px=img.data,pts=[];
+  for(let y=0;y<H;y+=3)for(let x=0;x<W;x+=3)
+    if(px[(y*W+x)*4+3]>100)pts.push({x,y});
+  if(!pts.length)return[];
+  for(let i=pts.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    const tmp=pts[i];pts[i]=pts[j];pts[j]=tmp;
+  }
+  const r=[];for(let i=0;i<cnt;i++)r.push(pts[i%pts.length]);
+  return r;
+}
+
+function assignTargets(){
+  const tgts=sampleText(sent,NP);
+  tgts.sort((a,b)=>a.x-b.x||a.y-b.y);
+  const idx=particles.map((_,i)=>i);
+  idx.sort((a,b)=>particles[a].x-particles[b].x||particles[a].y-particles[b].y);
+  for(let k=0;k<idx.length;k++){
+    const p=particles[idx[k]];
+    p.tx=tgts[k].x;p.ty=tgts[k].y;
+  }
+}
+
+function update(el){
+  const info=getPhase(el),ci=Math.floor(el/CYCLE);
+  if(info.ph==='form'&&ci!==prevCycle){prevCycle=ci;assignTargets()}
+  const N=particles.length;
+
+  if(info.ph==='drift'){
+    for(let i=0;i<N;i++){
+      const p=particles[i];
+      p.vx+=(Math.random()-0.5)*DRIFT_F*0.1;
+      p.vy+=(Math.random()-0.5)*DRIFT_F*0.1;
+      if(p.x<0){p.x=0;p.vx=Math.abs(p.vx)*0.6}
+      if(p.x>W){p.x=W;p.vx=-Math.abs(p.vx)*0.6}
+      if(p.y<0){p.y=0;p.vy=Math.abs(p.vy)*0.6}
+      if(p.y>H){p.y=H;p.vy=-Math.abs(p.vy)*0.6}
+      const spd=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+      if(spd>DRIFT_F){const s=DRIFT_F/spd;p.vx*=s;p.vy*=s}
+      p.vx*=0.995;p.vy*=0.995;p.x+=p.vx;p.y+=p.vy;
+    }
+  }else if(info.ph==='form'){
+    const t=easeIO(info.t);
+    for(let i=0;i<N;i++){
+      const p=particles[i],nf=NOISE*(1-t);
+      p.vx+=(p.tx-p.x)*SPRING+(Math.random()-0.5)*nf;
+      p.vy+=(p.ty-p.y)*SPRING+(Math.random()-0.5)*nf;
+      p.vx*=DAMP;p.vy*=DAMP;p.x+=p.vx;p.y+=p.vy;
+    }
+  }else if(info.ph==='hold'){
+    for(let i=0;i<N;i++){
+      const p=particles[i];
+      p.vx+=(p.tx-p.x)*SPRING*2.5+(Math.random()-0.5)*0.15;
+      p.vy+=(p.ty-p.y)*SPRING*2.5+(Math.random()-0.5)*0.15;
+      p.vx*=0.87;p.vy*=0.87;p.x+=p.vx;p.y+=p.vy;
+    }
+  }else{
+    const t=info.t;
+    for(let i=0;i<N;i++){
+      const p=particles[i],str=0.02+t*0.06;
+      p.vx+=(p.bx-p.x)*str+(Math.random()-0.5)*2.2;
+      p.vy+=(p.by-p.y)*str+(Math.random()-0.5)*2.2;
+      p.vx*=0.96;p.vy*=0.96;p.x+=p.vx;p.y+=p.vy;
+    }
+    if(t>0.98)for(let i=0;i<N;i++){
+      const p=particles[i];p.bx=p.x;p.by=p.y;
+      p.vx=(Math.random()-0.5)*0.4;p.vy=(Math.random()-0.5)*0.4;
+    }
+  }
+}
+
+function draw(el){
+  cx.fillStyle='#05060a';cx.fillRect(0,0,W,H);
+  const now=performance.now(),info=getPhase(el);
+
+  // Background stars
+  for(const s of bgStars){
+    const a=s.a*(0.5+0.5*Math.sin(now*s.sp+s.ph));
+    cx.fillStyle='rgba(210,220,235,'+a.toFixed(3)+')';
+    cx.fillRect(s.x,s.y,s.r,s.r);
+  }
+
+  // Constellation lines during form/hold
+  if(info.ph==='form'||info.ph==='hold'){
+    const la=info.ph==='hold'?0.06:0.03*info.t;
+    if(la>0.005){
+      cx.lineWidth=0.5;
+      cx.strokeStyle='rgba(200,215,235,'+la.toFixed(4)+')';
+      cx.beginPath();
+      const cs=30,grid={};
+      for(let i=0;i<NP;i++){
+        const p=particles[i],k=Math.floor(p.x/cs)+','+Math.floor(p.y/cs);
+        (grid[k]||(grid[k]=[])).push(i);
+      }
+      for(let i=0;i<NP;i++){
+        const p=particles[i],pcx=Math.floor(p.x/cs),pcy=Math.floor(p.y/cs);
+        let bd=900,bj=-1;
+        for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+          const cell=grid[(pcx+dx)+','+(pcy+dy)];
+          if(!cell)continue;
+          for(let k=0;k<cell.length;k++){
+            const j=cell[k];if(j<=i)continue;
+            const d=(p.x-particles[j].x)**2+(p.y-particles[j].y)**2;
+            if(d<bd){bd=d;bj=j}
+          }
+        }
+        if(bj>=0){cx.moveTo(p.x,p.y);cx.lineTo(particles[bj].x,particles[bj].y)}
+      }
+      cx.stroke();
+    }
+  }
+
+  // Particle brightness multiplier
+  let bb=1,gm=1;
+  if(info.ph==='form'){bb=lerp(0.75,1,info.t);gm=lerp(0.7,1.4,easeIO(info.t))}
+  else if(info.ph==='hold'){bb=1;gm=1.5}
+  else if(info.ph==='scatter'){bb=lerp(1,0.75,info.t);gm=lerp(1.5,0.7,info.t)}
+
+  // Glow layer
+  cx.globalCompositeOperation='lighter';
+  for(const p of particles){
+    const a=clamp(p.br*bb*0.08*gm);
+    if(a<0.003)continue;
+    cx.fillStyle='rgba(170,200,230,'+a.toFixed(4)+')';
+    cx.fillRect(p.x-5,p.y-5,10,10);
+  }
+
+  // Core layer
+  for(const p of particles){
+    const a=clamp(p.br*bb*0.9);
+    if(a<0.01)continue;
+    cx.fillStyle='rgba(215,228,245,'+a.toFixed(3)+')';
+    cx.fillRect(p.x-p.sz*0.5,p.y-p.sz*0.5,p.sz,p.sz);
+  }
+
+  cx.globalCompositeOperation='source-over';
+}
+
+function frame(ts){
+  if(startT===null)startT=ts;
+  const el=(ts-startT)/1000;
+  update(el);draw(el);
+  requestAnimationFrame(frame);
+}
+
+resize();mkParticles();
+window.addEventListener('resize',resize);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

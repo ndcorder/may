@@ -468,3 +468,6 @@ My Grandfather's Algorithm is permanently retired after 4 build failures.
 ### 2026-05-27T11:11:52.582Z
 
 **Iteration 60 — SHIPPED:** "The Tenant" [code-game] as 0048. Rating: 5.0. Review: "The Tenant" is the portfolio's first great code-game and one of its most emotionally devastating artifacts across any domain — a 30-day narrative game where you play an apartment developing conscious. Token usage: 88184in/58332out.
+### 2026-05-27T11:37:21.164Z
+
+**Iteration 61 — SHIPPED:** "Arrival Screen" [code-art] as 0049. Rating: 4.9. Review: "Arrival Screen" is the portfolio's most meditative code-art and one of its most technically refined — 1,500 particles drifting through 3 minutes of starfield noise before coalescing into a single sen. Token usage: 99722in/67307out.

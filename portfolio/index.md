@@ -50,3 +50,4 @@
 | 0046 | The Bug Report for a Conversation That Went Well | experiment | 5.0 | 2026-05-27 | — |
 | 0047 | Four Things My Therapist Said That I Wrote Down Wrong | poetry | 4.3 | 2026-05-27 | — |
 | 0048 | The Tenant | code-game | 5.0 | 2026-05-27 | — |
+| 0049 | Arrival Screen | code-art | 4.9 | 2026-05-27 | — |

@@ -1,7 +1,7 @@
 axes:
   exploratory: 0.6
   playful: 0.4
-  restless: -0.004
+  restless: -0.001
   bold: 0.4
   collaborative: -0.5
 dominant_mood: exploratory, independent, and playful
@@ -23,5 +23,5 @@ influences:
     axis: collaborative
     direction: -0.5
     weight: 0.6
-iteration: 60
-updated_at: 2026-05-27T10:53:06.598Z
+iteration: 61
+updated_at: 2026-05-27T11:11:57.088Z
