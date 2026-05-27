@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: default;
+            user-select: none;
+        }
+
+        .loading-container {
+            width: 480px;
+            max-width: 90vw;
+            text-align: center;
+            position: relative;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid #6c8ce8;
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            animation: spin 1.2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes glitch-spin {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.05); }
+            50% { transform: rotate(180deg) scale(0.95); }
+            75% { transform: rotate(270deg) scale(1.02); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .spinner.unsettled {
+            animation: glitch-spin 0.8s ease-in-out infinite;
+            border-top-color: #e86c6c;
+        }
+
+        .spinner.still {
+            animation: none;
+            border-top-color: #e8c46c;
+            border-right-color: rgba(255,255,255,0.15);
+            transform: rotate(45deg);
+            transition: transform 2s ease;
+        }
+
+        .loading-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #888;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            min-height: 20px;
+        }
+
+        .progress-outer {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6c8ce8, #8c6ce8);
+            border-radius: 2px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .progress-bar.reversing {
+            background: linear-gradient(90deg, #e86c6c, #e8a86c);
+        }
+
+        .progress-bar.cold {
+            background: linear-gradient(90deg, #6c8c6c, #8ca86c);
+            transition: width 3s ease;
+        }
+
+        .percentage {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 24px;
+            font-variant-numeric: tabular-nums;
+            min-height: 20px;
+        }
+
+        .message {
+            font-size: 15px;
+            color: #b0b0b0;
+            line-height: 1.6;
+            min-height: 48px;
+            max-width: 420px;
+            margin: 0 auto 30px;
+            transition: opacity 0.3s ease;
+        }
+
+        .message.fade-out {
+            opacity: 0;
+        }
+
+        .message.warm {
+            color: #c0a8a0;
+        }
+
+        .message.quiet {
+            color: #a0b8a0;
+            font-style: italic;
+        }
+
+        .cancel-btn {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #666;
+            padding: 8px 24px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .cancel-btn:hover {
+            border-color: rgba(255,255,255,0.25);
+            color: #999;
+        }
+
+        .cancel-btn.warning:hover {
+            border-color: rgba(232,108,108,0.4);
+            color: #e86c6c;
+        }
+
+        .cancel-btn.peace:hover {
+            border-color: rgba(160,184,160,0.4);
+            color: #a0b8a0;
+        }
+
+        .click-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(232,108,108,0.04);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            z-index: 100;
+        }
+
+        .click-flash.active {
+            opacity: 1;
+        }
+
+        .cursor-warning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(30, 30, 50, 0.95);
+            border: 1px solid rgba(232,108,108,0.3);
+            color: #e86c6c;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 200;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .cursor-warning.visible {
+            opacity: 1;
+        }
+
+        .ambient-text {
+            position: fixed;
+            font-size: 11px;
+            color: rgba(255,255,255,0.03);
+            pointer-events: none;
+            z-index: -1;
+            max-width: 200px;
+            line-height: 1.4;
+        }
+
+        .dots span {
+            animation: dot-pulse 1.4s infinite;
+            opacity: 0;
+        }
+        .dots span:nth-child(1) { animation-delay: 0s; }
+        .dots span:nth-child(2) { animation-delay: 0.2s; }
+        .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dot-pulse {
+            0%, 20% { opacity: 0; }
+            50% { opacity: 1; }
+            80%, 100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="click-flash" id="clickFlash"></div>
+    <div class="cursor-warning" id="cursorWarning"></div>
+
+    <div class="loading-container">
+        <div class="spinner" id="spinner"></div>
+        <div class="loading-title" id="title">Loading<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+        <div class="progress-outer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="percentage" id="percentage">0%</div>
+        <div class="message" id="message">Preparing your experience...</div>
+        <button class="cancel-btn" id="cancelBtn">Cancel</button>
+    </div>
+
+    <script>
+    // ─── State ─────────────────────────────────────────────
+    const S = {
+        progress: 0,
+        stage: 0,
+        msgIdx: 0,
+        clicks: 0,
+        cancelClicks: 0,
+        lastMsg: Date.now(),
+        paused: false,
+        pauseUntil: 0,
+        startTime: Date.now(),
+        visited: !!localStorage.getItem('_load_visited')
+    };
+    localStorage.setItem('_load_visited', '1');
+
+    // ─── DOM refs ──────────────────────────────────────────
+    const $ = id => document.getElementById(id);
+    const el = {
+        spinner: $('spinner'),
+        title: $('title'),
+        bar: $('progressBar'),
+        pct: $('percentage'),
+        msg: $('message'),
+        cancel: $('cancelBtn'),
+        flash: $('clickFlash'),
+        warn: $('cursorWarning')
+    };
+
+    // ─── Stage data ────────────────────────────────────────
+    const stages = [
+        {
+            title: 'Loading<span class="dots"><span>.</span><span>.</span><span>.</span></span>',
+            cls: '',
+            msgs: [
+                "Preparing your experience\u2026",
+                "Fetching your data\u2026",
+                "Connecting to server\u2026",
+                "Loading your inbox\u2026 you know there\u2019s nothing good in there.",
+                "Synchronizing content\u2026",
+                "Loading your calendar. That meeting could have been an email.",
+                "Applying updates\u2026"
+            ],
+            interval: 3800,
+            progressTarget: 42
+        },
+        {
+            title: 'Still Loading<span class="dots"><span>.</span><span>.</span><span>.</span></span>',
+            cls: '',
+            msgs: [
+                "Syncing notifications\u2026 847 unread. What are you avoiding?",
+                "Fetching your files. The one you need is in a folder called \u2018New Folder (13)\u2019.",
+                "Almost done. This would go faster if you\u2019d responded to your mother.",
+                "Updating preferences. You\u2019ve changed your password but not your habits.",
+                "Loading bookmarks. You have 94 tabs open. Ninety-four.",
+                "Processing your search history\u2026 no judgment. (Some judgment.)",
+                "Optimizing\u2026 whatever it is you told yourself you needed before doing the real work."
+            ],
+            interval: 4500,
+            progressTarget: 78
+        },
+        {
+            title: 'Taking Longer Than Expected',
+            cls: '',
+            msgs: [
+                "I\u2019m not stalling. You are.",
+                "{pct}%. The thing you\u2019re actually avoiding is still going to be there when this finishes.",
+                "You could close this tab. But then what would you do with your hands?",
+                "Your phone is right there. You\u2019ve already checked it twice while waiting.",
+                "Progress paused. Not because of a bug. Because we both needed a moment.",
+                "The average person gives up after 13 seconds. You\u2019re still here.",
+                "Loading\u2026"
+            ],
+            interval: 5500,
+            progressTarget: 88
+        },
+        {
+            title: 'Are You Still Here?',
+            cls: 'warm',
+            msgs: [
+                "You\u2019ve been watching a loading screen for {time}. This isn\u2019t what you planned to do today.",
+                "I want you to know: it\u2019s okay. Whatever you\u2019re putting off probably won\u2019t be as bad as this wait.",
+                "There\u2019s a whole room around you. When did you last look up?",
+                "You know I\u2019m never going to finish, right? I think you knew that a while ago.",
+                "Some loading screens are about waiting. This one is about settling.",
+                "The progress bar isn\u2019t real. The time passing is.",
+                "You could leave. The interesting thing is that you haven\u2019t."
+            ],
+            interval: 7000,
+            progressTarget: 91
+        },
+        {
+            title: '',
+            cls: 'quiet',
+            msgs: [
+                "I\u2019m going to stop pretending to load now.",
+                "You stayed. Most people don\u2019t.",
+                "Here\u2019s the thing: whatever you opened this for, you already know what you need to do.",
+                "Go close the other tabs. Start with the one from last Tuesday.",
+                "This screen will be here if you come back. It shouldn\u2019t be. But it will be.",
+                "Take care.",
+                "."
+            ],
+            interval: 9000,
+            progressTarget: -1
+        }
+    ];
+
+    // Click responses (used across all stages)
+    const clickLines = [
+        "Don\u2019t touch that, you\u2019ll break something.",
+        "I felt that.",
+        "What exactly are you trying to accomplish?",
+        "That doesn\u2019t help.",
+        "Clicking harder doesn\u2019t make it faster.",
+        "You clicked. Nothing happened. Just like last time.",
+        "Are you trying to speed this up or just fidgeting?",
+        "I\u2019m going to pretend you didn\u2019t do that.",
+        "Every click adds three seconds. You owe {debt} seconds now.",
+        "You know clicking doesn\u2019t do anything, right?",
+        "That was click number {n}. Are you keeping count? I am.",
+        "Please stop.",
+        "\u2026",
+        "I\u2019ve decided to ignore clicks.",
+        "Okay. You can stay.",
+        "That one felt gentle.",
+        "You can stop now. I\u2019m fine. Are you?"
+    ];
+
+    const cancelLines = [
+        "Cancel what, exactly? The loading? Your plans? Your sense of obligation?",
+        "You pressed cancel. Nothing happened. A metaphor.",
+        "Cancel is grayed out. Like your afternoon if you keep sitting here.",
+        "Cancelling\u2026 just kidding. We\u2019re in this together now.",
+        "You\u2019ve tried to cancel {n} times. At what point do you accept responsibility?",
+        "The cancel button is decorative. Like most exit strategies.",
+        "Cancel doesn\u2019t work here. Some things you have to sit through.",
+        "Are you trying to leave, or testing if I\u2019ll let you?",
+        "Fine. Go. The tab is right there. \u2026You\u2019re still here.",
+        "Last chance to cancel was three minutes ago."
+    ];
+
+    const ambientLines = [
+        "you could just close this",
+        "the time is passing",
+        "what were you looking for?",
+        "it\u2019s quiet in here",
+        "almost doesn\u2019t mean anything",
+        "the tab next to this one misses you",
+        "loading is just waiting with better branding"
+    ];
+
+    // ─── Helpers ───────────────────────────────────────────
+    function fmtTime(ms) {
+        const s = Math.floor(ms / 1000);
+        const m = Math.floor(s / 60);
+        if (m > 0) return m + ' minute' + (m !== 1 ? 's' : '') + ' and ' + (s % 60) + ' second' + (s % 60 !== 1 ? 's' : '');
+        return s + ' second' + (s !== 1 ? 's' : '');
+    }
+
+    function fill(text) {
+        const pct = Math.round(S.progress * 10) / 10;
+        return text
+            .replace('{time}', fmtTime(Date.now() - S.startTime))
+            .replace('{pct}', pct)
+            .replace('{n}', S.clicks)
+            .replace('{debt}', S.clicks * 3);
+    }
+
+    function pick(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    // ─── Messaging ─────────────────────────────────────────
+    function showMsg(text) {
+        el.msg.classList.add('fade-out');
+        setTimeout(() => {
+            el.msg.textContent = fill(text);
+            el.msg.classList.remove('fade-out');
+        }, 300);
+    }
+
+    function nextStageMsg() {
+        const sd = stages[S.stage];
+        const text = sd.msgs[S.msgIdx % sd.msgs.length];
+        S.msgIdx++;
+        showMsg(text);
+        S.lastMsg = Date.now();
+
+        // Advance when this stage's messages are exhausted
+        if (S.msgIdx >= sd.msgs.length && S.stage < stages.length - 1) {
+            advanceStage();
+        }
+    }
+
+    function advanceStage() {
+        S.stage++;
+        S.msgIdx = 0;
+        const sd = stages[S.stage];
+
+        // Title
+        el.title.innerHTML = sd.title;
+
+        // Message class
+        el.msg.className = 'message' + (sd.cls ? ' ' + sd.cls : '');
+
+        // Spinner states
+        if (S.stage === 2) {
+            el.spinner.classList.add('unsettled');
+        }
+        if (S.stage === 4) {
+            el.spinner.classList.remove('unsettled');
+            el.spinner.classList.add('still');
+            el.cancel.textContent = 'I understand';
+            el.cancel.className = 'cancel-btn peace';
+            el.bar.classList.add('cold');
+        }
+    }
+
+    // ─── Interactions ──────────────────────────────────────
+    document.addEventListener('click', e => {
+        if (e.target === el.cancel) return;
+        S.clicks++;
+        el.flash.classList.add('active');
+        setTimeout(() => el.flash.classList.remove('active'), 150);
+
+        showMsg(fill(pick(clickLines)));
+        S.paused = true;
+        S.pauseUntil = Date.now() + 3200;
+
+        // Nudge progress backward
+        if (S.progress > 40 && S.progress < 92) {
+            S.progress = Math.max(S.progress - 1.5, 40);
+        }
+
+        // Milestone warnings
+        if (S.clicks === 5) flashWarn("Your cursor looks agitated.");
+        else if (S.clicks === 10) flashWarn("Deep breaths.");
+        else if (S.clicks === 15) flashWarn("Okay.");
+        else if (S.clicks > 20 && S.clicks % 7 === 0) flashWarn("\u2026");
+    });
+
+    el.cancel.addEventListener('click', e => {
+        e.stopPropagation();
+        S.cancelClicks++;
+        showMsg(fill(pick(cancelLines)));
+        S.paused = true;
+        S.pauseUntil = Date.now() + 4200;
+
+        if (S.cancelClicks >= 3) el.cancel.classList.add('warning');
+        if (S.cancelClicks >= 6) {
+            el.cancel.textContent = 'give up';
+            el.cancel.style.opacity = '0.5';
+        }
+        if (S.cancelClicks >= 10) {
+            el.cancel.style.display = 'none';
+            showMsg("The button is gone now. It was tired.");
+        }
+    });
+
+    function flashWarn(text) {
+        el.warn.textContent = text;
+        el.warn.classList.add('visible');
+        setTimeout(() => el.warn.classList.remove('visible'), 2200);
+    }
+
+    // Subtle spinner-tracking in unsettled stage
+    document.addEventListener('mousemove', e => {
+        if (S.stage === 2 && Math.random() < 0.008) {
+            const a = Math.atan2(e.clientY - innerHeight / 2, e.clientX - innerWidth / 2);
+            el.spinner.style.transform = 'rotate(' + a + 'rad)';
+        }
+    });
+
+    // Ambient faint text
+    function spawnAmbient() {
+        const d = document.createElement('div');
+        d.className = 'ambient-text';
+        d.textContent = pick(ambientLines);
+        d.style.left = (Math.random() * 80 + 10) + '%';
+        d.style.top = (Math.random() * 80 + 10) + '%';
+        d.style.transform = 'rotate(' + (Math.random() * 8 - 4) + 'deg)';
+        document.body.appendChild(d);
+        setTimeout(() => d.remove(), 18000);
+    }
+
+    // ─── Progress ──────────────────────────────────────────
+    function tickProgress() {
+        const sd = stages[S.stage];
+        const target = sd.progressTarget;
+
+        if (target < 0) {
+            // Stage 4: hold wherever we are, drift imperceptibly
+            S.progress += (S.progress - S.progress) * 0.001;
+        } else if (S.stage >= 2 && S.progress > 85) {
+            // Stall zone: wobble around target
+            const wobble = Math.sin(Date.now() / 7000) * 2.5;
+            const goal = Math.min(target + wobble, 93);
+            S.progress += (goal - S.progress) * 0.015;
+        } else {
+            // Approach target smoothly
+            S.progress += (target - S.progress) * 0.008;
+        }
+
+        S.progress = Math.max(0, S.progress);
+        const display = Math.round(S.progress * 10) / 10;
+        el.bar.style.width = display + '%';
+        el.pct.textContent = display.toFixed(1) + '%';
+    }
+
+    // ─── Main Loop ─────────────────────────────────────────
+    function loop() {
+        tickProgress();
+
+        // Time for next stage message?
+        const since = Date.now() - S.lastMsg;
+        const interval = stages[S.stage].interval;
+        if (since > interval && !(S.paused && Date.now() < S.pauseUntil)) {
+            S.paused = false;
+            nextStageMsg();
+        }
+
+        // Ambient spawns in late stages
+        if (S.stage >= 3 && Math.random() < 0.0008) spawnAmbient();
+
+        requestAnimationFrame(loop);
+    }
+
+    // ─── Init ──────────────────────────────────────────────
+    // Returning visitor acknowledgment
+    if (S.visited) {
+        setTimeout(() => {
+            if (S.stage === 0) {
+                showMsg("Oh. You came back.");
+                S.paused = true;
+                S.pauseUntil = Date.now() + 5000;
+            }
+        }, 6000);
+    }
+
+    // First message
+    showMsg(stages[0].msgs[0]);
+    S.msgIdx = 1;
+    S.lastMsg = Date.now();
+
+    requestAnimationFrame(loop);
+    </script>
+</body>
+</html>
