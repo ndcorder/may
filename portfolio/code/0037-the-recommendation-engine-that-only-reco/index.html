@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Recommendation Engine</title>
+  <style>
+    /* Reset and base */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #141414;
+      --bg-secondary: #1a1a1a;
+      --bg-card: #2a2a2a;
+      --bg-hover: #333;
+      --text-primary: #e5e5e5;
+      --text-secondary: #a3a3a3;
+      --text-muted: #737373;
+      --accent: #e50914;
+      --accent-hover: #f40612;
+      --border-subtle: #333;
+      --radius: 4px;
+    }
+
+    html, body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Landing screen */
+    #landing {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    #landing h1 {
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      letter-spacing: 0.02em;
+    }
+
+    #input-container {
+      width: 100%;
+      max-width: 600px;
+      position: relative;
+    }
+
+    #loss-input {
+      width: 100%;
+      padding: 1rem 1.2rem;
+      font-size: 1.1rem;
+      font-family: inherit;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #loss-input:focus {
+      border-color: var(--accent);
+    }
+
+    #loss-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    #suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      justify-content: center;
+    }
+
+    .suggestion-chip {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .suggestion-chip:hover {
+      border-color: var(--text-secondary);
+      color: var(--text-secondary);
+    }
+
+    /* Results page */
+    #results {
+      display: none;
+      padding: 0;
+    }
+
+    #results.active {
+      display: block;
+    }
+
+    #landing.hidden {
+      display: none;
+    }
+
+    /* Top bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      padding: 1rem 3%;
+      background: rgba(20, 20, 20, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius);
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    /* Hero section — the matched loss */
+    .hero {
+      padding: 3rem 3% 2rem;
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .hero-cover {
+      width: 250px;
+      height: 250px;
+      border-radius: var(--radius);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hero-info {
+      flex: 1;
+    }
+
+    .hero-category {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-title {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      line-height: 1.2;
+    }
+
+    .hero-description {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      max-width: 500px;
+    }
+
+    .listen-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: inherit;
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .listen-btn:hover {
+      background: var(--text-secondary);
+    }
+
+    .listen-btn.playing {
+      background: var(--accent);
+      color: white;
+    }
+
+    .listen-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Sections */
+    .rec-section {
+      padding: 1.5rem 0;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-left: 3%;
+      padding-right: 3%;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .section-title span {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Carousel */
+    .carousel-container {
+      position: relative;
+    }
+
+    .carousel {
+      display: flex;
+      gap: 0.75rem;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding-bottom: 0.5rem;
+    }
+
+    .carousel::-webkit-scrollbar { display: none; }
+
+    .rec-card {
+      flex-shrink: 0;
+      width: 180px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .rec-card:hover {
+      transform: scale(1.05);
+    }
+
+    .rec-card-cover {
+      width: 180px;
+      height: 180px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+      position: relative;
+    }
+
+    .rec-card-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .similarity-badge {
+      position: absolute;
+      bottom: 6px;
+      left: 6px;
+      background: rgba(0,0,0,0.75);
+      color: var(--text-primary);
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .rec-card-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      line-height: 1.3;
+      margin-bottom: 0.25rem;
+    }
+
+    .rec-card-reason {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Also Lost section — horizontal list */
+    .also-lost-grid {
+      display: flex;
+      gap: 0.75rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 0.5rem;
+    }
+
+    .also-lost-grid::-webkit-scrollbar { display: none; }
+
+    .also-item {
+      flex-shrink: 0;
+      width: 180px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .also-item:hover {
+      transform: scale(1.05);
+    }
+
+    .also-item-cover {
+      width: 180px;
+      height: 100px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 0.4rem;
+    }
+
+    .also-item-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .also-item-title {
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 0.15rem;
+    }
+
+    .also-item-sim {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border-subtle);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Footer attribution */
+    .footer {
+      text-align: center;
+      padding: 3rem 3%;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .hero {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .hero-description {
+        max-width: 100%;
+      }
+      .hero-cover {
+        width: 200px;
+        height: 200px;
+      }
+      .hero-title {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* Fade-in animation */
+    .fade-in {
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Landing screen -->
+  <div id="landing">
+    <h1>What did you lose?</h1>
+    <div id="input-container">
+      <input type="text" id="loss-input" placeholder="A cassette tape. My grandmother's voice. The feeling of not worrying." autocomplete="off" />
+    </div>
+    <div id="suggestions"></div>
+  </div>
+
+  <!-- Results page -->
+  <div id="results">
+    <div class="top-bar">
+      <button class="back-btn" id="back-btn">← New Loss</button>
+    </div>
+
+    <div class="hero fade-in">
+      <div class="hero-cover" id="hero-cover"></div>
+      <div class="hero-info">
+        <div class="hero-category" id="hero-category"></div>
+        <h2 class="hero-title" id="hero-title"></h2>
+        <p class="hero-description" id="hero-description"></p>
+        <button class="listen-btn" id="listen-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Listen Now
+        </button>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="rec-section fade-in" style="animation-delay: 0.15s">
+      <h3 class="section-title">Because you lost <span id="because-lost-name"></span></h3>
+      <div class="carousel-container">
+        <div class="carousel" id="because-carousel"></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="rec-section fade-in" style="animation-delay: 0.3s">
+      <h3 class="section-title">Users who lost this also lost</h3>
+      <div class="also-lost-grid" id="also-lost"></div>
+    </div>
+
+    <div class="footer">
+      The Recommendation Engine · Things you've lost, things you'll lose
+    </div>
+  </div>
+
+  <script src="losses.js"></script>
+  <script src="recommend.js"></script>
+  <script src="audio-engine.js"></script>
+  <script src="cover-art.js"></script>
+  <script>
+    (function() {
+      const landing = document.getElementById('landing');
+      const results = document.getElementById('results');
+      const input = document.getElementById('loss-input');
+      const suggestionsEl = document.getElementById('suggestions');
+      const backBtn = document.getElementById('back-btn');
+
+      // Populate suggestions
+      const suggestions = recommend.getSuggestions();
+      suggestions.forEach(text => {
+        const chip = document.createElement('button');
+        chip.className = 'suggestion-chip';
+        chip.textContent = text;
+        chip.addEventListener('click', () => {
+          input.value = text;
+          handleSubmit(text);
+        });
+        suggestionsEl.appendChild(chip);
+      });
+
+      // Input handling
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && input.value.trim()) {
+          handleSubmit(input.value.trim());
+        }
+      });
+
+      backBtn.addEventListener('click', function() {
+        results.classList.remove('active');
+        landing.classList.remove('hidden');
+        input.value = '';
+        input.focus();
+        AudioEngine.stop();
+      });
+
+      function handleSubmit(text) {
+        const rec = recommend.recommendFromInput(text);
+        if (rec) {
+          renderResults(rec);
+        } else {
+          // Fallback: pick a random loss if no match
+          const randomLoss = LOSSES[Math.floor(Math.random() * LOSSES.length)];
+          const fallbackRec = recommend.buildRecommendation(randomLoss);
+          renderResults(fallbackRec);
+        }
+      }
+
+      function renderResults(rec) {
+        const loss = rec.matchedLoss;
+
+        // Hide landing, show results
+        landing.classList.add('hidden');
+        results.classList.add('active');
+
+        // Hero
+        const coverUrl = CoverArt.generate(loss, 300, 300);
+        document.getElementById('hero-cover').innerHTML = '<img src="' + coverUrl + '" alt="Cover art for ' + loss.name + '">';
+        document.getElementById('hero-category').textContent = getCategoryLabel(loss.category);
+        document.getElementById('hero-title').textContent = loss.name;
+        document.getElementById('hero-description').textContent = loss.description;
+        document.getElementById('because-lost-name').textContent = loss.name.toLowerCase();
+
+        // Because You Lost carousel
+        const carousel = document.getElementById('because-carousel');
+        carousel.innerHTML = '';
+        rec.becauseYouLost.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'rec-card';
+          const thumbUrl = CoverArt.generate(item.loss, 180, 180);
+          card.innerHTML =
+            '<div class="rec-card-cover">' +
+              '<img src="' + thumbUrl + '" alt="' + item.loss.name + '">' +
+              '<div class="similarity-badge">' + item.similarity + '% match</div>' +
+            '</div>' +
+            '<div class="rec-card-title">' + item.loss.name + '</div>' +
+            '<div class="rec-card-reason">' + item.reason + '</div>';
+          card.addEventListener('click', function() {
+            const newRec = recommend.buildRecommendation(item.loss);
+            AudioEngine.stop();
+            renderResults(newRec);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+          carousel.appendChild(card);
+        });
+
+        // Users Also Lost
+        const alsoLost = document.getElementById('also-lost');
+        alsoLost.innerHTML = '';
+        rec.usersAlsoLost.forEach(item => {
+          const el = document.createElement('div');
+          el.className = 'also-item';
+          const thumbUrl = CoverArt.generate(item.loss, 180, 100);
+          el.innerHTML =
+            '<div class="also-item-cover">' +
+              '<img src="' + thumbUrl + '" alt="' + item.loss.name + '">' +
+            '</div>' +
+            '<div class="also-item-title">' + item.loss.name + '</div>' +
+            '<div class="also-item-sim">' + item.similarity + '% similarity</div>';
+          el.addEventListener('click', function() {
+            const newRec = recommend.buildRecommendation(item.loss);
+            AudioEngine.stop();
+            renderResults(newRec);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+          alsoLost.appendChild(el);
+        });
+
+        // Listen button
+        const listenBtn = document.getElementById('listen-btn');
+        listenBtn.className = 'listen-btn';
+        listenBtn.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>' +
+          'Listen Now';
+        listenBtn.onclick = function() {
+          if (AudioEngine.isPlaying()) {
+            AudioEngine.stop();
+            listenBtn.className = 'listen-btn';
+            listenBtn.innerHTML =
+              '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>' +
+              'Listen Now';
+          } else {
+            const duration = AudioEngine.playLoss(loss);
+            listenBtn.className = 'listen-btn playing';
+            listenBtn.innerHTML =
+              '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>' +
+              'Playing...';
+            setTimeout(function() {
+              if (AudioEngine.isPlaying()) {
+                AudioEngine.stop();
+                listenBtn.className = 'listen-btn';
+                listenBtn.innerHTML =
+                  '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>' +
+                  'Listen Now';
+              }
+            }, duration * 1000 + 200);
+          }
+        };
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -324,3 +324,6 @@ The portfolio is 25 artifacts deep with a 4.57 average and a clear but narrowing
 ### 2026-05-27T08:41:23.798Z
 
 **Iteration 44 — SHIPPED:** "A Eulogy for Anyone" [code-tool] as 0036. Rating: 4.7. Review: "A Eulogy for Anyone" is the portfolio's most emotionally generous code-tool and one of its most perfectly calibrated — a procedural eulogy generator that produces genuinely moving text from five simp. Token usage: 42388in/26517out.
+### 2026-05-27T09:43:51.671Z
+
+**Iteration 45 — SHIPPED:** "The Recommendation Engine That Only Recommends Things You've Already Lost" [code-tool] as 0037. Rating: 5.0. Review: "The Recommendation Engine That Only Recommends Things You've Already Lost" is the portfolio's most formally complete code-tool and one of its most devastating — a Netflix-style recommendation interfa. Token usage: 199334in/171307out.

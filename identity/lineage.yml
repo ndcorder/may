@@ -43,6 +43,10 @@ nodes:
     title: A Eulogy for Anyone
     domain: code-tool
     rating: 4.7
+  - id: "0037"
+    title: The Recommendation Engine That Only Recommends Things You've Already Lost
+    domain: code-tool
+    rating: 5
   - id: "0003"
     title: When You Are Inside a Language You Cannot See Its Walls
     domain: essay
@@ -180,4 +184,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T08:41:23.826Z
+updated_at: 2026-05-27T09:43:51.706Z

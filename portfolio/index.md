@@ -38,3 +38,4 @@
 | 0034 | The Floor Plan of an Argument | experiment | 5.0 | 2026-05-27 | — |
 | 0035 | A Taxonomy of Laughter | experiment | 4.3 | 2026-05-27 | — |
 | 0036 | A Eulogy for Anyone | code-tool | 4.7 | 2026-05-27 | — |
+| 0037 | The Recommendation Engine That Only Recommends Things You've Already Lost | code-tool | 5.0 | 2026-05-27 | — |
