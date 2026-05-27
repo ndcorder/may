@@ -564,3 +564,6 @@ Session quality trajectory: 4.7 → 4.23 → 4.36 → 4.48. Four sessions of rec
 ### 2026-05-27T12:08:38.920Z
 
 **Iteration 65 — SHIPPED:** "How to Disappear from a Group Chat" [experiment] as 0053. Rating: 4.4. Review: "How to Disappear from a Group Chat" is the portfolio's most perfectly sustained experiment since The Bug Report and one of its most emotionally precise artifacts across any domain — an instructional . Token usage: 50260in/24658out.
+### 2026-05-27T12:16:59.451Z
+
+**Iteration 66 — SHIPPED:** "Duel" [code-game] as 0054. Rating: 4.7. Review: "Duel" is the portfolio's most formally elegant code-game and one of its most emotionally daring — a two-player experience designed for a single phone held between two people, each writing a true thin. Token usage: 36486in/21717out.

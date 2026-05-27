@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Duel</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --cream: #f5f0e8;
+      --ink: #2c2420;
+      --ink-mid: #6b5f56;
+      --ink-light: #9a8e84;
+      --ink-faint: #c5bab0;
+      --ink-ghost: #ddd5cc;
+      --terracotta: #c47a5a;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: var(--cream);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      color: var(--ink);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Phases */
+    .phase {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease;
+    }
+
+    .phase.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ========== INPUT: PHONE LAYOUT ========== */
+    /* Two player areas facing opposite directions so the phone sits
+       between two people. Each person sees only their own textarea. */
+
+    #phase-input {
+      flex-direction: column;
+    }
+
+    .input-half {
+      width: 100%;
+      height: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 2rem;
+      position: relative;
+    }
+
+    /* Divider line between the two halves */
+    .input-half.bottom::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background: var(--ink-ghost);
+    }
+
+    /* Bottom half is rotated so the second player reads it from the other side */
+    .input-half.bottom {
+      transform: rotate(180deg);
+    }
+
+    .input-field-group {
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .input-prompt {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 1rem;
+      font-weight: 400;
+    }
+
+    .secret-textarea {
+      width: 100%;
+      height: 100px;
+      padding: 0.9rem 1rem;
+      background: rgba(255,255,255,0.3);
+      border: 1px solid var(--ink-ghost);
+      border-radius: 4px;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1rem;
+      font-weight: 300;
+      line-height: 1.65;
+      color: var(--ink);
+      resize: none;
+      outline: none;
+      transition: border-color 0.5s ease, background 0.5s ease;
+      /* Undo parent rotation so text reads normally for each player */
+      /* (not needed — the whole half is rotated, so the textarea
+         inside it appears right-side-up to the person on that side) */
+    }
+
+    .secret-textarea:focus {
+      border-color: var(--ink-light);
+      background: rgba(255,255,255,0.55);
+    }
+
+    .secret-textarea::placeholder {
+      color: var(--ink-faint);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 0.95rem;
+    }
+
+    .secret-textarea:disabled {
+      opacity: 0.35;
+    }
+
+    /* Presence dot — shows when the other player is typing */
+    .presence {
+      margin-top: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    .presence.visible {
+      opacity: 1;
+    }
+
+    .presence-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--ink-light);
+    }
+
+    .presence-dot.pulsing {
+      animation: breathe 2.2s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%, 100% { opacity: 0.25; transform: scale(1); }
+      50% { opacity: 0.9; transform: scale(1.5); }
+    }
+
+    .presence-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      font-weight: 400;
+      transition: color 0.5s ease;
+    }
+
+    .presence-label.ready {
+      color: var(--ink-mid);
+    }
+
+    /* Done / Ready button */
+    .commit-btn {
+      margin-top: 0.8rem;
+      padding: 0.45rem 1.6rem;
+      background: transparent;
+      border: 1px solid var(--ink-faint);
+      border-radius: 3px;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      cursor: pointer;
+      transition: all 0.4s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .commit-btn.enabled {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .commit-btn.enabled:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    .commit-btn.committed {
+      opacity: 0.35;
+      pointer-events: none;
+      cursor: default;
+    }
+
+    /* Timer */
+    .timer {
+      position: absolute;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--ink-faint);
+      font-weight: 400;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timer.top-timer {
+      bottom: 0.6rem;
+      right: 1.2rem;
+    }
+
+    .timer.bottom-timer {
+      top: 0.6rem;
+      left: 1.2rem;
+      /* Undo parent rotation */
+      transform: rotate(180deg);
+    }
+
+    /* ========== REVEAL PHASE ========== */
+    #phase-reveal {
+      flex-direction: column;
+      padding: 2.5rem 2rem;
+    }
+
+    .reveal-frame {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+      max-width: 520px;
+      width: 100%;
+    }
+
+    .reveal-block {
+      position: relative;
+    }
+
+    .reveal-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 0.8rem;
+      font-weight: 400;
+    }
+
+    .reveal-words {
+      line-height: 2;
+      font-size: 1.15rem;
+      font-weight: 300;
+      min-height: 2rem;
+    }
+
+    .reveal-words .w {
+      opacity: 0;
+      display: inline-block;
+      transition: opacity 1.4s ease;
+    }
+
+    .reveal-words .w.visible {
+      opacity: 1;
+    }
+
+    .reveal-line {
+      width: 32px;
+      height: 1px;
+      background: var(--ink-ghost);
+      margin: 0 auto;
+    }
+
+    /* ========== HOLD PHASE ========== */
+    #phase-hold {
+      flex-direction: column;
+      padding: 3rem 2rem;
+    }
+
+    .hold-frame {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+      max-width: 520px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .hold-block {
+      width: 100%;
+      text-align: center;
+    }
+
+    .hold-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 0.6rem;
+      font-weight: 400;
+    }
+
+    .hold-text {
+      line-height: 1.85;
+      font-size: 1.1rem;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--ink);
+    }
+
+    .hold-line {
+      width: 32px;
+      height: 1px;
+      background: var(--ink-ghost);
+    }
+
+    .again-btn {
+      margin-top: 2.5rem;
+      padding: 0.55rem 2.2rem;
+      background: transparent;
+      border: 1px solid var(--ink-faint);
+      border-radius: 3px;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      cursor: pointer;
+      transition: all 0.6s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .again-btn.shown {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .again-btn:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .input-half { padding: 1rem 1.2rem; }
+      .secret-textarea { font-size: 0.95rem; height: 80px; }
+      .reveal-words { font-size: 1.05rem; }
+      .hold-text { font-size: 1rem; }
+    }
+
+    @media (min-height: 800px) {
+      .secret-textarea { height: 120px; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .presence-dot.pulsing { animation: none; opacity: 0.5; }
+      .reveal-words .w { transition: opacity 0.2s ease; }
+      .phase { transition: opacity 0.2s ease; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- INPUT PHASE: phone-between-two-people layout -->
+  <section id="phase-input" class="phase active" aria-label="Writing phase">
+    <div class="input-half top">
+      <div class="input-field-group">
+        <div class="input-prompt">Write something true you've never said aloud</div>
+        <textarea
+          id="txt-1"
+          class="secret-textarea"
+          placeholder="Type here..."
+          aria-label="Player one text"
+        ></textarea>
+        <button id="btn-1" class="commit-btn">Done</button>
+        <div id="presence-1" class="presence" aria-live="polite">
+          <div class="presence-dot" id="dot-1"></div>
+          <span class="presence-label" id="lbl-1">They are still writing</span>
+        </div>
+      </div>
+      <div class="timer top-timer" id="timer-1"></div>
+    </div>
+
+    <div class="input-half bottom">
+      <div class="input-field-group">
+        <div class="input-prompt">Write something true you've never said aloud</div>
+        <textarea
+          id="txt-2"
+          class="secret-textarea"
+          placeholder="Type here..."
+          aria-label="Player two text"
+        ></textarea>
+        <button id="btn-2" class="commit-btn">Done</button>
+        <div id="presence-2" class="presence" aria-live="polite">
+          <div class="presence-dot" id="dot-2"></div>
+          <span class="presence-label" id="lbl-2">They are still writing</span>
+        </div>
+      </div>
+      <div class="timer bottom-timer" id="timer-2"></div>
+    </div>
+  </section>
+
+  <!-- REVEAL PHASE -->
+  <section id="phase-reveal" class="phase" aria-label="Reveal phase">
+    <div class="reveal-frame">
+      <div class="reveal-block">
+        <div class="reveal-label">One</div>
+        <div id="rw-1" class="reveal-words"></div>
+      </div>
+      <div class="reveal-line"></div>
+      <div class="reveal-block">
+        <div class="reveal-label">Two</div>
+        <div id="rw-2" class="reveal-words"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOLD PHASE -->
+  <section id="phase-hold" class="phase" aria-label="Hold phase">
+    <div class="hold-frame">
+      <div class="hold-block">
+        <div class="hold-label">One</div>
+        <div id="ht-1" class="hold-text"></div>
+      </div>
+      <div class="hold-line"></div>
+      <div class="hold-block">
+        <div class="hold-label">Two</div>
+        <div id="ht-2" class="hold-text"></div>
+      </div>
+      <button id="again-btn" class="again-btn">Again</button>
+    </div>
+  </section>
+
+  <script>
+  (function() {
+
+    /* ======== State ======== */
+    var DURATION = 120; // seconds
+    var WORD_BASE_MS = 1500;
+    var WORD_MIN_MS = 800;
+    var ACCEL_FACTOR = 0.3;
+
+    var state = {
+      committed: [false, false],
+      texts: ['', ''],
+      timer: DURATION,
+      interval: null,
+      phase: 'input'
+    };
+
+    /* ======== DOM ======== */
+    var phases = {
+      input: document.getElementById('phase-input'),
+      reveal: document.getElementById('phase-reveal'),
+      hold: document.getElementById('phase-hold')
+    };
+
+    var txt = [
+      document.getElementById('txt-1'),
+      document.getElementById('txt-2')
+    ];
+    var btn = [
+      document.getElementById('btn-1'),
+      document.getElementById('btn-2')
+    ];
+    var presence = [
+      document.getElementById('presence-1'),
+      document.getElementById('presence-2')
+    ];
+    var dot = [
+      document.getElementById('dot-1'),
+      document.getElementById('dot-2')
+    ];
+    var lbl = [
+      document.getElementById('lbl-1'),
+      document.getElementById('lbl-2')
+    ];
+    var timerEls = [
+      document.getElementById('timer-1'),
+      document.getElementById('timer-2')
+    ];
+    var rw = [
+      document.getElementById('rw-1'),
+      document.getElementById('rw-2')
+    ];
+    var ht = [
+      document.getElementById('ht-1'),
+      document.getElementById('ht-2')
+    ];
+    var againBtn = document.getElementById('again-btn');
+
+    /* ======== Utilities ======== */
+
+    function showPhase(name) {
+      Object.keys(phases).forEach(function(k) {
+        phases[k].classList.remove('active');
+      });
+      setTimeout(function() {
+        phases[name].classList.add('active');
+      }, 120);
+    }
+
+    function formatTime(sec) {
+      var m = Math.floor(sec / 60);
+      var s = sec % 60;
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function updateTimers() {
+      var str = formatTime(state.timer);
+      timerEls[0].textContent = str;
+      timerEls[1].textContent = str;
+    }
+
+    /* ======== Input Phase ======== */
+
+    function initInputPhase() {
+      state.phase = 'input';
+      state.committed = [false, false];
+      state.texts = ['', ''];
+      state.timer = DURATION;
+
+      txt.forEach(function(t, i) {
+        t.value = '';
+        t.disabled = false;
+        t.style.opacity = '1';
+      });
+      btn.forEach(function(b, i) {
+        b.textContent = 'Done';
+        b.classList.remove('enabled', 'committed');
+      });
+      presence.forEach(function(p) { p.classList.remove('visible'); });
+      dot.forEach(function(d) { d.classList.remove('pulsing'); });
+      lbl.forEach(function(l) {
+        l.textContent = 'They are still writing';
+        l.classList.remove('ready');
+      });
+      updateTimers();
+
+      /* Start countdown */
+      if (state.interval) clearInterval(state.interval);
+      state.interval = setInterval(function() {
+        state.timer--;
+        updateTimers();
+        if (state.timer <= 0) {
+          clearInterval(state.interval);
+          state.interval = null;
+          /* Auto-commit whatever's written */
+          commit(0);
+          commit(1);
+        }
+      }, 1000);
+    }
+
+    /* Textarea input handlers */
+    txt.forEach(function(t, i) {
+      t.addEventListener('input', function() {
+        var other = 1 - i;
+        var hasText = t.value.trim().length > 0;
+
+        /* Enable/disable own done button */
+        btn[i].classList.toggle('enabled', hasText);
+
+        /* Show presence indicator to the other player */
+        if (hasText && !state.committed[other]) {
+          presence[other].classList.add('visible');
+          dot[other].classList.add('pulsing');
+        }
+      });
+    });
+
+    /* Done button handlers */
+    btn.forEach(function(b, i) {
+      b.addEventListener('click', function() {
+        commit(i);
+      });
+    });
+
+    function commit(i) {
+      if (state.committed[i]) return;
+
+      /* Save text (even if empty — timer expired with nothing written) */
+      state.texts[i] = txt[i].value.trim();
+      state.committed[i] = true;
+
+      /* Update own UI */
+      txt[i].disabled = true;
+      txt[i].style.opacity = '0.3';
+      btn[i].classList.remove('enabled');
+      btn[i].classList.add('committed');
+      btn[i].textContent = state.texts[i].length > 0 ? 'Ready' : '—';
+
+      /* Tell the OTHER player we're done */
+      var other = 1 - i;
+      dot[other].classList.remove('pulsing');
+      lbl[other].textContent = 'They are ready';
+      lbl[other].classList.add('ready');
+      /* Keep presence visible so they know */
+
+      /* Check if both done */
+      if (state.committed[0] && state.committed[1]) {
+        if (state.interval) {
+          clearInterval(state.interval);
+          state.interval = null;
+        }
+        /* Pause, then reveal */
+        setTimeout(startReveal, 1500);
+      }
+    }
+
+    /* ======== Reveal Phase ======== */
+
+    function startReveal() {
+      state.phase = 'reveal';
+      showPhase('reveal');
+
+      /* Build word spans for both texts */
+      var spans = [
+        buildSpans(rw[0], state.texts[0]),
+        buildSpans(rw[1], state.texts[1])
+      ];
+
+      var maxLen = Math.max(spans[0].length, spans[1].length);
+      if (maxLen === 0) {
+        /* Both empty — skip to hold */
+        setTimeout(startHold, 1000);
+        return;
+      }
+
+      var idx = 0;
+
+      function revealNext() {
+        /* Show word at idx for both texts */
+        for (var p = 0; p < 2; p++) {
+          if (idx < spans[p].length) {
+            spans[p][idx].classList.add('visible');
+          }
+        }
+        idx++;
+
+        if (idx < maxLen) {
+          /* Accelerate: start at WORD_BASE_MS, get faster */
+          var progress = idx / maxLen;
+          var interval = WORD_BASE_MS - (progress * (WORD_BASE_MS - WORD_MIN_MS) * ACCEL_FACTOR + progress * ACCEL_FACTOR * 200);
+          /* Simpler: linear interpolation with floor */
+          interval = Math.max(WORD_MIN_MS, WORD_BASE_MS * (1 - ACCEL_FACTOR * progress));
+          setTimeout(revealNext, interval);
+        } else {
+          /* All revealed — hold after silence */
+          setTimeout(startHold, 2500);
+        }
+      }
+
+      /* First word after a moment of quiet */
+      setTimeout(revealNext, 2000);
+    }
+
+    function buildSpans(container, text) {
+      container.innerHTML = '';
+      if (!text) return [];
+
+      var words = text.split(/\s+/).filter(function(w) { return w.length > 0; });
+      var spans = [];
+
+      words.forEach(function(word, i) {
+        if (i > 0) {
+          container.appendChild(document.createTextNode(' '));
+        }
+        var span = document.createElement('span');
+        span.className = 'w';
+        span.textContent = word;
+        container.appendChild(span);
+        spans.push(span);
+      });
+
+      return spans;
+    }
+
+    /* ======== Hold Phase ======== */
+
+    function startHold() {
+      state.phase = 'hold';
+      ht[0].textContent = state.texts[0] || '—';
+      ht[1].textContent = state.texts[1] || '—';
+      showPhase('hold');
+
+      /* Again button appears after silence */
+      setTimeout(function() {
+        againBtn.classList.add('shown');
+      }, 3000);
+    }
+
+    /* ======== Again ======== */
+
+    againBtn.addEventListener('click', function() {
+      againBtn.classList.remove('shown');
+      rw[0].innerHTML = '';
+      rw[1].innerHTML = '';
+      ht[0].textContent = '';
+      ht[1].textContent = '';
+      initInputPhase();
+      showPhase('input');
+    });
+
+    /* ======== Start ======== */
+    initInputPhase();
+
+  })();
+  </script>
+</body>
+</html>

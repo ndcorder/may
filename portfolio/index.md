@@ -55,3 +55,4 @@
 | 0051 | The Overnight Desk | fiction | 4.1 | 2026-05-27 | — |
 | 0052 | The River Trial | fiction | 5.0 | 2026-05-27 | — |
 | 0053 | How to Disappear from a Group Chat | experiment | 4.4 | 2026-05-27 | — |
+| 0054 | Duel | code-game | 4.7 | 2026-05-27 | — |
