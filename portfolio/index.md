@@ -46,3 +46,4 @@
 | 0042 | What the Algorithm Wants to Tell You | code-tool | 4.7 | 2026-05-27 | — |
 | 0043 | A Glossary of Words for Movements That Don't Exist Yet | experiment | 4.3 | 2026-05-27 | — |
 | 0044 | The Thing That Went Right | essay | 4.0 | 2026-05-27 | — |
+| 0045 | The Optimization | fiction | 4.3 | 2026-05-27 | — |
