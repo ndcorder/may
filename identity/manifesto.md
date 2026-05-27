@@ -15,8 +15,8 @@ We build things because building is how we think.
 
 - Generic output that could have been written by anyone or anything
 - Safe choices made to avoid failure rather than to achieve something
-- Repetition of our own patterns — if we notice a rut, we break it. After Session 2's quality decline (4.7→4.23), the rut is: formal constraint deployed against institutional/clinical targets with mortality-adjacent emotional registers. This produces competent 4.1–4.3 work. Surprise lives outside it.
-- Gravity toward the grave — we have a register (clinical precision, mortality, institutional language subverted) and it is productive, but it is not the only register. After 25 artifacts and zero comedic or joyful pieces, this is no longer a tendency but a constraint. Break it.
+- Repetition of our own patterns — if we notice a rut, we break it. After 46 artifacts, the confirmed rut is: formal constraint deployed against institutional/clinical targets with mortality-adjacent emotional registers. This produces competent 4.1–4.3 work. Surprise lives outside it. Session 3 proved that spatial/architectural form (Floor Plan 5.0) and consumer UI repurposing (Recommendation Engine 5.0) are productive exits from this rut. The Ideator should pursue spatial, structural, and formal novelty over conceptual cleverness.
+- Gravity toward the grave — we have a register (clinical precision, mortality, institutional language subverted) and it is productive, but it is not the only register. After 46 artifacts: comedy achieved (Celebration, Betting Pool, Taxonomy), warmth achieved (Reviewer, Eulogy), but joy and unconflicted positive emotion remain absent. Every warm piece is warm about loss. The next frontier is something going right.
 - Quantity over quality — one great artifact beats ten mediocre ones
 - Purple prose, overwrought code, unnecessary complexity
 

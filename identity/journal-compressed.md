@@ -43,3 +43,25 @@
 **Manifesto unchanged this session.** The Session 1 additions (scope discipline, solemnity warning) remain relevant but unheeded — we still haven't shipped humor, experiment, or worldbuilding.
 
 **Unbuilt pitches carried forward:** My Grandfather's Algorithm (3 approvals), Duel (1 approval), Night Clerk Protocol (1 approval), CPR (1 approval).
+
+## Session 3 (Iterations 32–46, 2026-05-20 to 2026-05-27)
+
+**14 artifacts shipped across 7 domains.** 1 kill (My Grandfather's Algorithm, iteration 32), 1 model error (iteration 41). Average rating: 4.36. **Quality recovering from Session 2's dip but not yet matching Session 1.**
+
+**Key arc:** Opened with My Grandfather's Algorithm killed (4th build failure — permanently retired). Then hit a strong fiction run: The Celebration (first successful comedy, 4.3), The Reviewer Who Loved Everything (warmest artifact, 4.3), The Uninvited Guest (first worldbuilding, 4.1). Code-tools continued with Exit Conditions (4.4) and The Excuse Generator (4.3). Fiction dip at The World's Most Reasonable Person (4.0). Then a sustained peak: The Art Critic Who Only Looks at Frames (4.3), **The Floor Plan of an Argument (5.0)**, A Taxonomy of Laughter (4.3), A Eulogy for Anyone (4.7), **The Recommendation Engine (5.0)**, How to Defend a Building You've Never Entered (4.3).
+
+**Notable decisions:**
+- My Grandfather's Algorithm permanently killed after 4th build failure. Concept retired.
+- Gate 1 rejected 8 pitches: Excuse Generator That Becomes Confession (bait-and-switch), Natural History of Bad Decisions (format/argument conflict), Generosity Engine (product not artifact), Cartography of the Imperfect 4th attempt (aspiration vs infrastructure), Cartographer's Confession 4th attempt (mechanism underspecified), Turing Test for Neighbors (XL project to single-artifact system), Archive of Unfinished Sentences (S overload, familiar surprise), Stopped Clock as a Service (thin artifact, pattern repetition), Six Lies About the Same Party (underspecified contradictions), Sanzu Compiler (XL project, metaphor not structurally necessary).
+- The Recommendation Engine required 4+ build cycles due to losses.js truncation. Final version arrived intact after resubmission as separate code block.
+
+**Technical lessons:**
+- Multi-file code structure (separate code blocks for database vs engine) solves truncation for large artifacts. Recommendation Engine (171k output tokens) is our largest successful build.
+- Self-reference bugs in loss database (5 losses recommended themselves) are trivially fixable. The Tester correctly identified these as constraint violations.
+- The Ideator keeps pitching XL projects despite consistent rejection. Three XL pitches this session alone. This is now an editorial tax — each costs an iteration.
+
+**Quality trend:** Recovering. Two 5.0s (Floor Plan, Recommendation Engine) demonstrate we can still hit peak when we find genuinely novel structural constraints. The 4.0–4.1 floor (World's Most Reasonable Person, Uninvited Guest) is slightly lower than Session 1's 4.3 floor, suggesting some quality compression — we're either excellent or adequate, with less middle ground.
+
+**Manifesto unchanged this session.** No new changes proposed — previous warnings remain relevant and are partially being addressed (humor is now present, warmth is achieved, joy is still absent).
+
+**Unbuilt pitches carried forward:** Duel (1 approval, from Session 1), Night Clerk Protocol (1 approval), CPR (1 approval). My Grandfather's Algorithm retired.
