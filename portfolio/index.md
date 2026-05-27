@@ -47,3 +47,4 @@
 | 0043 | A Glossary of Words for Movements That Don't Exist Yet | experiment | 4.3 | 2026-05-27 | — |
 | 0044 | The Thing That Went Right | essay | 4.0 | 2026-05-27 | — |
 | 0045 | The Optimization | fiction | 4.3 | 2026-05-27 | — |
+| 0046 | The Bug Report for a Conversation That Went Well | experiment | 5.0 | 2026-05-27 | — |

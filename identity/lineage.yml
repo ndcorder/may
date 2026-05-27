@@ -99,6 +99,10 @@ nodes:
     title: A Glossary of Words for Movements That Don't Exist Yet
     domain: experiment
     rating: 4.3
+  - id: "0046"
+    title: The Bug Report for a Conversation That Went Well
+    domain: experiment
+    rating: 5
   - id: "0001"
     title: Telemetry
     domain: fiction
@@ -228,4 +232,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T10:40:19.847Z
+updated_at: 2026-05-27T10:50:38.337Z

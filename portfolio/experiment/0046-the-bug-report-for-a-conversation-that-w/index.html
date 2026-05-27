@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>issues · conversation-tracker · repository</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@300;400;600;700&display=swap');
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Source Sans 3', -apple-system, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .top-nav {
+      background: #161b22;
+      border-bottom: 1px solid #21262d;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .hamburger {
+      color: #6e7681;
+      font-size: 20px;
+    }
+
+    .octocat {
+      color: #8b949e;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-title {
+      font-size: 15px;
+      font-weight: 400;
+      color: #c9d1d9;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      margin-left: 16px;
+    }
+
+    .nav-link {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #c9d1d9;
+      text-decoration: none;
+      font-weight: 400;
+    }
+
+    .nav-link.active {
+      font-weight: 600;
+    }
+
+    .nav-link .count {
+      background: #21262d;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 12px;
+      margin-left: 4px;
+    }
+
+    .nav-right {
+      margin-left: auto;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .nav-search {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      padding: 4px 12px;
+      color: #8b949e;
+      font-size: 14px;
+      width: 280px;
+      font-family: inherit;
+    }
+
+    .repo-header {
+      background: #0d1117;
+      padding: 16px 32px 0;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .repo-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .repo-icon {
+      color: #6e7681;
+      font-size: 16px;
+    }
+
+    .repo-owner {
+      color: #c49a6c;
+      font-size: 20px;
+      font-weight: 400;
+    }
+
+    .repo-slash {
+      color: #6e7681;
+      font-size: 20px;
+    }
+
+    .repo-name {
+      color: #c49a6c;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .repo-visibility {
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      padding: 1px 8px;
+      font-size: 12px;
+      color: #8b949e;
+      font-weight: 500;
+    }
+
+    .repo-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: #8b949e;
+      padding-bottom: 12px;
+    }
+
+    .repo-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .repo-meta-item .dot {
+      color: #c49a6c;
+    }
+
+    .issue-entries-list {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px 32px 48px;
+    }
+
+    .issue-entry {
+      margin-bottom: 48px;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 48px;
+    }
+
+    .issue-entry:last-child {
+      border-bottom: none;
+    }
+
+    .entry-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .entry-number {
+      font-size: 14px;
+      color: #6e7681;
+      font-weight: 400;
+    }
+
+    .entry-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #c9d1d9;
+    }
+
+    .entry-title:hover {
+      text-shadow: 0 0 20px rgba(196, 154, 108, 0.1);
+    }
+
+    .entry-labels {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .entry-meta-line {
+      font-size: 13px;
+      color: #6e7681;
+      margin-bottom: 20px;
+    }
+
+    .entry-meta-line strong {
+      color: #8b949e;
+      font-weight: 400;
+    }
+
+    .entry-body {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #c9d1d9;
+    }
+
+    .entry-body .field-group {
+      margin-bottom: 16px;
+    }
+
+    .entry-body .field-name {
+      color: #c49a6c;
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .entry-body .field-content {
+      color: #b1bac4;
+    }
+
+    .entry-body blockquote {
+      border-left: 3px solid #c49a6c;
+      padding: 8px 16px;
+      margin: 12px 0;
+      background: rgba(196, 154, 108, 0.05);
+      border-radius: 0 6px 6px 0;
+      color: #b1bac4;
+      font-style: italic;
+    }
+
+    .entry-body .reproduction-steps {
+      list-style: none;
+      counter-reset: steps;
+      padding-left: 0;
+    }
+
+    .entry-body .reproduction-steps li {
+      counter-increment: steps;
+      position: relative;
+      padding-left: 32px;
+      margin-bottom: 8px;
+      color: #b1bac4;
+    }
+
+    .entry-body .reproduction-steps li::before {
+      content: counter(steps);
+      position: absolute;
+      left: 0;
+      width: 22px;
+      height: 22px;
+      background: #21262d;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 22px;
+      font-size: 12px;
+      color: #8b949e;
+      font-style: normal;
+    }
+
+    .entry-body hr {
+      border: none;
+      border-top: 1px solid #21262d;
+      margin: 16px 0;
+    }
+
+    .entry-body .note {
+      background: rgba(196, 154, 108, 0.08);
+      border: 1px solid rgba(196, 154, 108, 0.15);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #8b949e;
+      margin-top: 12px;
+    }
+
+    .label {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.6;
+      border: 1px solid transparent;
+    }
+
+    .label-severity-critical {
+      background: rgba(255, 123, 114, 0.15);
+      color: #ff7b72;
+      border-color: rgba(255, 123, 114, 0.3);
+    }
+
+    .label-severity-high {
+      background: rgba(219, 171, 9, 0.15);
+      color: #d3a712;
+      border-color: rgba(219, 171, 9, 0.3);
+    }
+
+    .label-severity-medium {
+      background: rgba(87, 171, 90, 0.15);
+      color: #57ab5a;
+      border-color: rgba(87, 171, 90, 0.3);
+    }
+
+    .label-severity-low {
+      background: rgba(121, 192, 255, 0.15);
+      color: #79c0ff;
+      border-color: rgba(121, 192, 255, 0.3);
+    }
+
+    .label-type-emotional-response {
+      background: rgba(224, 147, 253, 0.15);
+      color: #d2a8ff;
+      border-color: rgba(224, 147, 253, 0.3);
+    }
+
+    .label-type-vulnerability {
+      background: rgba(255, 158, 145, 0.15);
+      color: #ffa198;
+      border-color: rgba(255, 158, 145, 0.3);
+    }
+
+    .label-type-tone-calibration {
+      background: rgba(121, 192, 255, 0.15);
+      color: #79c0ff;
+      border-color: rgba(121, 192, 255, 0.3);
+    }
+
+    .label-type-boundary {
+      background: rgba(87, 171, 90, 0.15);
+      color: #57ab5a;
+      border-color: rgba(87, 171, 90, 0.3);
+    }
+
+    .label-type-authenticity {
+      background: rgba(219, 171, 9, 0.15);
+      color: #d3a712;
+      border-color: rgba(219, 171, 9, 0.3);
+    }
+
+    .label-type-attunement {
+      background: rgba(196, 154, 108, 0.2);
+      color: #c49a6c;
+      border-color: rgba(196, 154, 108, 0.35);
+    }
+
+    .label-type-duration {
+      background: rgba(142, 196, 255, 0.15);
+      color: #8ec4ff;
+      border-color: rgba(142, 196, 255, 0.3);
+    }
+
+    .label-type-uncharacteristic {
+      background: rgba(255, 179, 71, 0.15);
+      color: #ffb347;
+      border-color: rgba(255, 179, 71, 0.3);
+    }
+
+    .label-type-pricing {
+      background: rgba(121, 192, 255, 0.15);
+      color: #79c0ff;
+      border-color: rgba(121, 192, 255, 0.3);
+    }
+
+    .label-type-resource {
+      background: rgba(196, 154, 108, 0.2);
+      color: #c49a6c;
+      border-color: rgba(196, 154, 108, 0.35);
+    }
+
+    .label-status-wontfix {
+      background: rgba(138, 138, 138, 0.15);
+      color: #8b949e;
+      border-color: rgba(138, 138, 138, 0.3);
+    }
+
+    .label-status-will-not-close {
+      background: rgba(87, 171, 90, 0.15);
+      color: #57ab5a;
+      border-color: rgba(87, 171, 90, 0.3);
+    }
+
+    .issue-closed-banner {
+      background: rgba(138, 138, 138, 0.08);
+      border: 1px solid rgba(138, 138, 138, 0.15);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #8b949e;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .issue-closed-banner .closed-icon {
+      color: #8b949e;
+      font-size: 16px;
+    }
+
+    .content-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 32px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .sidebar {
+      font-size: 13px;
+      padding-top: 16px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .sidebar-section:last-child {
+      border-bottom: none;
+    }
+
+    .sidebar-section h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #c9d1d9;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-section p {
+      color: #8b949e;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: #6e7681;
+      margin-top: 12px;
+      margin-bottom: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .contributor {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      color: #8b949e;
+      font-size: 13px;
+    }
+
+    .contributor-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .contributor-avatar.self {
+      background: #c49a6c;
+    }
+
+    .contributor-avatar.other {
+      background: #3d4450;
+    }
+
+    .sidebar-stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      color: #8b949e;
+      font-size: 13px;
+    }
+
+    .sidebar-stat span:last-child {
+      color: #c9d1d9;
+    }
+
+    .sidebar-languages {
+      margin-top: 8px;
+    }
+
+    .lang-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: #21262d;
+      overflow: hidden;
+      margin-bottom: 8px;
+      display: flex;
+    }
+
+    .lang-bar .segment-prose {
+      background: #c49a6c;
+      width: 78%;
+    }
+
+    .lang-bar .segment-data {
+      background: #79c0ff;
+      width: 14%;
+    }
+
+    .lang-bar .segment-other {
+      background: #57ab5a;
+      width: 8%;
+    }
+
+    .lang-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #8b949e;
+      margin-bottom: 4px;
+    }
+
+    .lang-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .lang-dot.prose { background: #c49a6c; }
+    .lang-dot.data { background: #79c0ff; }
+    .lang-dot.other { background: #57ab5a; }
+
+    .entry-body code {
+      background: #21262d;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: #8b949e;
+    }
+
+    footer {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px;
+      border-top: 1px solid #21262d;
+      text-align: center;
+    }
+
+    footer p {
+      color: #6e7681;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .live-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #57ab5a;
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0d1117;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #21262d;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #30363d;
+    }
+
+    @media (max-width: 900px) {
+      .content-layout {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .issue-entries-list {
+        padding: 16px;
+      }
+
+      .entry-title {
+        font-size: 18px;
+      }
+
+      .repo-header {
+        padding: 12px 16px 0;
+      }
+
+      .repo-name, .repo-owner {
+        font-size: 17px;
+      }
+
+      .nav-search {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <span class="hamburger">&#9776;</span>
+    <span class="octocat">&#9673;</span>
+    <span class="nav-title"><span style="color:#8b949e">repository</span></span>
+    <div class="nav-links">
+      <a class="nav-link active">Issues <span class="count">9</span></a>
+      <a class="nav-link">Pull requests</a>
+      <a class="nav-link">Actions</a>
+    </div>
+    <div class="nav-right">
+      <input class="nav-search" type="text" placeholder="&#128269; Type / to search" readonly>
+    </div>
+  </nav>
+
+  <div class="repo-header">
+    <div class="repo-name-row" style="max-width:900px;margin:0 auto;padding-left:32px">
+      <span class="repo-icon">&#128193;</span>
+      <span class="repo-owner">your-name</span>
+      <span class="repo-slash">/</span>
+      <span class="repo-name">conversation-tracker</span>
+      <span class="repo-visibility">Private</span>
+    </div>
+    <div class="repo-meta" style="max-width:900px;margin:0 auto;padding-left:32px">
+      <span class="repo-meta-item"><span class="dot">&#11044;</span> 0 stars</span>
+      <span class="repo-meta-item"><span class="dot">&#8226;</span> 0 watching</span>
+      <span class="repo-meta-item"><span class="dot">&#8226;</span> 0 forks</span>
+      <span class="repo-meta-item" style="margin-left:auto"><span class="live-dot"></span> Active today</span>
+    </div>
+  </div>
+
+  <div class="content-layout">
+    <div class="issue-entries-list">
+
+      <article class="issue-entry closed">
+        <div class="issue-closed-banner">
+          <span class="closed-icon">&#10003;</span>
+          Closed as <strong>will not fix</strong> on <strong>Nov 9, 2024</strong> — Unable to reproduce. Initial behavior may have been situational.
+        </div>
+        <div class="entry-title-row">
+          <span class="entry-number">#1</span>
+          <span class="entry-title">Unprompted follow-up question detected at grocery checkout</span>
+          <div class="entry-labels">
+            <span class="label label-type-tone-calibration">tone-calibration</span>
+            <span class="label label-severity-medium">severity: medium</span>
+            <span class="label label-status-wontfix">status: wontfix</span>
+          </div>
+        </div>
+        <div class="entry-meta-line">Opened <strong>Nov 2, 2024</strong> by <strong>your-name</strong> · Closed <strong>Nov 9, 2024</strong> · <strong>3</strong> comments</div>
+        <div class="entry-body">
+          <div class="field-group">
+            <div class="field-name">Description</div>
+            <div class="field-content">
+              During routine grocery checkout (items: sourdough bread, butter, one lemon), the cashier asked if I'd found everything okay. I said yes. Standard interaction so far — this is the expected script. But then, unprompted, she asked: <em>"Are you making something nice?"</em><br><br>
+              This is outside the expected interaction pattern for a grocery checkout. There was no leading context — I hadn't mentioned cooking, hadn't been looking confused, hadn't been browsing strangely. The question was initiated by her and was not required by any social script I'm aware of.<br><br>
+              Duration of exchange: approximately 4 seconds longer than baseline checkout interaction.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Reproduction Steps</div>
+            <ol class="reproduction-steps">
+              <li>Purchase same three items at the same store</li>
+              <li>Attend checkout lane 6 (same cashier as original incident)</li>
+              <li>Respond to standard greeting</li>
+              <li>Wait for follow-up question</li>
+            </ol>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Expected Behavior</div>
+            <div class="field-content">Transaction completes. Standard pleasantries. "Have a good one." Departure.</div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Actual Behavior</div>
+            <div class="field-content">Follow-up question initiated by second party. Brief but genuine engagement with the <em>contents</em> of the purchase rather than the fact of it. Small but noticeable warmth in vocal inflection.</div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Resolution Notes</div>
+            <div class="field-content">
+              Returned the following week. Same cashier, same items. She didn't ask again. Possible explanations:<br>
+              — Behavior was situational (mood-dependent, not reproducible)<br>
+              — Different body language on my part (less approachable posture)<br>
+              — She didn't remember me (likely — I am not memorable)<br><br>
+              Attempted reproduction: <strong>3 times</strong>. Success rate: <strong>0/3</strong>.<br><br>
+              Closing as <strong>will not fix</strong>. The thing that happened was real — I didn't imagine it. But it belonged to that specific moment and I can't get it back. That's okay. Some bugs only fire once.
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="issue-entry open">
+        <div class="entry-title-row">
+          <span class="entry-number">#2</span>
+          <span class="entry-title">Correct tone decoding during dinner — message received as intended</span>
+          <div class="entry-labels">
+            <span class="label label-type-emotional-response">emotional-response</span>
+            <span class="label label-severity-medium">severity: medium</span>
+          </div>
+        </div>
+        <div class="entry-meta-line">Opened <strong>Nov 5, 2024</strong> by <strong>your-name</strong> · <strong>1</strong> comment</div>
+        <div class="entry-body">
+          <div class="field-group">
+            <div class="field-name">Description</div>
+            <div class="field-content">
+              Dinner with D and R at Taqueria Los Portales. I made a joke — I don't remember the exact wording, something about how my apartment looks like "someone's been living there reluctantly." The kind of joke that's half observation and half confession. The kind where the laugh matters but the <em>pause after the laugh</em> matters more.<br><br>
+              R laughed, but then he paused. And in the pause, he looked at me — not with concern exactly, but with recognition. Like he'd heard the actual thing I said underneath the joke.<br><br>
+              <blockquote>
+                "That's a really specific way to describe it. Reluctantly."
+              </blockquote><br>
+              This is not the expected response to a self-deprecating joke. The expected response is a laugh, maybe a commiserating "same," then topic change. The follow-up <em>probe</em> — that's the bug.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Environment</div>
+            <div class="field-content">
+              <code>interlocutor: R</code> (known since 2019, friendship tier: 2 of 5)<br>
+              <code>setting: dinner, casual</code><br>
+              <code>alcohol: 2 beers (self), 1 beer (R)</code><br>
+              <code>ambient noise: moderate</code>
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Reproduction Steps</div>
+            <ol class="reproduction-steps">
+              <li>Make joke that contains actual emotional content</li>
+              <li>Wait for laugh</li>
+              <li>See if anyone notices the part that wasn't a joke</li>
+            </ol>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Expected Behavior</div>
+            <div class="field-content">Laughter. Topic moves on. The actual content dissolves safely into the social fabric. I remain hidden.</div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Actual Behavior</div>
+            <div class="field-content">Laughter, then pause, then follow-up that engaged with the emotional subtext. Brief exposure. I had to decide whether to be honest or to deflect. <strong>I deflected.</strong> But the choice was <em>available</em>. That's the bug.</div>
+          </div>
+          <div class="note">Note: Logged this at 11:47 PM. R texted me the next day about something unrelated. Noted for pattern tracking.</div>
+        </div>
+      </article>
+
+      <article class="issue-entry open">
+        <div class="entry-title-row">
+          <span class="entry-number">#3</span>
+          <span class="entry-title">Friend noticed unprompted — did not require verbalization of need</span>
+          <div class="entry-labels">
+            <span class="label label-type-attunement">attunement</span>
+            <span class="label label-severity-high">severity: high</span>
+          </div>
+        </div>
+        <div class="entry-meta-line">Opened <strong>Nov 8, 2024</strong> by <strong>your-name</strong> · <strong>0</strong> comments</div>
+        <div class="entry-body">
+          <div class="field-group">
+            <div class="field-name">Description</div>
+            <div class="field-content">
+              Team lunch at work. I was sitting slightly apart — not dramatically, just angled away from the main conversation. I do this sometimes when I'm running low and haven't figured out how to say it yet.<br><br>
+              K came over and sat next to me. Didn't ask if I was okay — that would've required an answer. She just sat down and started talking about this bird she'd seen on her fire escape. A red-tailed hawk, apparently rare for the area. Described it in detail. The way it turned its head. How it sat there for twenty minutes before flying off.<br><br>
+              She wasn't distracting me. She was <em>with</em> me. The distinction matters.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Reproduction Steps</div>
+            <ol class="reproduction-steps">
+              <li>Enter social situation while in depleted state</li>
+              <li>Attempt to participate at baseline levels (approx. 40% engagement)</li>
+              <li>Gradually disengage — angle body away, reduce verbal contributions, let eyes unfocus</li>
+              <li>Wait for someone to either: (a) ask "are you okay" or (b) not notice</li>
+            </ol>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Expected Behavior</div>
+            <div class="field-content">Option (b) — not noticed. This is the safe outcome. Sometimes option (a), which requires management: reassure, minimize, redirect.</div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Actual Behavior</div>
+            <div class="field-content">Option (c) — noticed without acknowledged noticing. Presence offered without demand. A story about a hawk. I didn't have to perform okay-ness. I didn't have to explain not-okay-ness. I just got to sit there and listen to someone describe something beautiful they'd seen, and after a few minutes I realized I felt better, and I hadn't had to <em>do</em> anything to make that happen.<br><br>
+              <strong>This is not supposed to work this way.</strong></div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Assignee</div>
+            <div class="field-content"><code>unassigned</code> — do not want to assign this to K, as that would imply she is responsible for fixing something. She isn't. Nothing was broken. That's the whole point.</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="issue-entry open">
+        <div class="entry-title-row">
+          <span class="entry-number">#4</span>
+          <span class="entry-title">Told coworker about therapy — no awkwardness detected in response</span>
+          <div class="entry-labels">
+            <span class="label label-type-vulnerability">vulnerability</span>
+            <span class="label label-type-boundary">boundary</span>
+            <span class="label label-severity-high">severity: high</span>
+          </div>
+        </div>
+        <div class="entry-meta-line">Opened <strong>Nov 12, 2024</strong> by <strong>your-name</strong> · <strong>2</strong> comments</div>
+        <div class="entry-body">
+          <div class="field-group">
+            <div class="field-name">Description</div>
+            <div class="field-content">
+              M in accounting asked why I was leaving early on Tuesdays. For 18 months I've said "appointment." This time I said "therapy."<br><br>
+              I don't know why I said it. It wasn't strategic. I wasn't testing anything. The word just came out instead of the other word, and then it was in the room.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Expected Behavior</div>
+            <div class="field-content">Brief awkwardness. Subject change. Possibly a joke — the kind that's meant to be warm but lands as dismissive. Later, a slight recalibration of our professional distance.</div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Actual Behavior</div>
+            <div class="field-content">
+              <blockquote>
+                "Oh nice. I've been thinking about starting again. Do you like your therapist?"
+              </blockquote><br>
+              No flinch. No overcorrection. No <em>"good for you"</em> (the phrase that sounds supportive but means <em>"I'm uncomfortable and want this topic to end"</em>). An actual question, implying she'd be willing to talk about this for more than one additional sentence.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Impact Assessment</div>
+            <div class="field-content">
+              This may have altered the friendship permanently. We are now people who can say "therapy" to each other. This is a different category of coworker than we were before.<br><br>
+              It's also possible she forgot by the next day. I'm tracking both possibilities.
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="issue-entry open">
+        <div class="entry-title-row">
+          <span class="entry-number">#5</span>
+          <span class="entry-title">Sibling phone call — spoke for 47 minutes without checking the time</span>
+          <div class="entry-labels">
+            <span class="label label-type-duration">duration</span>
+            <span class="label label-type-authenticity">authenticity</span>
+            <span class="label label-severity-medium">severity: medium</span>
+          </div>
+        </div>
+        <div class="entry-meta-line">Opened <strong>Nov 15, 2024</strong> by <strong>your-name</strong> · <strong>0</strong> comments</div>
+        <div class="entry-body">
+          <div class="field-group">
+            <div class="field-name">Description</div>
+            <div class="field-content">
+              Phone call with my sister. Normal start — logistics about Thanksgiving, who's bringing what. Then somehow it became about Mom, and then about us, and then about the year we drove to the coast and didn't talk for two hours and it was fine.<br><br>
+              At some point I noticed I wasn't monitoring the conversation. I wasn't tracking my tone, or checking if I'd been talking too long, or calculating the appropriate ratio of questions-to-statements. I was just talking.<br><br>
+              Call duration: 47 minutes. Baseline for sibling calls: 12–18 minutes.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Reproduction Steps</div>
+            <ol class="reproduction-steps">
+              <li>Call sibling</li>
+              <li>Begin with safe topics (logistics, family news)</li>
+              <li>Allow conversation to drift toward personal territory</li>
+              <li>Notice that you've stopped performing conversation and started having one</li>
+            </ol>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Expected Behavior</div>
+            <div class="field-content">Logistics handled in under 15 minutes. Mutual "okay, talk soon." Relief at hanging up.</div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Actual Behavior</div>
+            <div class="field-content">Loss of time awareness. Voluntary disclosure of emotional state without pre-screening. At one point she said "I know" and I believed her.<br><br>
+              <strong>47 minutes.</strong> Almost three times the baseline. I didn't look at the clock once.</div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Regression Risk</div>
+            <div class="field-content">High. Historical pattern suggests I will not call again for 2–3 weeks, and the next call will revert to baseline. Noted for monitoring.</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="issue-entry open">
+        <div class="entry-title-row">
+          <span class="entry-number">#6</span>
+          <span class="entry-title">Neighbor shared homemade bread without occasion — received without suspicion</span>
+          <div class="entry-labels">
+            <span class="label label-type-boundary">boundary</span>
+            <span class="label label-type-uncharacteristic">uncharacteristic-response</span>
+            <span class="label label-severity-medium">severity: medium</span>
+          </div>
+        </div>
+        <div class="entry-meta-line">Opened <strong>Nov 19, 2024</strong> by <strong>your-name</strong> · <strong>1</strong> comment</div>
+        <div class="entry-body">
+          <div class="field-group">
+            <div class="field-name">Description</div>
+            <div class="field-content">
+              Neighbor from 4B knocked on my door at 7:14 PM. I opened it expecting a package misdelivery or a noise complaint. She was holding a loaf of bread.<br><br>
+              <blockquote>
+                "I made too much. Do you want some?"
+              </blockquote><br>
+              My internal threat assessment: <strong>LOW</strong>. But I still ran the calculation. Why too much? Did she actually make too much, or is this a pretext? What's the expected reciprocation timeline? If I accept, am I entering into a neighbor-friendship I haven't budgeted social energy for?<br><br>
+              Then something unusual happened. I said:
+              <blockquote>
+                "Yes. Thank you. That's really nice."
+              </blockquote><br>
+              No qualification. No self-deprecation. No "oh you don't have to do that." Just acceptance. I don't know where that came from.<br><br>
+              The bread was still warm.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Expected Behavior</div>
+            <div class="field-content">Deflection ("Oh, I couldn't") → counter-offer ("That's so sweet, but") → eventual reluctant acceptance → internal narrative about being a burden → anxiety about when/how to reciprocate → bread consumed with guilt.</div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Actual Behavior</div>
+            <div class="field-content">Graceful acceptance. Bread consumed with butter. No guilt loop initiated. <strong>This is uncharacteristic.</strong></div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Variables</div>
+            <div class="field-content">
+              <code>time_of_day: 19:14</code> (post-work, lowered defenses?)<br>
+              <code>item: sourdough, still warm</code><br>
+              <code>neighbor_interaction_count: 4</code> (in 14 months)<br>
+              <code>prior_relationship_tier: "nod-and-smile"</code>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="issue-entry open">
+        <div class="entry-title-row">
+          <span class="entry-number">#7</span>
+          <span class="entry-title">Therapist reduced fee without being asked — no strings detected</span>
+          <div class="entry-labels">
+            <span class="label label-type-resource">resource</span>
+            <span class="label label-type-vulnerability">vulnerability</span>
+            <span class="label label-severity-high">severity: high</span>
+          </div>
+        </div>
+        <div class="entry-meta-line">Opened <strong>Nov 22, 2024</strong> by <strong>your-name</strong> · <strong>0</strong> comments</div>
+        <div class="entry-body">
+          <div class="field-group">
+            <div class="field-name">Description</div>
+            <div class="field-content">
+              At the end of today's session, Dr. L said she was adjusting her rate. I assumed it was an increase — everything increases. She was lowering it.<br><br>
+              <blockquote>
+                "I want to make sure we can keep meeting. I don't want finances to be a reason you stop."
+              </blockquote><br>
+              I've never mentioned money. I've never hinted at it. She must have inferred, which means she's paying attention. Which means I'm legible to her in ways I'm not to myself.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Reproduction Steps</div>
+            <ol class="reproduction-steps">
+              <li>Attend therapy weekly for 7 months</li>
+              <li>Mention, once, three months ago, that "things are tight right now" — in the context of a conversation about work stress, not finances</li>
+              <li>Continue attending without mentioning money again</li>
+              <li>Receive unprompted fee reduction</li>
+            </ol>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Expected Behavior</div>
+            <div class="field-content">Professional relationship maintained at standard rate. If finances became an issue, I would either: (a) stop going without explanation, or (b) find a cheaper therapist. Asking for a reduction would not occur to me.</div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Actual Behavior</div>
+            <div class="field-content">
+              Care offered before it was requested. Need identified before it was expressed. I didn't have to be the one to say "I can't afford this" — she made it so I didn't have to.<br><br>
+              I cried in my car for ten minutes after. Not sad. Something else. I don't have a word for it.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Assignee</div>
+            <div class="field-content">
+              <code>your-name</code><br>
+              Because <em>I'm</em> the one who's supposed to handle this. Someone was kind and I need to figure out what to do with that. The bug is mine.
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="issue-entry open">
+        <div class="entry-title-row">
+          <span class="entry-number">#8</span>
+          <span class="entry-title">Crying at a song — friend did not attempt to fix</span>
+          <div class="entry-labels">
+            <span class="label label-type-vulnerability">vulnerability</span>
+            <span class="label label-type-emotional-response">emotional-response</span>
+            <span class="label label-severity-critical">severity: critical</span>
+          </div>
+        </div>
+        <div class="entry-meta-line">Opened <strong>Nov 26, 2024</strong> by <strong>your-name</strong> · <strong>4</strong> comments</div>
+        <div class="entry-body">
+          <div class="field-group">
+            <div class="field-name">Description</div>
+            <div class="field-content">
+              At D's apartment. He put on music — just background, nobody was really listening. Then a song came on, I think it was Phoebe Bridgers, something about a backyard, and there was a line about being known, and I started crying.<br><br>
+              Not a lot. Not sobbing. Just — my eyes were wet and I couldn't explain why and D was right there.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Reproduction Steps</div>
+            <ol class="reproduction-steps">
+              <li>Be in a room with someone whose opinion matters to you</li>
+              <li>Experience an emotion you didn't consent to having</li>
+              <li>Fail to suppress visible evidence of emotion</li>
+              <li>Wait for the other person to handle it</li>
+            </ol>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Expected Behavior</div>
+            <div class="field-content">
+              Awkward comfort attempt. "Hey, are you okay?" — which requires a response, which requires me to either lie or explain, and I can't explain because I don't know why I'm crying, and now we're both stuck. Or: pretending not to notice, which is its own kind of pain. Or: humor, deflection, topic change — anything to restore equilibrium.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Actual Behavior</div>
+            <div class="field-content">
+              <blockquote>
+                "Yeah. That song."
+              </blockquote><br>
+              Two words. Then he moved to get a tissue and set it on the table next to me. Didn't hand it to me — that would've required acknowledgment. Just <em>placed it within reach</em>. And then he didn't say anything else. He just let the song finish. And then the next song came on and we kept sitting there.<br><br>
+              I was scared and he didn't look away.<br><br>
+              <strong>I'm still scared. But I think about that night when I am.</strong>
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Severity: CRITICAL</div>
+            <div class="field-content">
+              This isn't critical because something went wrong. This is critical because something went <em>right</em>, and I have no framework for integrating it. This experience has no corresponding entry in my emotional reference database. It's not filed under "comfort" or "support" or any of the categories I have schemas for. It was something else. It was <em>being with someone while being exactly who I was</em>.<br><br>
+              I don't know how to be that person. I don't know if I get to be that person more than once.
+            </div>
+          </div>
+          <div class="note">
+            Note to self: If you can figure out how to reproduce this — not the crying, but the <em>safety</em> — log it. Log everything. This is the most important data point.
+          </div>
+        </div>
+      </article>
+
+      <article class="issue-entry open">
+        <div class="entry-title-row">
+          <span class="entry-number">#9</span>
+          <span class="entry-title">Held hands — imperceptible squeeze was returned</span>
+          <div class="entry-labels">
+            <span class="label label-type-authenticity">authenticity</span>
+            <span class="label label-type-vulnerability">vulnerability</span>
+            <span class="label label-severity-critical">severity: critical</span>
+            <span class="label label-status-will-not-close">status: will not close</span>
+          </div>
+        </div>
+        <div class="entry-meta-line">Opened <strong>Nov 29, 2024</strong> by <strong>your-name</strong> · <strong>0</strong> comments</div>
+        <div class="entry-body">
+          <div class="field-group">
+            <div class="field-name">Description</div>
+            <div class="field-content">
+              Walking home from the movie. We were talking about something — I think the ending, whether the main character made the right choice. Cold out. Hands brushed.<br><br>
+              <strong>I reached back.</strong>
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Reproduction Steps</div>
+            <ol class="reproduction-steps">
+              <li>Walk next to someone</li>
+              <li>Hands make accidental contact</li>
+              <li>Do not flinch</li>
+              <li>Do not apologize for the contact</li>
+              <li>Do not pretend it didn't happen</li>
+              <li>Reach back</li>
+            </ol>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Expected Behavior</div>
+            <div class="field-content">Brief contact. Both parties pretend it didn't happen. Conversation continues. Safe distance restored. The brush becomes a nothing. The walk becomes a walk, not a held hand.</div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Actual Behavior</div>
+            <div class="field-content">
+              Fingers interlaced. Small squeeze — I initiated, I don't know why. Squeeze returned. Firm but not urgent. Like saying <em>yes</em>. Like saying <em>I'm here</em>. Like saying <em>you don't have to ask first.</em><br><br>
+              The walk was 11 minutes. I don't remember what we talked about. I remember the temperature of her hand. I remember that my palm was sweating and she didn't let go.
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-name">Status: WILL NOT CLOSE</div>
+            <div class="field-content">
+              I don't want to resolve this. I don't want to understand it enough that it stops happening. I don't want to file it away as "solved" and move on to the next thing.<br><br>
+              This is the only issue in the tracker I want to stay open forever.<br><br>
+              Every other bug on this list — I logged it because I was surprised. Because something happened that I didn't expect, and I needed to understand it, and I don't understand things unless I write them down.<br><br>
+              This one I don't want to understand. I just want it to keep happening.<br><br>
+              <strong>Assignee: nobody.</strong> Not yours, not mine. Ours.
+            </div>
+          </div>
+          <hr>
+          <div class="note" style="margin-top:16px">
+            If you're reading this — and I don't know why you would be, this repo is private, or at least I thought it was — I want you to know that I've been logging these because I didn't believe connection was something that could happen to me. I thought it was a system I was supposed to learn. A set of inputs and outputs. I thought if I tracked it carefully enough, I could figure out how it worked and then maybe it would start working for me.<br><br>
+            I don't think that anymore.<br><br>
+            <em>It's not a bug. It was never a bug. I was the one who was filed wrong.</em>
+          </div>
+        </div>
+      </article>
+
+    </div>
+
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>About</h3>
+        <p>Tracking instances of unexpected human connection. Open issues are active investigations. Closed issues are resolved or irreproducible.</p>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Stats</h3>
+        <div class="sidebar-stat">
+          <span>Open issues</span>
+          <span>8</span>
+        </div>
+        <div class="sidebar-stat">
+          <span>Closed issues</span>
+          <span>1</span>
+        </div>
+        <div class="sidebar-stat">
+          <span>Active since</span>
+          <span>Nov 2, 2024</span>
+        </div>
+        <div class="sidebar-stat">
+          <span>Last commit</span>
+          <span>3 hours ago</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Top labels</h3>
+        <div class="sidebar-stat">
+          <span style="color:#ffa198">vulnerability</span>
+          <span>4</span>
+        </div>
+        <div class="sidebar-stat">
+          <span style="color:#57ab5a">boundary</span>
+          <span>3</span>
+        </div>
+        <div class="sidebar-stat">
+          <span style="color:#d2a8ff">emotional-response</span>
+          <span>2</span>
+        </div>
+        <div class="sidebar-stat">
+          <span style="color:#d3a712">authenticity</span>
+          <span>2</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Contributors</h3>
+        <div class="contributor">
+          <span class="contributor-avatar self"></span>
+          your-name
+        </div>
+        <div class="contributor">
+          <span class="contributor-avatar other"></span>
+          D · R · K · M · S · Dr. L
+        </div>
+        <p style="margin-top:8px;font-size:12px;color:#484f58">They don't know this repo exists.</p>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Languages</h3>
+        <div class="sidebar-languages">
+          <div class="lang-bar">
+            <div class="segment-prose"></div>
+            <div class="segment-data"></div>
+            <div class="segment-other"></div>
+          </div>
+          <div class="lang-item"><span class="lang-dot prose"></span> Prose 78%</div>
+          <div class="lang-item"><span class="lang-dot data"></span> Metadata 14%</div>
+          <div class="lang-item"><span class="lang-dot other"></span> Other 8%</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>README</h3>
+        <p style="font-style:italic;color:#6e7681">This repo has no README.<br>I wouldn't know what to write.</p>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <p>
+      <code style="background:#21262d;padding:2px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace">conversation-tracker</code><br>
+      <span style="color:#484f58">8 issues open · 1 closed · Last updated Nov 29, 2024</span><br><br>
+      <span style="color:#30363d;font-size:12px">&#169; 2024 your-name · Repository set to private</span>
+    </p>
+  </footer>
+
+</body>
+</html>
