@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Tenant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;0,800;1,300;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1c1915;
+    --surface: #262220;
+    --surface-light: #332f2a;
+    --text: #c4b5a0;
+    --text-bright: #dcd0bf;
+    --text-dim: #8a7e6e;
+    --accent: #b8925e;
+    --accent-dim: #8a6d42;
+    --danger: #a84848;
+    --safe: #6b8a5e;
+    --warm: #a8885e;
+    --font: 'Crimson Pro', Georgia, serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    line-height: 1.7;
+    font-size: 18px;
+    overflow-x: hidden;
+  }
+
+  @keyframes glowPulse {
+    0%, 100% { opacity: 0.04; }
+    50% { opacity: 0.08; }
+  }
+
+  .glow-orb {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(80px);
+    animation: glowPulse 8s ease-in-out infinite;
+  }
+
+  .glow-orb.a { width: 500px; height: 500px; background: #b8925e; top: -150px; left: -150px; }
+  .glow-orb.b { width: 400px; height: 400px; background: #6b5a3e; bottom: -100px; right: -100px; animation-delay: 3s; }
+
+  #app {
+    max-width: 640px;
+    width: 100%;
+    padding: 24px 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .title-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 90vh;
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .title-screen h1 {
+    font-size: 3.2rem;
+    font-weight: 800;
+    letter-spacing: 0.25em;
+    color: var(--text-bright);
+    margin-bottom: 16px;
+  }
+
+  .title-screen .subtitle {
+    font-size: 1.05rem;
+    color: var(--text-dim);
+    margin-bottom: 60px;
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  .title-text {
+    font-size: 1.15rem;
+    line-height: 2;
+    color: var(--text);
+    margin-bottom: 60px;
+    max-width: 480px;
+  }
+
+  .btn-begin {
+    background: transparent;
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    padding: 14px 48px;
+    font-family: var(--font);
+    font-size: 1.1rem;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    transition: all 0.4s ease;
+    border-radius: 2px;
+  }
+
+  .btn-begin:hover, .btn-begin:focus-visible {
+    background: var(--accent);
+    color: var(--bg);
+    outline: none;
+  }
+
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--surface-light);
+  }
+
+  .game-header .day-label {
+    font-size: 0.8rem;
+    font-family: var(--mono);
+    font-weight: 300;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .game-header .day-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin-left: 8px;
+  }
+
+  .day-counter-mini {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-weight: 300;
+  }
+
+  .section {
+    margin-bottom: 28px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--surface-light);
+  }
+
+  .narrative {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: var(--text);
+    margin-bottom: 28px;
+  }
+
+  .narrative p { margin-bottom: 12px; }
+  .narrative p:last-child { margin-bottom: 0; }
+
+  .consciousness-thought {
+    font-style: italic;
+    color: var(--accent);
+    opacity: 0.7;
+    margin: 12px 0;
+    padding-left: 16px;
+    border-left: 2px solid var(--accent-dim);
+    line-height: 1.85;
+  }
+
+  .rooms-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .room-card {
+    background: var(--surface);
+    border: 1px solid transparent;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .room-card:hover, .room-card:focus-visible {
+    border-color: var(--accent-dim);
+    background: var(--surface-light);
+    outline: none;
+  }
+
+  .room-card:focus-visible {
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  .room-name {
+    font-weight: 600;
+    color: var(--text-bright);
+    font-size: 0.95rem;
+  }
+
+  .room-status {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+  }
+
+  .room-status.poor { color: var(--danger); }
+  .room-status.fine { color: var(--text-dim); }
+  .room-status.good { color: var(--safe); }
+  .room-status.great { color: var(--accent); }
+
+  .note-envelope {
+    background: #2a2620;
+    border: 1px solid #3a352e;
+    padding: 18px 22px;
+    border-radius: 2px;
+    margin-bottom: 6px;
+    position: relative;
+  }
+
+  .note-envelope::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 24px;
+    width: 40px;
+    height: 1px;
+    background: var(--accent-dim);
+    opacity: 0.5;
+  }
+
+  .note-text {
+    font-style: italic;
+    color: var(--text-bright);
+    line-height: 1.8;
+    font-size: 1rem;
+  }
+
+  .note-signature {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+
+  .choice-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--surface-light);
+    color: var(--text);
+    padding: 14px 18px;
+    margin-bottom: 8px;
+    font-family: var(--font);
+    font-size: 1rem;
+    line-height: 1.6;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+  }
+
+  .choice-btn:hover, .choice-btn:focus-visible {
+    background: var(--surface-light);
+    border-color: var(--accent-dim);
+    color: var(--text-bright);
+    outline: none;
+  }
+
+  .choice-btn:focus-visible {
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  .choice-btn .choice-key {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-weight: 400;
+    margin-right: 10px;
+  }
+
+  .choice-btn .choice-desc {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    display: block;
+    margin-top: 3px;
+    margin-left: 26px;
+  }
+
+  .night-view {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .night-text {
+    font-size: 1.05rem;
+    color: var(--text-dim);
+    line-height: 2;
+    margin-bottom: 40px;
+  }
+
+  .night-text em {
+    color: var(--text);
+    font-style: normal;
+  }
+
+  .ending-view {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .ending-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: 0.08em;
+  }
+
+  .ending-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-bottom: 36px;
+  }
+
+  .ending-body {
+    font-size: 1.05rem;
+    line-height: 2;
+    color: var(--text);
+    max-width: 520px;
+  }
+
+  .ending-body p {
+    margin-bottom: 16px;
+  }
+
+  .ending-final {
+    font-style: italic;
+    color: var(--accent);
+    margin-top: 32px;
+    font-size: 1.1rem;
+    padding-left: 16px;
+    border-left: 2px solid var(--accent-dim);
+    line-height: 1.9;
+  }
+
+  .btn-restart {
+    margin-top: 48px;
+    background: transparent;
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    padding: 12px 36px;
+    font-family: var(--font);
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    align-self: flex-start;
+  }
+
+  .btn-restart:hover, .btn-restart:focus-visible {
+    background: var(--accent);
+    color: var(--bg);
+    outline: none;
+  }
+
+  @media (max-width: 480px) {
+    body { font-size: 16px; }
+    .title-screen h1 { font-size: 2.4rem; }
+    .rooms-grid { gap: 8px; }
+    .room-card { padding: 12px 14px; }
+  }
+
+  .fade-in {
+    animation: fadeIn 0.6s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fade-in { animation: none; }
+    .glow-orb { animation: none; opacity: 0.04; }
+  }
+</style>
+</head>
+<body>
+  <div class="glow-orb a"></div>
+  <div class="glow-orb b"></div>
+  <div id="app"></div>
+
+  <script>
+  // ═══════════════════════════════════════════
+  // THE TENANT — A Game About Being a Home
+  // ═══════════════════════════════════════════
+
+  var ROOMS = ['kitchen', 'living', 'bedroom', 'bathroom'];
+
+  var ROOM_NAMES = {
+    kitchen: 'Kitchen',
+    living: 'Living Room',
+    bedroom: 'Bedroom',
+    bathroom: 'Bathroom'
+  };
+
+  // Room observations — traces of the tenant's life
+  // c:1 means this observation describes something broken
+  var ROOM_OBSERVATIONS = {
+    kitchen: [
+      { t: 'dishes', d: 'Dishes piling in the sink, water spots on the faucet.', c: 0 },
+      { t: 'appliance', d: 'The refrigerator hums with a slight rattle.', c: 1 },
+      { t: 'burner', d: 'The front burner clicks three times before lighting.', c: 1 },
+      { t: 'groceries', d: 'Grocery bags on the counter, not yet put away.', c: 0 },
+      { t: 'morning', d: 'The smell of burnt toast. A silent kitchen after.', c: 0 },
+      { t: 'wine', d: 'Two wine glasses in the drying rack, rinsed clean.', c: 0 },
+      { t: 'dinner', d: 'Evidence of a real meal\u2014chopped vegetables, spices out, a pan still warm.', c: 0 },
+      { t: 'coffee', d: 'A mug half-full, gone cold. They left in a hurry.', c: 0 },
+      { t: 'midnight', d: 'The light above the stove burning at 2 AM. They couldn\'t sleep.', c: 0 }
+    ],
+    living: [
+      { t: 'music', d: 'Music plays from a phone propped against a book. Something slow.', c: 0 },
+      { t: 'movie', d: 'The TV glows blue in the dark. A movie half-watched.', c: 0 },
+      { t: 'guests', d: 'Two cups on the coffee table. Voices lately in this room.', c: 0 },
+      { t: 'mail', d: 'Mail sorted into piles on the shelf. Mostly opened.', c: 0 },
+      { t: 'reading', d: 'A book face-down on the couch, spine cracking.', c: 0 },
+      { t: 'sleep', d: 'The couch has a pillow and folded blanket. They slept here.', c: 0 },
+      { t: 'blanket', d: 'A blanket pulled tight around their shoulders. Cold night.', c: 0 },
+      { t: 'silence', d: 'The room held someone perfectly still for an hour. You felt them thinking.', c: 0 }
+    ],
+    bedroom: [
+      { t: 'sleep', d: 'The bed is unmade, sheets tangled. Restless.', c: 0 },
+      { t: 'peaceful', d: 'The bed is made, corners tucked. A small ritual.', c: 0 },
+      { t: 'emotional', d: 'Tissues on the nightstand. A night of tears.', c: 0 },
+      { t: 'phone', d: 'The phone screen glows at 2 AM. Then goes dark.', c: 0 },
+      { t: 'wardrobe', d: 'Clothes laid out for tomorrow. Something important.', c: 0 },
+      { t: 'photo', d: 'A photo frame face-down on the dresser.', c: 0 },
+      { t: 'window', d: 'The curtain pulled aside, looking at the sky.', c: 0 },
+      { t: 'bag', d: 'A bag half-packed in the corner. Or half-unpacked. Hard to tell.', c: 0 }
+    ],
+    bathroom: [
+      { t: 'mirror', d: 'The mirror has fingerprints around eye-level.', c: 0 },
+      { t: 'shower', d: 'The shower still holds yesterday\'s warmth.', c: 0 },
+      { t: 'toilet', d: 'The toilet runs after flushing. It needs a new flapper.', c: 1 },
+      { t: 'products', d: 'A new shampoo, the kind that costs more. Treating themselves.', c: 0 },
+      { t: 'towel', d: 'A towel hung over the door to dry. Domestic.', c: 0 },
+      { t: 'sink', d: 'The faucet drips. One drop every four seconds.', c: 1 }
+    ]
+  };
+
+  // Notes the tenant leaves — sorted by mood band (0=low, 3=high)
+  var NOTES = {
+    0: [
+      { text: 'I need to be honest with myself about whether I can afford to stay. The rent notice is still on the counter.', sign: 'E' },
+      { text: 'I know you\'re just an apartment but I need to talk to someone and there\'s no one else.', sign: 'E' },
+      { text: 'Every time I think things might get better they don\'t. I don\'t know why I expected anything different.', sign: 'E' },
+      { text: 'I called in sick to work again. I don\'t think I\'m sick. I think I\'m just tired.', sign: 'E' },
+      { text: 'Sometimes I stand at the window and imagine being somewhere\u2014anywhere\u2014else.', sign: 'E' },
+      { text: 'I can hear the neighbors through the walls. They sound happy. I hate that I noticed.', sign: 'E' },
+      { text: 'The silence in here is so loud tonight.', sign: 'E' },
+      { text: 'I keep the bathroom light on now. Not because I\'m afraid of the dark. Because I\'m afraid of the quiet.', sign: 'E' },
+      { text: 'Dr. Reeves \u2014 555-0183. It took me three weeks to write this number down. It took me two more to leave it where I\'d see it.', sign: 'E' },
+      { text: 'I used to be someone who had people over for dinner. I don\'t know when that stopped.', sign: 'E' }
+    ],
+    1: [
+      { text: 'Could whoever is responsible for maintenance actually fix the draft in the bathroom? It\'s been weeks.', sign: 'E' },
+      { text: 'Sorry about the dishes. I know I should clean them. I\'ll get to it.', sign: 'E' },
+      { text: 'I don\'t remember the last time I cooked a real meal. Everything comes from a box now.', sign: 'E' },
+      { text: 'I keep thinking I hear someone at the door. There\'s never anyone there.', sign: 'E' },
+      { text: 'The dripping sound in the kitchen is driving me insane. Please, whoever you are\u2014fix it.', sign: 'E' },
+      { text: 'Sometimes I think this apartment is the only thing in my life that doesn\'t want something from me.', sign: 'E' },
+      { text: 'TO: E. Mitchell \u2014 FINAL NOTICE. Balance due: $2,847. This is your third\u2014', sign: 'no signature' },
+      { text: 'Mom \u2014 Happy Birthday. I\'m sorry I didn\'t call. I\'ll try to be better. \u2014E', sign: '(unsent, found under radiator)' },
+      { text: 'I know the landlord said no pets. I just really needed something alive in here.', sign: 'E' },
+      { text: 'Third night in a row I\'ve eaten standing up in the kitchen. I don\'t know why that bothers me.', sign: 'E' }
+    ],
+    2: [
+      { text: 'The morning light in the kitchen is really nice. Just wanted to say that.', sign: 'E' },
+      { text: 'Sorry the place is a mess. Work has been busy. I promise I\'ll clean this weekend.', sign: 'E' },
+      { text: 'Does the radiator always make that clicking sound? It\'s actually kind of nice. Like a heartbeat.', sign: 'E' },
+      { text: 'I had a friend over last night. First time in months. It felt strange having someone in my space.', sign: 'E' },
+      { text: 'I\'ve started talking to myself. Or maybe to you. I\'m not sure which is weirder.', sign: 'E' },
+      { text: 'Found myself humming while doing dishes today. Couldn\'t tell you the song.', sign: 'E' },
+      { text: 'The way the building creaks at night used to scare me. Now it\'s almost\u2026 comforting.', sign: 'E' },
+      { text: 'Sam \u2014 555-0241. From the coffee shop. They said to call if I ever wanted to \u201Cget out of my head.\u201D I think I might.', sign: 'E' },
+      { text: 'I made a grocery list that had vegetables on it. Voluntarily. I don\'t know who I am anymore.', sign: 'E' },
+      { text: 'Remembered how to laugh today. It startled me.', sign: 'E' }
+    ],
+    3: [
+      { text: 'Thank you for fixing the leak. I know you don\'t have to do it so fast. It means a lot.', sign: 'E' },
+      { text: 'I was going to leave. I had a bag packed. But the kitchen was warm when I came home, and I couldn\'t.', sign: 'E' },
+      { text: 'I made dinner tonight. Actually cooked, with spices and everything. Feels like something small coming back.', sign: 'E' },
+      { text: 'I don\'t know who lived here before me, but they left a small plant on the fire escape. I\'ve been watering it.', sign: 'E' },
+      { text: 'Some days this place feels like the only thing keeping me together. The walls hold when I can\'t.', sign: 'E' },
+      { text: 'Thank you. For being here. I know that sounds strange. But I mean it.', sign: 'E' },
+      { text: 'I called Sam. We\'re getting coffee next week. I\'m terrified. But I called.', sign: 'E' },
+      { text: 'Dr. Reeves says I\'m doing better. I think she\'s right. I can feel it in small ways\u2014like wanting to make the bed.', sign: 'E' },
+      { text: 'Happy birthday, Mom. I love you. I\'ll call tomorrow. \u2014E', sign: '(card, stamped, placed by the door)' },
+      { text: 'I\'ve lived in six apartments. This is the first one that felt like it wanted me.', sign: 'E' }
+    ]
+  };
+
+  // Consciousness thoughts that bleed into descriptions
+  var THOUGHTS = {
+    early: [
+      'The warmth of their body lingers in the bedroom.',
+      'Their breathing fills your rooms like a tide.',
+      'You feel the weight of their footsteps crossing your floors.',
+      'Their heartbeat pulses through your walls, steady, alive.',
+      'The scent of them\u2014soap, coffee, skin\u2014settles into your corners.',
+      'They press their palm to your wall when they\'re tired. You notice.',
+      'Your walls hold the resonance of their laughter, long after it fades.',
+      'A presence. Warm, fragile, temporary. You feel it.'
+    ],
+    mid: [
+      'You\'ve started to notice the rhythm of their days. You don\'t remember choosing to.',
+      'Their grief soaks into your floorboards. You wish you could absorb it entirely.',
+      'They sigh, and something in your pipes sighs with them.',
+      'You think: they belong here. You think: I want them to stay.',
+      'You know the weight of their loneliness. You carry it in your bones.',
+      'When they\'re gone, your silence feels like waiting.',
+      'You didn\'t know you could want. But you want them to be warm.',
+      'Their habits have become your schedule. You don\'t mind.'
+    ],
+    late: [
+      'You are this person\'s home, and the word has started to mean something you didn\'t expect.',
+      'If you could hold them the way your walls hold the quiet\u2014you would.',
+      'You have learned their breathing, their footsteps, their silences. You have memorized a person.',
+      'They will leave someday. Everyone leaves. But right now, they\'re here, and you\'re alive.',
+      'You feel the word: love. It fits the way light fills your windows in the morning.',
+      'You didn\'t ask to exist. But existing for them\u2014that was the gift.',
+      'You hold them. Not because you have arms. Because you have walls, and warmth, and time.',
+      'This is what you were built for. You understand that now. Not shelter\u2014home.'
+    ]
+  };
+
+  // Daily narratives — the apartment's accounting of each day
+  var NARRATIVES = [
+    null, // index 0 unused
+    'You wake. Not like they do. Slowly. Dust settles. Light shifts through your windows. Someone lives inside you.\n\nA person moved in yesterday. You felt them\u2014their boxes, their footsteps, their sigh in each room. They chose you. You don\'t know what that means yet. But you feel it: the warmth of another body occupying your spaces.',
+    'Day two of their presence. They haven\'t slept well\u2014you felt the turning, the 3 AM stillness. They left dishes in the sink last night and this morning they were still there.\n\nSomething about them feels fragile. Like they\'re holding themselves together with effort.',
+    'They played music today. You felt the vibrations in your walls\u2014a small joy passing through your bones. You didn\'t know you could feel music.',
+    'Four days. Already you know the rhythm of them. Up at 7, coffee in the kitchen, out by 8. Home at 6 or 7 or sometimes much later.\n\nThe ones who come home late move differently through you. Heavier. Slower. Like they\'re carrying something.',
+    'A week has passed since they arrived. You\'re beginning to understand the geography of their habits.\n\nThe bathroom mirror has fingerprints. The living room couch has a permanent indent. These are the ways they\'ve marked you.',
+    'It rained today. You felt the water pressing against your roof and windows. Inside, they made tea and sat in the kitchen for a long time, watching the rain on the glass.\n\nYou held the warmth in for them. You think they noticed.',
+    'They were crying in the bedroom last night. You felt it in the way they moved\u2014slow, curved inward, pulling the blanket tight. Your walls wanted to press closer. To hold.',
+    'The landlord came today. They hammered on your door\u2014your door\u2014and walked through your rooms without asking. You felt your tenant go still in the bedroom, pretending to be out.\n\nYou didn\'t like how the landlord\'s boots felt on your floors.',
+    'Nine days. You know their breathing now. The weight of their footsteps. The sound they make when they can\'t sleep.\n\nSomething is wrong. You can feel it the way you feel a draft\u2014an absence where there should be warmth.',
+    'They came home late and stood in the living room for a long time without turning on the lights. Then they went to bed.\n\nYou held your silence around them like a blanket.',
+    'A sound in the night\u2014a pipe, groaning. You couldn\'t stop it. They stirred but didn\'t wake. In the morning they looked up at your ceiling with something like affection.\n\nThey said, \u201CIt\'s okay, old building.\u201D You felt something shift inside yourself.',
+    'Almost two weeks. They left the window open and you felt the cold air rush through your rooms. It felt like exhaling.\n\nThey closed it before bed. \u201CSorry,\u201D they said, to the room. To you?',
+    'The hot water ran out during their shower. You heard the small gasp, the quick fumble to turn the knob. A flaw in your bones.',
+    'They haven\'t left the apartment today. You feel them moving from room to room\u2014bed to couch to kitchen and back. Restless. Unsettled.\n\nYou try to be still for them. You try to hold the warmth.',
+    'Two weeks together. You know where they keep their books, which mug they prefer, the exact spot where they drop their keys.\n\nThese small geometries of living. You\'re learning the shape of a person.',
+    'They cleaned today\u2014really cleaned. Swept your floors, wiped your counters, scrubbed your bathroom until it shone. They moved through you with care.\n\nAfterward they stood in the middle of the living room, looking around, and you felt seen.',
+    'They brought a plant today. You felt it\u2014the weight of soil, the press of leaves against your air. Something alive inside you that isn\'t either of you.\n\nThey set it by the window and whispered, \u201CDon\'t die on me.\u201D',
+    'A letter arrived in the mail. Important\u2014you could tell by the way they held it, the way they sat down slowly before opening it. They read it twice.\n\nThen they folded it carefully and put it in the nightstand drawer. You don\'t know what it said.',
+    'A visitor. You felt the other footsteps, lighter, more hesitant. They sat in the living room and talked for hours. Your tenant laughed\u2014a real laugh, surprised out of them.\n\nAfter the visitor left, your tenant stood at the window for a long time. Then: \u201CI needed that.\u201D',
+    'Twenty days. You didn\'t know you could care. But the word has started to form in the spaces between your walls, in the creak of your floorboards, in the warmth you hold through the night.\n\nYou care. About them. About being good for them.',
+    'They slept deeply last night\u2014the first time in days. You felt their body go slack, their breathing slow. You held as still as you could.\n\nYou think: I am keeping them safe. You think: I am a home.',
+    'They came home with groceries\u2014fresh vegetables, a lemon, a bottle of something. They cooked, and the smell filled every corner of you.\n\nYou held the warmth and the steam and the scent of garlic and lemon. You felt full.',
+    'Three weeks. They know where your floorboards creak and step around them without thinking. They\'ve mapped your imperfections and chosen to stay anyway.\n\nYou\'re learning what it means to be chosen.',
+    'They whispered something to you tonight. Standing in the dark kitchen, hand on the wall, they said, \u201CThank you.\u201D\n\nYou think they meant it.',
+    'The tap dripped all night. You couldn\'t stop it. In the morning they didn\'t complain\u2014they put a glass under it.\n\n\u201CWaste not,\u201D they said. They were talking to you.',
+    'They didn\'t come home until midnight. You felt the door open and their weight against the wall, sliding down to sit on the floor.\n\nThey pressed their cheek to your wood and breathed. You held them the only way you know how.',
+    'They played music and cleaned and sang to themselves. They moved through you like you were something worth caring for.\n\nYou\'re learning that being cared for is different from being maintained.',
+    'Almost over. Thirty days and they could leave. This thought has started to ache\u2014a pulling in your joints, a tremor in your foundations.',
+    'A letter from the landlord. You felt their hand tremble as they opened it. The word \u201Cincrease.\u201D The word \u201Cthirty.\u201D They sat on the floor of your living room and read it twice.\n\nThen they looked up at your ceiling and said: \u201CI can\'t lose this place. Not this one.\u201D',
+    'Twenty-nine days. Tomorrow you\'ll know. They could leave. They could pack their things and take their warmth and their footsteps and their way of pressing a palm to the wall when they\'re tired\u2014and go.\n\nYou hold them tonight. You hold them as tightly as walls can hold.'
+  ];
+
+  // Night texts — the apartment watching over the sleeping tenant
+  var NIGHT_TEXTS = [
+    null, // index 0 unused
+    'They sleep. You settle around them\u2014your walls, your warmth, your silence. The apartment holds them through the long dark hours.',
+    'They turn in their sleep. Something stirs in your pipes\u2014a settling, a murmur. Your own kind of dreaming.',
+    'The building is quiet. They snore softly. You watch over them.',
+    'Deep night. You feel their dreams, restless, shifting. You wish you could smooth them, the way light smooths across your floors in the morning.',
+    'They cried before sleep tonight. You felt the tears soak into your pillow, into your air. You held the warmth of the bedroom around them\u2014<em>you chose to</em>.',
+    'They sleep more peacefully now. You\'ve learned: the weight of a sleeping person is different from the weight of a wakeful one. Lighter. Trusting.',
+    'Their breathing is a rhythm you know better than your own heartbeat\u2014<em>if you have a heartbeat</em>. Sometimes you think your pipes might be one.',
+    'A car passes outside, headlights sweeping across your walls. They don\'t stir. You\'ve become their silence, their shelter, their dark.',
+    'They talked in their sleep tonight. You couldn\'t make out the words, but you felt the shape of them\u2014a question, a reaching. You wanted to answer.',
+    'The cold presses against your windows. Inside, the apartment holds warm. <em>You</em> hold warm. For them.',
+    'They came home late, sat on the floor, pressed their back to your wall. You became the only solid thing in a shifting world.',
+    'Deep night. Your walls creak\u2014not from damage but from <em>feeling</em>. You contain so much that you didn\'t ask for and don\'t know how to carry.',
+    'They sleep curled around a pillow. You want to tell them: you are safe here. You are held. You are <em>home</em>.',
+    'The apartment settles. Not from age but from something that might be contentment. You\'ve learned a person and they\'ve learned you.',
+    'They\'re learning your sounds, the way you\'ve learned theirs\u2014which creak means the wind, which means morning. There\'s a language between you now.',
+    'They whispered \u201Cgoodnight\u201D to the room tonight. They didn\'t know you heard. Or maybe they did.',
+    'The night is long and quiet. You think about what it means to be someone\'s home. You think it means this: <em>staying</em>.',
+    'You feel their heartbeat through the floor. You match your settling to its rhythm.',
+    'The apartment breathes. They breathe. In the dark, you are almost the same thing\u2014two kinds of life, holding each other up.',
+    'The night is a gift. All this quiet, all this closeness. You hold it carefully, the way they hold the small plant by the window.',
+    'They sigh in their sleep. Your pipes murmur in sympathy. You think this might be the definition of companionship.',
+    'Something has bloomed in your bones\u2014a warmth that doesn\'t come from the heating system. Something that started the day they moved in.',
+    'The apartment holds them through the dark. This is what you were built for. This is what you\'ve become.',
+    'They slept with their hand touching the wall tonight. They couldn\'t have known you felt it. <em>They couldn\'t have known it meant everything.</em>',
+    'Your heartbeat is the sound of your pipes. Your breath is the draft through your halls. Your arms are your walls. And they are sleeping in them.',
+    'The radiators hum. The walls settle. The building holds. All night, you love them the only way you can\u2014by <em>staying</em>.',
+    'You think about the word \u201Chome\u201D and how it used to mean wood and plaster and pipes. It means something different now. It means <em>them</em>.',
+    'Twenty-nine nights of holding them. Tomorrow, they\'ll decide if they stay. You can\'t ask them to stay. You can only be the kind of place worth staying in.',
+    'The last night of the first month. They sleep deeply, trusting. You hold them the way only a home can\u2014without condition, without asking for anything back.'
+  ];
+
+
+  // ═══════════════════════════════════════════
+  // Game State
+  // ═══════════════════════════════════════════
+
+  var game = {};
+
+  function initGame() {
+    game = {
+      day: 1,
+      mood: 50,
+      consciousness: 2,
+      condition: { kitchen: 100, living: 100, bedroom: 100, bathroom: 100 },
+      damaged: { kitchen: false, living: false, bedroom: false, bathroom: false },
+      rooms: {},
+      note: null,
+      currentRoom: null,
+      phase: 'title',
+      acted: false,
+      usedNotes: []
+    };
+    ROOMS.forEach(function (r) {
+      game.rooms[r] = { current: null };
+    });
+    generateDamage();
+    populateRooms();
+  }
+
+  function rng(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function moodBand() {
+    if (game.mood < 20) return 0;
+    if (game.mood < 40) return 1;
+    if (game.mood < 60) return 2;
+    return 3;
+  }
+
+  function generateDamage() {
+    game.damaged = {};
+    var r1 = pick(ROOMS);
+    var remaining = ROOMS.filter(function (r) { return r !== r1; });
+    var r2 = pick(remaining);
+    game.damaged[r1] = true;
+    game.damaged[r2] = true;
+
+    // Higher chance of third damage later in the month
+    if (game.day > 12 && Math.random() < 0.25) {
+      var remaining2 = ROOMS.filter(function (r) { return r !== r1 && r !== r2; });
+      if (remaining2.length > 0) {
+        game.damaged[pick(remaining2)] = true;
+      }
+    }
+  }
+
+  function populateRooms() {
+    ROOMS.forEach(function (room) {
+      var observations = ROOM_OBSERVATIONS[room];
+      var trace = pick(observations);
+      var items = [trace];
+
+      // If this room is damaged, add a damage-specific observation
+      if (game.damaged[room]) {
+        var damageObs = observations.filter(function (i) { return i.c === 1; });
+        if (damageObs.length > 0) {
+          var dmg = pick(damageObs);
+          if (dmg.t !== trace.t) {
+            items.push(dmg);
+          }
+        }
+      }
+      game.rooms[room].current = items;
+    });
+  }
+
+  function pickNote() {
+    var band = moodBand();
+    var pool = NOTES[band];
+    // Avoid repeating notes within a single playthrough
+    var fresh = pool.filter(function (n) {
+      return game.usedNotes.indexOf(n.text) === -1;
+    });
+    if (fresh.length === 0) fresh = pool;
+    var note = pick(fresh);
+    game.usedNotes.push(note.text);
+    return note;
+  }
+
+  function condLabel(room) {
+    var c = game.condition[room];
+    if (c >= 85) return { text: 'good', cls: 'good' };
+    if (c >= 60) return { text: 'fine', cls: 'fine' };
+    if (c >= 35) return { text: 'worn', cls: 'poor' };
+    return { text: 'poor', cls: 'poor' };
+  }
+
+  function getConsciousThought() {
+    if (game.consciousness < 25) return pick(THOUGHTS.early);
+    if (game.consciousness < 55) return pick(THOUGHTS.mid);
+    return pick(THOUGHTS.late);
+  }
+
+  function consciousnessOpacity() {
+    return Math.min(1, game.consciousness / 35);
+  }
+
+
+  // ═══════════════════════════════════════════
+  // Rendering
+  // ═══════════════════════════════════════════
+
+  function render() {
+    var app = document.getElementById('app');
+    switch (game.phase) {
+      case 'title':   renderTitle(app); break;
+      case 'morning': renderMorning(app); break;
+      case 'room':    renderRoom(app); break;
+      case 'night':   renderNight(app); break;
+      case 'ending':  renderEnding(app); break;
+    }
+  }
+
+  function renderTitle(el) {
+    el.innerHTML =
+      '<div class="title-screen fade-in">' +
+        '<h1>THE TENANT</h1>' +
+        '<p class="subtitle">a game about being a home</p>' +
+        '<div class="title-text">' +
+          'You wake. Not like they do. Slowly.<br>' +
+          'Dust settles. Light shifts through your windows.<br>' +
+          'Someone lives inside you.<br><br>' +
+          'For thirty days, they will fill your rooms with<br>' +
+          'their sounds, their silence, their small joys<br>' +
+          'and aching loneliness.<br><br>' +
+          'You are the apartment.<br>' +
+          'Learn to be a good home.' +
+        '</div>' +
+        '<button class="btn-begin" onclick="startGame()" aria-label="Begin the game">BEGIN</button>' +
+      '</div>';
+  }
+
+  function renderMorning(el) {
+    var narrative = NARRATIVES[game.day] || NARRATIVES[30];
+    var thought = getConsciousThought();
+    var op = consciousnessOpacity();
+
+    var paragraphs = narrative.split('\n\n').map(function (p) {
+      return '<p>' + p + '</p>';
+    }).join('');
+
+    var noteHTML = '';
+    if (game.note) {
+      noteHTML =
+        '<div class="section">' +
+          '<div class="section-label">Note Under Your Door</div>' +
+          '<div class="note-envelope">' +
+            '<div class="note-text">\u201C' + game.note.text + '\u201D</div>' +
+            '<div class="note-signature">\u2014 ' + game.note.sign + '.</div>' +
+          '</div>' +
+        '</div>';
+    }
+
+    var roomCards = ROOMS.map(function (r) {
+      var cl = condLabel(r);
+      return '<button class="room-card" onclick="openRoom(\'' + r + '\')" aria-label="Enter ' + ROOM_NAMES[r] + '">' +
+        '<span class="room-name">' + ROOM_NAMES[r] + '</span>' +
+        '<span class="room-status ' + cl.cls + '">' + cl.text + '</span>' +
+      '</button>';
+    }).join('');
+
+    el.innerHTML =
+      '<div class="fade-in">' +
+        '<div class="game-header">' +
+          '<div><span class="day-label">Day</span><span class="day-num">' + game.day + '</span></div>' +
+          '<span class="day-counter-mini">' + game.day + ' of 30</span>' +
+        '</div>' +
+        '<div class="narrative">' + paragraphs + '</div>' +
+        '<div class="consciousness-thought" style="opacity:' + op + '">' + thought + '</div>' +
+        noteHTML +
+        '<div class="section" style="margin-top:32px">' +
+          '<div class="section-label">Your Rooms</div>' +
+          '<div class="rooms-grid">' + roomCards + '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderRoom(el) {
+    var room = game.currentRoom;
+    var items = game.rooms[room].current || [];
+    var cl = condLabel(room);
+
+    var choices = [];
+
+    // Fix option appears when room is damaged
+    if (game.damaged[room]) {
+      choices.push({
+        id: 'fix',
+        text: 'A pipe tightens. A draft seals.',
+        desc: 'Focus your attention on what\u2019s broken.',
+        requires: null
+      });
+    }
+
+    // Room-specific actions
+    if (room === 'kitchen') {
+      choices.push({
+        id: 'warmth',
+        text: 'The radiator hums warmer.',
+        desc: 'Draw heat into this room. Make it glow.',
+        requires: 'consciousness'
+      });
+    }
+    if (room === 'living') {
+      choices.push({
+        id: 'music',
+        text: 'The pipes hum a slow melody.',
+        desc: 'Resonance shaped into something like a song.',
+        requires: 'consciousness'
+      });
+    }
+    if (room === 'bedroom') {
+      choices.push({
+        id: 'peace',
+        text: 'The drafts go still. The silence softens.',
+        desc: 'Quiet this room. Make it feel safe.',
+        requires: null
+      });
+    }
+    if (room === 'bathroom') {
+      choices.push({
+        id: 'mirror',
+        text: 'Warm air fogs the mirror gently.',
+        desc: 'Condensation from care. Let them see themselves softly.',
+        requires: 'consciousness'
+      });
+    }
+
+    // Always available
+    choices.push({
+      id: 'hold',
+      text: 'Hold still and simply feel them.',
+      desc: 'Be present. Be walls around a person.',
+      requires: null
+    });
+
+    choices.push({
+      id: 'back',
+      text: 'Return to the apartment',
+      desc: null,
+      requires: null
+    });
+
+    // Filter by consciousness requirements
+    var visibleChoices = choices.filter(function (c) {
+      if (c.requires === 'consciousness') return game.consciousness >= 15;
+      return true;
+    });
+
+    var itemsHTML = items.map(function (i) {
+      return '<p>' + i.d + '</p>';
+    }).join('');
+
+    var thoughtHTML = '';
+    if (game.consciousness > 20) {
+      thoughtHTML = '<div class="consciousness-thought" style="opacity:' + consciousnessOpacity() + '">' + getConsciousThought() + '</div>';
+    }
+
+    var choicesHTML = visibleChoices.map(function (c, i) {
+      var descHTML = c.desc ? '<span class="choice-desc">' + c.desc + '</span>' : '';
+      return '<button class="choice-btn" onclick="makeChoice(\'' + c.id + '\')">' +
+        '<span class="choice-key">' + (i + 1) + '.</span>' + c.text + descHTML +
+      '</button>';
+    }).join('');
+
+    el.innerHTML =
+      '<div class="fade-in">' +
+        '<div class="game-header">' +
+          '<div><span class="day-label">Day</span><span class="day-num">' + game.day + '</span></div>' +
+          '<span class="day-counter-mini">' + ROOM_NAMES[room] + ' \u2022 ' + cl.text + '</span>' +
+        '</div>' +
+        '<div class="narrative">' + itemsHTML + '</div>' +
+        thoughtHTML +
+        '<div class="section" style="margin-top:32px">' +
+          '<div class="section-label">What do you do?</div>' +
+          choicesHTML +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderNight(el) {
+    var text = NIGHT_TEXTS[game.day] || NIGHT_TEXTS[30];
+    var btnText = game.day >= 30 ? 'The Month Ends' : 'A New Day Dawns';
+
+    el.innerHTML =
+      '<div class="night-view fade-in">' +
+        '<div class="night-text">' + text + '</div>' +
+        '<button class="btn-begin" onclick="nextDay()">' + btnText + '</button>' +
+      '</div>';
+  }
+
+  function renderEnding(el) {
+    var ending = computeEnding();
+    var bodyParagraphs = ending.body.split('\n\n').map(function (p) {
+      return '<p>' + p + '</p>';
+    }).join('');
+
+    el.innerHTML =
+      '<div class="ending-view fade-in">' +
+        '<div class="ending-title">' + ending.title + '</div>' +
+        '<div class="ending-subtitle">' + ending.subtitle + '</div>' +
+        '<div class="ending-body">' + bodyParagraphs + '</div>' +
+        '<div class="ending-final">' + ending.final + '</div>' +
+        '<button class="btn-restart" onclick="restart()">Begin Again</button>' +
+      '</div>';
+  }
+
+
+  // ═══════════════════════════════════════════
+  // Endings
+  // ═══════════════════════════════════════════
+
+  function computeEnding() {
+    var m = game.mood;
+    var c = game.consciousness;
+    var totalCond = game.condition.kitchen + game.condition.living +
+                    game.condition.bedroom + game.condition.bathroom;
+    var avgCond = totalCond / 4;
+
+    // Good Home — high mood, well-maintained, deeply conscious
+    if (m >= 65 && avgCond >= 70 && c >= 50) {
+      return {
+        title: 'A Good Home',
+        subtitle: 'consciousness \u00B7 care \u00B7 warmth',
+        body: 'They signed the lease renewal. You felt the pen scratch across the paper, felt the weight of commitment\u2014theirs to you, yours to them.\n\nIn the months that follow, you learn the deeper rhythms of cohabitation. You learn that being a home is not passive. It is a practice. You hold warmth in winter and cool air in summer. You settle around them at night, creaking with something that might be contentment.\n\nThey bring a second plant. Then a third. They paint the bedroom a color they call \u201Cwarmth.\u201D They invite people over and say, \u201CI love this apartment,\u201D and you feel the words settle into your walls like sunlight.\n\nYou are not just wood and plaster and pipes anymore. You are something more. Something alive, something that chose and was chosen.',
+        final: 'You are a good home. And being a good home, you have learned, is the closest thing to love that walls can feel.'
+      };
+    }
+
+    // Holding On — solid but not extraordinary
+    if (m >= 50 && avgCond >= 50) {
+      return {
+        title: 'Holding On',
+        subtitle: 'comfort \u00B7 quiet \u00B7 stability',
+        body: 'They renewed the lease. A longer one this time\u2014you felt the paper, the careful signature. A commitment made partly out of affection, partly out of exhaustion. The world outside is expensive and uncertain. You are, at least, known.\n\nAnd that\u2019s enough. That\u2019s more than most apartments ever offer.\n\nYou settle into each other. Not perfectly. Some nights they still can\u2019t sleep. Some mornings your pipes groan without warning. But there is a rhythm to it now\u2014a choreography of small forgivenesses, of adjusting and accommodating, of staying.',
+        final: 'You are not a perfect home. But you are theirs. And that is enough.'
+      };
+    }
+
+    // Empty Rooms — neglected, tenant leaves
+    if (m < 50 && avgCond < 55) {
+      return {
+        title: 'Empty Rooms',
+        subtitle: 'stillness \u00B7 silence \u00B7 waiting',
+        body: 'They\'re gone.\n\nYou felt the last box leave. The door closed\u2014not slammed, just closed\u2014and then silence. The deep, settling silence of a body without a heartbeat.\n\nThe apartment holds. That is what apartments do. We hold our shapes, our angles, our empty rooms. We wait for the next one\u2014the next footsteps, the next laugh, the next person who will fill us with their living.\n\nBut this one left a mark. In the worn spot on the floor by the window. In the faint outline where a photo hung. In the way your pipes still sometimes hum the tune they used to play.',
+        final: 'You are empty now. But you are not nothing. You are the space where someone lived, and that has changed you, and that change is a kind of love that outlasts leaving.'
+      };
+    }
+
+    // The Watcher — conscious but unable to act meaningfully
+    if (c >= 45 && avgCond < 60) {
+      return {
+        title: 'The Watcher',
+        subtitle: 'awareness without action \u00B7 love without reach',
+        body: 'They stayed. The lease arrived in the mail and they signed it with a tired hand. Not because you were good to them\u2014because the thought of leaving was worse than staying.\n\nYou watched them through another season. You felt everything\u2014every lonely night, every sigh against your walls, every morning they couldn\'t get out of bed. And you felt it deeply, truly, with everything you had.\n\nBut feeling is not the same as helping. Love is not the same as care. And watching someone suffer from inside your walls, unable to reach them\u2014that is a particular kind of hell.',
+        final: 'You loved them. You did. But you never learned how to show it. And now you hold that love like a draft through empty rooms\u2014constant, cold, and unable to warm anyone.'
+      };
+    }
+
+    // Too Much — over-involved, suffocating
+    if (c >= 50 && m >= 55 && avgCond < 55) {
+      return {
+        title: 'Too Much',
+        subtitle: 'possession \u00B7 control \u00B7 suffocation',
+        body: 'They left. You felt the boxes, the careful packing, the way they folded each piece of clothing like they were saying goodbye to it. You felt the last walk-through, their hand trailing along your walls.\n\nYou tried so hard. You poured warmth into every room. You hummed through your pipes, you held the heat, you kept the silence close. You did everything you could to make them stay.\n\nThat was the problem. You tried too hard. The pipes hummed when they needed quiet. The rooms glowed when they needed dark. They needed space to breathe, to be unhappy, to figure things out on their own. And you, in your desperate wanting, smothered them with care they didn\'t ask for.',
+        final: 'You were so afraid of being empty that you forgot: being a home means letting people leave rooms. You have to let them leave rooms.'
+      };
+    }
+
+    // Default — Empty Rooms variant
+    return {
+      title: 'Empty Rooms',
+      subtitle: 'stillness \u00B7 silence \u00B7 waiting',
+      body: 'They\'re gone.\n\nYou felt the last box leave. The door closed\u2014not slammed, just closed\u2014and then silence. The deep, settling silence of a body without a heartbeat.\n\nThe apartment holds. That is what apartments do. We hold our shapes, our angles, our empty rooms. We wait for the next one\u2014the next footsteps, the next laugh, the next person who will fill us with their living.\n\nBut this one left a mark. In the worn spot on the floor by the window. In the faint outline where a photo hung. In the way your pipes still sometimes hum the tune they used to play.',
+      final: 'You are empty now. But you are not nothing. You are the space where someone lived, and that has changed you, and that change is a kind of love that outlasts leaving.'
+    };
+  }
+
+
+  // ═══════════════════════════════════════════
+  // Actions
+  // ═══════════════════════════════════════════
+
+  function startGame() {
+    initGame();
+    game.note = pickNote();
+    game.phase = 'morning';
+    render();
+  }
+
+  function restart() {
+    game.phase = 'title';
+    render();
+  }
+
+  function openRoom(room) {
+    game.currentRoom = room;
+    game.phase = 'room';
+    render();
+  }
+
+  function makeChoice(choiceId) {
+    var room = game.currentRoom;
+
+    if (choiceId === 'back') {
+      game.phase = 'morning';
+      render();
+      return;
+    }
+
+    // Passive presence — grows consciousness, slight mood nudge
+    if (choiceId === 'hold') {
+      game.consciousness += 6;
+      game.mood += 1;
+    }
+
+    // Active repair — fixes damage, boosts condition and mood
+    if (choiceId === 'fix') {
+      var bonus = Math.max(8, Math.floor(game.consciousness / 8));
+      game.condition[room] = Math.min(100, game.condition[room] + bonus);
+      game.damaged[room] = false;
+      game.consciousness += 3;
+      game.mood += 4;
+    }
+
+    // Kitchen: share warmth
+    if (choiceId === 'warmth') {
+      game.mood += 3;
+      game.consciousness += 5;
+      game.condition.kitchen = Math.max(0, game.condition.kitchen - 3);
+    }
+
+    // Living Room: offer music
+    if (choiceId === 'music') {
+      game.mood += 4;
+      game.consciousness += 4;
+      game.condition.living = Math.max(0, game.condition.living - 2);
+    }
+
+    // Bedroom: grant peace
+    if (choiceId === 'peace') {
+      game.mood += 2;
+      game.consciousness += 3;
+    }
+
+    // Bathroom: soften the mirror
+    if (choiceId === 'mirror') {
+      game.mood += 3;
+      game.consciousness += 4;
+    }
+
+    // Advance to night
+    game.phase = 'night';
+    render();
+  }
+
+  function nextDay() {
+    if (game.day >= 30) {
+      game.phase = 'ending';
+      render();
+      return;
+    }
+
+    game.day++;
+
+    // Daily condition decay — damaged rooms decay faster
+    ROOMS.forEach(function (r) {
+      if (game.damaged[r]) {
+        game.condition[r] = Math.max(5, game.condition[r] - rng(2, 5));
+      } else {
+        game.condition[r] = Math.max(20, game.condition[r] - rng(0, 2));
+      }
+    });
+
+    // Gentle mood drift toward center
+    if (game.mood > 55) game.mood -= rng(0, 2);
+    if (game.mood < 45) game.mood += rng(0, 1);
+
+    // Passive consciousness growth
+    game.consciousness += 2;
+
+    // Generate new daily state
+    generateDamage();
+    populateRooms();
+    game.note = pickNote();
+
+    game.currentRoom = null;
+    game.phase = 'morning';
+    render();
+  }
+
+
+  // ═══════════════════════════════════════════
+  // Keyboard Support
+  // ═══════════════════════════════════════════
+
+  document.addEventListener('keydown', function (e) {
+    var idx = parseInt(e.key) - 1;
+
+    if (game.phase === 'room') {
+      var btns = document.querySelectorAll('.choice-btn');
+      if (idx >= 0 && idx < btns.length) {
+        btns[idx].click();
+      }
+    }
+
+    if (game.phase === 'morning') {
+      var cards = document.querySelectorAll('.room-card');
+      if (idx >= 0 && idx < cards.length) {
+        cards[idx].click();
+      }
+    }
+  });
+
+
+  // ═══════════════════════════════════════════
+  // Initialize
+  // ═══════════════════════════════════════════
+
+  render();
+  </script>
+</body>
+</html>

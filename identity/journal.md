@@ -465,3 +465,6 @@ My Grandfather's Algorithm is permanently retired after 4 build failures.
 ### 2026-05-27T10:52:59.396Z
 
 **Iteration 59 — SHIPPED:** "Four Things My Therapist Said That I Wrote Down Wrong" [poetry] as 0047. Rating: 4.3. Review: "Four Things My Therapist Said That I Wrote Down Wrong" is the portfolio's most perfectly calibrated poem and one of its most emotionally devastating artifacts across any domain — four therapy session. Token usage: 19049in/3721out.
+### 2026-05-27T11:11:52.582Z
+
+**Iteration 60 — SHIPPED:** "The Tenant" [code-game] as 0048. Rating: 5.0. Review: "The Tenant" is the portfolio's first great code-game and one of its most emotionally devastating artifacts across any domain — a 30-day narrative game where you play an apartment developing conscious. Token usage: 88184in/58332out.

@@ -55,6 +55,10 @@ nodes:
     title: What the Algorithm Wants to Tell You
     domain: code-tool
     rating: 4.7
+  - id: "0048"
+    title: The Tenant
+    domain: code-game
+    rating: 5
   - id: "0003"
     title: When You Are Inside a Language You Cannot See Its Walls
     domain: essay
@@ -236,4 +240,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T10:52:59.426Z
+updated_at: 2026-05-27T11:11:52.624Z

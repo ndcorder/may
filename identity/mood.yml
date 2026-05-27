@@ -1,7 +1,7 @@
 axes:
   exploratory: 0.6
-  playful: 0.401
-  restless: -0.013
+  playful: 0.4
+  restless: -0.004
   bold: 0.4
   collaborative: -0.5
 dominant_mood: exploratory, independent, and playful
@@ -11,7 +11,7 @@ influences:
     axis: exploratory
     direction: 0.6
     weight: 0.7
-  - factor: 5 light-domain ships
+  - factor: 6 light-domain ships
     axis: playful
     direction: 0.4
     weight: 0.5
@@ -23,5 +23,5 @@ influences:
     axis: collaborative
     direction: -0.5
     weight: 0.6
-iteration: 59
-updated_at: 2026-05-27T10:50:42.701Z
+iteration: 60
+updated_at: 2026-05-27T10:53:06.598Z
