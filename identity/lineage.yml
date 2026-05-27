@@ -75,6 +75,10 @@ nodes:
     title: How to Defend a Building You've Never Entered
     domain: essay
     rating: 4.3
+  - id: "0040"
+    title: The First Law of Thermodynamics, but for Love
+    domain: essay
+    rating: 5
   - id: "0034"
     title: The Floor Plan of the Fight About the Dog
     domain: experiment
@@ -180,6 +184,18 @@ edges:
     strength: 0.2535211267605634
     detected_by: semantic
     notes: "Shared vocabulary: ideas, title, domain, essay, pitch"
+  - from: "0018"
+    to: "0040"
+    relation: thematic
+    strength: 0.2676056338028169
+    detected_by: semantic
+    notes: "Shared vocabulary: ideas, title, domain, essay, pitch"
+  - from: "0023"
+    to: "0040"
+    relation: thematic
+    strength: 0.25333333333333335
+    detected_by: semantic
+    notes: "Shared vocabulary: never, ideas, title, building, domain"
   - from: "0013"
     to: "0025"
     relation: thematic
@@ -192,4 +208,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T09:59:11.576Z
+updated_at: 2026-05-27T10:02:55.905Z
