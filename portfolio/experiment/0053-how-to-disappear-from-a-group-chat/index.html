@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Disappear from a Group Chat</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-essay: #161b22;
+    --bg-chat: #1a1d24;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --text-muted: #484f58;
+    --accent: #7ee787;
+    --accent-dim: rgba(126,231,135,0.12);
+    --border: #30363d;
+    --danger: #f85149;
+    --warning: #d29922;
+    --radius: 12px;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --font-mono: 'SF Mono', 'Cascadia Code', Consolas, monospace;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* === PROGRESS BAR === */
+  #progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 100;
+    transition: width 0.15s ease-out, opacity 0.3s;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* === NOISE OVERLAY === */
+  #noise-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.8s;
+    mix-blend-mode: overlay;
+    background: repeating-conic-gradient(rgba(255,255,255,0.01) 0% 25%, transparent 0% 50%) 0 0 / 3px 3px;
+  }
+
+  /* === MAIN CONTENT === */
+  main {
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  section {
+    padding: 3rem 0;
+    opacity: 1;
+    transition: opacity 0.4s ease;
+  }
+
+  /* === TITLE SECTION === */
+  #title-section {
+    min-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 0;
+    position: relative;
+  }
+
+  #title-section h1 {
+    font-size: clamp(2rem, 5.5vw, 3.2rem);
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: var(--text-dim);
+    font-style: italic;
+    max-width: 480px;
+    margin-bottom: 2.5rem;
+  }
+
+  .meta-line {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.01em;
+  }
+
+  .read-receipt-title {
+    margin-top: 3rem;
+    font-size: 0.8rem;
+    color: var(--accent);
+    opacity: 0.5;
+    transition: opacity 1s;
+  }
+
+  /* === ESSAY HEADINGS === */
+  .section-heading {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1.8rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.01em;
+  }
+
+  /* === ESSAY TEXT === */
+  .essay-text {
+    margin-bottom: 1.5rem;
+  }
+
+  .essay-text p {
+    margin-bottom: 1.2rem;
+  }
+
+  /* === HIGHLIGHTED TEXT === */
+  .highlight {
+    color: var(--accent);
+  }
+
+  /* === ANOMALY STYLES === */
+  .anomaly-dim {
+    color: var(--text-muted);
+    font-style: italic;
+    opacity: 0;
+    transition: opacity 2s ease;
+  }
+
+  .anomaly-dim.visible {
+    opacity: 1;
+  }
+
+  .anomaly-strikethrough {
+    text-decoration: line-through;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 1.5s ease;
+  }
+
+  .anomaly-strikethrough.visible {
+    opacity: 0.6;
+  }
+
+  .anomaly-meta {
+    opacity: 0;
+    transition: opacity 2s ease;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .anomaly-meta.visible {
+    opacity: 1;
+  }
+
+  .anomaly-edited {
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .anomaly-edited.visible {
+    opacity: 1;
+  }
+
+  .anomaly-quote {
+    border-left: 3px solid var(--border);
+    padding-left: 1rem;
+    color: var(--text-muted);
+    font-style: italic;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+
+  .anomaly-quote.visible {
+    opacity: 0.7;
+  }
+
+  /* === DELETED MESSAGE BLOCK === */
+  .deleted-block {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin: 2rem 0;
+    background: rgba(48,54,61,0.3);
+    text-align: center;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+
+  .deleted-block.visible {
+    opacity: 1;
+    animation: deleteFlash 0.5s ease;
+  }
+
+  @keyframes deleteFlash {
+    0% { border-color: var(--danger); }
+    100% { border-color: var(--border); }
+  }
+
+  /* === EMPTY PARAGRAPH (space eating) === */
+  .empty-space {
+    margin-bottom: 1.5rem;
+  }
+
+  /* === SECTION 5 ANOMALY TARGETS === */
+  .anomaly-target {
+    transition: opacity 0.8s ease, letter-spacing 0.8s ease;
+  }
+
+  .anomaly-target.degrading {
+    opacity: 0.5;
+    letter-spacing: 0.03em;
+  }
+
+  .anomaly-target.vanishing {
+    color: transparent;
+    background: var(--bg-essay);
+    border-radius: 4px;
+    user-select: none;
+  }
+
+  /* === TRANSITION TO CHAT === */
+  #transition-section {
+    min-height: 30vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 0;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+  }
+
+  #transition-section.visible {
+    opacity: 1;
+  }
+
+  .transition-text {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 1rem;
+  }
+
+  .transition-read {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    margin-top: 1.5rem;
+    opacity: 0.5;
+  }
+
+  /* === CHAT VIEW === */
+  #chat-container {
+    position: relative;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  #chat-header {
+    background: var(--bg-chat);
+    border-bottom: 1px solid var(--border);
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .chat-back-arrow {
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+
+  .chat-group-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7ee787, #3fb950);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: var(--bg);
+    font-weight: 700;
+  }
+
+  .chat-group-info {
+    flex: 1;
+  }
+
+  .chat-group-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .chat-group-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  #chat-messages {
+    padding: 1rem 0;
+  }
+
+  /* === CHAT MESSAGE === */
+  .chat-msg {
+    display: flex;
+    gap: 0.6rem;
+    padding: 0.35rem 1.2rem;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .chat-msg.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .chat-msg.yours-deleted {
+    background: rgba(248,81,73,0.03);
+  }
+
+  .msg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+    margin-top: 2px;
+  }
+
+  .msg-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .msg-sender {
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .msg-text {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--text);
+    word-wrap: break-word;
+  }
+
+  .msg-meta {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* === YOUR DELETED MESSAGES === */
+  .msg-text-deleted {
+    font-style: italic;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .msg-sender-you {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    opacity: 0.5;
+  }
+
+  /* === TYPING INDICATOR === */
+  #typing-indicator {
+    display: flex;
+    gap: 0.6rem;
+    padding: 0.5rem 1.2rem;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+
+  #typing-indicator.visible {
+    opacity: 1;
+  }
+
+  .typing-dots {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0.5rem 0.8rem;
+    background: var(--bg-essay);
+    border-radius: 12px;
+  }
+
+  .typing-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: typingBounce 1.4s infinite ease-in-out;
+  }
+
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* === CHAT INPUT === */
+  #chat-input-area {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-chat);
+    border-top: 1px solid var(--border);
+    padding: 0.7rem 1.2rem;
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    z-index: 10;
+    width: 100%;
+    max-width: 660px;
+  }
+
+  #chat-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.55rem 1rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    outline: none;
+    cursor: default;
+  }
+
+  #send-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: default;
+    opacity: 0.3;
+  }
+
+  /* === ACCRETION LAYERS === */
+  .accretion-layer {
+    position: relative;
+    padding: 1rem 0;
+    border-left: 2px solid transparent;
+    padding-left: 1rem;
+    transition: all 0.6s ease;
+  }
+
+  .accretion-layer.dimmed {
+    border-left-color: var(--border);
+    color: var(--text-muted);
+  }
+
+  /* === FREEDOM LINE === */
+  .freedom-line {
+    text-align: center;
+    padding: 4rem 0 2rem;
+    font-size: 0.82rem;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 2s ease;
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+  }
+
+  .freedom-line.visible {
+    opacity: 0.45;
+  }
+
+  /* === SCROLL CUE === */
+  .scroll-cue {
+    text-align: center;
+    padding: 3rem 0 6rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: opacity 1.5s;
+  }
+
+  .scroll-cue.visible {
+    opacity: 0.35;
+  }
+
+  /* === READ RECEIPTS === */
+  .read-receipt {
+    text-align: right;
+    font-size: 0.7rem;
+    color: var(--accent);
+    opacity: 0.5;
+    transition: opacity 0.8s ease, color 0.8s ease;
+  }
+
+  .read-receipt.fading {
+    opacity: 0.25;
+    color: var(--text-muted);
+  }
+
+  .read-receipt.gone {
+    opacity: 0.1;
+    color: var(--text-muted);
+  }
+
+  /* === REDUCED MOTION === */
+  @media (prefers-reduced-motion: reduce) {
+    .typing-dots span {
+      animation: none;
+      opacity: 0.6;
+    }
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 600px) {
+    main { padding: 1.5rem 1rem; }
+    #title-section h1 { font-size: 1.8rem; }
+    .section-heading { font-size: 1.15rem; }
+    .chat-msg { padding: 0.3rem 0.8rem; }
+    #chat-input-area { padding: 0.5rem 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div id="noise-overlay"></div>
+
+<main>
+  <!-- TITLE -->
+  <section id="title-section">
+    <h1>How to Disappear from a Group Chat</h1>
+    <p class="subtitle">A field guide to tactical absence, strategic silence, and the art of becoming forgettable.</p>
+    <p class="meta-line">Draft 14 &middot; 2,847 words &middot; Last edited 47 min ago</p>
+    <p class="read-receipt-title" id="title-read">Read 11:47 PM</p>
+  </section>
+
+  <!-- SECTION 1: Mute -->
+  <section id="section-1">
+    <h2 class="section-heading">1. Mute</h2>
+    <div class="essay-text">
+      <p>The first step is the easiest, and the most commonly misunderstood. <span class="highlight">Muting is not leaving.</span> Muting is the decision to remain technically present while strategically withdrawing your attention. You stay in the room but stop listening at the door.</p>
+      <p>Open the conversation. Find the settings. Toggle notifications to silent. Confirm. The confirmation is important — you should acknowledge to yourself, in some small way, that you have made a deliberate choice.</p>
+      <p>The group continues without interruption. Messages still arrive. The unread count climbs: 1, then 7, then 43, then a number too large to process. Your phone no longer vibrates. The screen no longer lights up. The conversation, for you, has begun to exist only in retrospect, only when you choose to visit it.</p>
+      <p>This is not avoidance. This is the first genuine boundary you've drawn in a space designed to have none.</p>
+    </div>
+    <p class="read-receipt">Read 11:48 PM</p>
+  </section>
+
+  <!-- SECTION 2: Archive -->
+  <section id="section-2">
+    <h2 class="section-heading">2. Archive</h2>
+    <div class="essay-text">
+      <p>Muting removed the sound. Archiving removes the sight. The conversation leaves your main screen, your default view, the list of things you see when you open the app without thinking. It is not deleted. It is not gone. It has simply been moved to a place you have to choose to visit.</p>
+      <p>You will not visit. That is the point.</p>
+      <p>Archiving is the spatial equivalent of what you've already done temporally: a deliberate displacement. The conversation is still there, in the architecture of your phone, in the server farms and backup drives and cached data that constitute the digital unconscious. But it is no longer in front of you. It is no longer the first thing you see when you open your messages, that small alive dot next to a name you used to check without thinking.</p>
+      <p>Think of it as putting a book back on the shelf. The book still exists. The words are still inside it. But you are no longer reading, and the book does not miss you.</p>
+    </div>
+    <p class="read-receipt">Read 11:52 PM</p>
+  </section>
+
+  <!-- SECTION 3: React, Don't Reply -->
+  <section id="section-3">
+    <h2 class="section-heading">3. React, Don't Reply</h2>
+    <div class="essay-text">
+      <p>If you must acknowledge something, use the smallest possible gesture. A thumbs-up. A heart. A single emoji, placed with precision, that signals presence without commitment. The reaction is the ghost of participation — it proves you were here, that you saw, that something registered — while committing you to nothing. No words. No follow-up. No thread that demands a reply in return.</p>
+      <p>This is the phase where people will begin to notice, vaguely, that something has changed. Not that you've left — they won't think that — but that your presence has thinned. You've gone from three-dimensional to two. You cast a shadow but no weight.</p>
+      <p>The reaction is a maintenance strategy. It costs you almost nothing. A tap. A pixelated heart that appears beneath someone else's words. <span class="highlight">It is the minimum viable participation,</span> and it is enough to keep you technically in the group while you prepare for the next phase.</p>
+    </div>
+    <p class="read-receipt fading">Read 11:54 PM</p>
+  </section>
+
+  <!-- SECTION 4: Become Boring -->
+  <section id="section-4">
+    <h2 class="section-heading">4. Become Boring</h2>
+    <div class="essay-text">
+      <p>Stop being funny. Stop being first. Stop being the person who sends the link everyone clicks, who asks the question everyone answers, who makes the observation that reframes the whole conversation. You don't have to be unpleasant. You just have to be forgettable.</p>
+      <p>This is harder than it sounds. In a group chat, personality is currency. The people who dominate are the ones who are quickest, wittiest, most willing to fill the silence. To withdraw that currency — to stop offering what people have come to expect — requires a kind of discipline that borders on asceticism.</p>
+      <p>Be pleasant. Be vague. Respond to direct questions with complete but uninteresting answers. "That sounds fun." "Good for them." "I hadn't thought about it." These are not lies. They are just... nothing. <span class="highlight">Tastes-like-water sentences that slide through the conversation without leaving a residue.</span></p>
+      <p>The goal is not to make people dislike you. The goal is to make your absence, when it comes, feel less like a loss and more like a shift in weather they didn't notice until someone mentioned it.</p>
+    </div>
+    <p class="read-receipt fading">Read 11:57 PM</p>
+  </section>
+
+  <!-- SECTION 5: The Ghost Phase -->
+  <section id="section-5">
+    <h2 class="section-heading">5. The Ghost Phase</h2>
+    <div class="essay-text">
+      <p class="anomaly-target" id="ghost-p1">Now comes the part they don't document in any help center. The part where you stop performing absence and start actually being absent. The part where you don't just leave the conversation — you leave the version of yourself that existed inside it.</p>
+
+      <div class="empty-space" style="height:1rem;"></div>
+
+      <p class="anomaly-dim" id="anomaly-timestamp">You sent a message last Tuesday at 3:47 AM. You don't remember sending it. The message read: <em>"yeah i think thats probably fine"</em> — lowercase, no punctuation, the kind of non-commitment that could apply to anything. It was a reply to a message you no longer have context for. The message above it has been deleted.</p>
+
+      <div class="empty-space" style="height:0.5rem;"></div>
+
+      <p class="anomaly-target" id="ghost-p2">This is the ghost phase. You are still listed as a member. Your name still appears in the header. But you have begun to function like a room that no one enters — present in the floor plan, technically accessible, but untouched for so long that the air inside has gone stale.</p>
+
+      <p class="anomaly-target" id="ghost-p3">Something shifts in the group's ecosystem. The conversation recalibrates around your absence, finding new equilibriums. New people step forward. New rhythms establish themselves. You notice this only in glimpses — the occasional time you scroll through, not reading, just checking — and each time, the group feels slightly less like a place you belong and more like a place you once visited.</p>
+
+      <p class="anomaly-meta" id="anomaly-timestamp-line">Last seen: Tuesday at 3:47 AM &mdash; <span style="text-decoration: line-through;">Wednesday at 2:12 AM</span></p>
+
+      <div class="empty-space" style="height:1.5rem;"></div>
+
+      <p class="anomaly-target" id="ghost-p4">Your read receipts stop appearing. Or maybe they were always appearing and you just stopped checking. Or maybe the app changed something in an update and your preferences migrated. Or maybe you turned them off yourself, late one night, without remembering. The point is: at some point, the group stopped knowing whether you'd seen their messages, and <span class="highlight">no one asked</span>.</p>
+
+      <div class="empty-space" style="height:1.5rem;"></div>
+
+      <blockquote class="anomaly-quote" id="quote-1">
+        <p style="font-style: italic; color: var(--text-muted);">"has anyone heard from them lately"</p>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem;">&mdash; Dana, 3 days ago &middot; <span style="opacity:0.5;">3 replies</span></p>
+      </blockquote>
+
+      <div class="empty-space" style="height:1.5rem;"></div>
+
+      <p class="anomaly-target" id="ghost-p5">You think about replying. You open the chat. You type something — or you imagine typing something — and then you close it. The impulse passes. The group moves on. The conversation continues, following paths that no longer include you, and the remarkable thing is how <em>unremarkable</em> it feels. How natural. How much like a process that was always going to happen, with or without your participation.</p>
+
+      <div class="empty-space" style="height:0.5rem;"></div>
+
+      <p class="anomaly-edited" id="anomaly-edited-line">This section was edited after you last viewed it.</p>
+    </div>
+    <p class="read-receipt gone" id="receipt-5">Read &mdash;</p>
+  </section>
+
+  <!-- SECTION 6: What Remains -->
+  <section id="section-6">
+    <h2 class="section-heading" style="opacity:0.7;">6. What Remains</h2>
+    <div class="essay-text">
+      <p class="accretion-layer" data-layer="1">They will archive your contributions. Not deliberately — the group will not hold a vote or reach a consensus about your memory. It will happen the way all things happen in group chats: <span class="highlight">gradually, then all at once, then not at all.</span></p>
+
+      <p class="accretion-layer" data-layer="2">Your jokes will be forgotten, then remembered, then attributed to someone else. Your links will expire. Your photos will lose context — someone will scroll past one and think, "Who sent this?" and not bother to check.</p>
+
+      <div class="deleted-block" id="deleted-block-1">
+        <p>This message has been deleted</p>
+      </div>
+
+      <p class="accretion-layer" data-layer="3">The group will occasionally reference your absence, but with decreasing frequency and diminishing interest. First as a question, then as an observation, then as a factual condition — like noting that a restaurant they used to go to has closed.</p>
+
+      <div class="empty-space" style="height:1.5rem;"></div>
+
+      <p class="anomaly-strikethrough" id="strikethrough-1">You will not be replaced. There is no replacing. There is only continuing.</p>
+
+      <div class="empty-space" style="height:1rem;"></div>
+
+      <p class="accretion-layer dimmed" data-layer="4">This is not erasure. This is what happens when a conversation becomes a living thing that outgrows the people who started it. It happens to every group chat eventually. It happens to every group. The ones who leave early, deliberately, get to choose the terms of their departure. The ones who simply vanish get a different kind of ending — cleaner, perhaps, but also less honest.</p>
+
+      <p class="accretion-layer dimmed" data-layer="5">You chose this. That matters. Even if no one else knows.</p>
+    </div>
+    <p class="read-receipt gone" id="receipt-6" style="opacity:0.08;">Read &mdash;</p>
+  </section>
+
+  <!-- TRANSITION -->
+  <section id="transition-section">
+    <div>
+      <p class="transition-text">The essay you were reading is no longer available.</p>
+      <p class="transition-read">Opened Tuesday at 3:47 AM &middot; Last active 47 minutes ago</p>
+    </div>
+  </section>
+
+  <!-- FINAL: The Chat View -->
+  <section id="section-7">
+    <div id="chat-container">
+      <div id="chat-header">
+        <span class="chat-back-arrow">&larr;</span>
+        <div class="chat-group-icon">4</div>
+        <div class="chat-group-info">
+          <div class="chat-group-name">tuesday night crew</div>
+          <div class="chat-group-sub">Alex, Dana, Miriam, Kai, <span style="color:var(--text-muted); text-decoration: line-through; opacity:0.4;">You</span></div>
+        </div>
+      </div>
+
+      <div id="chat-messages">
+        <!-- Messages injected by JS -->
+      </div>
+
+      <div id="typing-indicator">
+        <div style="width:28px; flex-shrink:0;"></div>
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <div id="chat-input-area">
+        <input type="text" id="chat-input" value="Message..." readonly>
+        <button id="send-btn">&#x2191;</button>
+      </div>
+    </div>
+
+    <div class="freedom-line" id="freedom-line">
+      you were never the conversation. you were just in it.
+    </div>
+
+    <div class="scroll-cue" id="scroll-cue">
+      <p>they're still typing.</p>
+    </div>
+  </section>
+</main>
+
+<script>
+(function() {
+  'use strict';
+
+  // === ELEMENTS ===
+  const progressBar = document.getElementById('progress-bar');
+  const noiseOverlay = document.getElementById('noise-overlay');
+  const titleRead = document.getElementById('title-read');
+  const transitionSection = document.getElementById('transition-section');
+  const chatMessages = document.getElementById('chat-messages');
+  const typingIndicator = document.getElementById('typing-indicator');
+  const freedomLine = document.getElementById('freedom-line');
+  const scrollCue = document.getElementById('scroll-cue');
+
+  // Anomaly elements
+  const anomalyTimestamp = document.getElementById('anomaly-timestamp');
+  const anomalyTimestampLine = document.getElementById('anomaly-timestamp-line');
+  const anomalyEditedLine = document.getElementById('anomaly-edited-line');
+  const quote1 = document.getElementById('quote-1');
+  const strikethrough1 = document.getElementById('strikethrough-1');
+  const deletedBlock1 = document.getElementById('deleted-block-1');
+
+  // Ghost phase paragraphs
+  const ghostP1 = document.getElementById('ghost-p1');
+  const ghostP2 = document.getElementById('ghost-p2');
+  const ghostP3 = document.getElementById('ghost-p3');
+  const ghostP4 = document.getElementById('ghost-p4');
+  const ghostP5 = document.getElementById('ghost-p5');
+
+  // === CHAT DATA ===
+  const chatData = [
+    { sender: 'Alex', color: '#58a6ff', initials: 'A', text: "anyone watching this?", time: "11:34 PM" },
+    { sender: 'Dana', color: '#f78166', initials: 'D', text: "the game? yeah it's on in the other room", time: "11:34 PM" },
+    { sender: 'Miriam', color: '#d2a8ff', initials: 'M', text: "i keep forgetting it's tuesday", time: "11:35 PM" },
+    { sender: 'Alex', color: '#58a6ff', initials: 'A', text: "wait did you see what kai posted", time: "11:36 PM" },
+    { sender: 'Kai', color: '#ffa657', initials: 'K', text: "lol don't @ me", time: "11:36 PM" },
+    { sender: 'Dana', color: '#f78166', initials: 'D', text: "ok that was actually pretty good", time: "11:37 PM" },
+    { sender: 'Miriam', color: '#d2a8ff', initials: 'M', text: "agreed. unexpected from kai", time: "11:37 PM" },
+    { sender: 'Kai', color: '#ffa657', initials: 'K', text: "i contain multitudes", time: "11:38 PM" },
+    { sender: 'Alex', color: '#58a6ff', initials: 'A', text: "lol", time: "11:38 PM" },
+    { deleted: true, sender: 'You', text: "This message has been deleted.", time: "11:39 PM" },
+    { sender: 'Dana', color: '#f78166', initials: 'D', text: "oh wait did you see that play??", time: "11:40 PM" },
+    { sender: 'Miriam', color: '#d2a8ff', initials: 'M', text: "THE CATCH", time: "11:40 PM" },
+    { sender: 'Kai', color: '#ffa657', initials: 'K', text: "insane", time: "11:41 PM" },
+    { sender: 'Alex', color: '#58a6ff', initials: 'A', text: "clip it clip it clip it", time: "11:41 PM" },
+    { sender: 'Dana', color: '#f78166', initials: 'D', text: "sent it to the group", time: "11:42 PM" },
+    { sender: 'Miriam', color: '#d2a8ff', initials: 'M', text: "perfect", time: "11:42 PM" },
+    { sender: 'Kai', color: '#ffa657', initials: 'K', text: "okay but seriously can we talk about next weekend", time: "11:43 PM" },
+    { sender: 'Alex', color: '#58a6ff', initials: 'A', text: "yesss i've been thinking about it", time: "11:43 PM" },
+    { deleted: true, sender: 'You', text: "This message has been deleted.", time: "11:44 PM" },
+    { sender: 'Dana', color: '#f78166', initials: 'D', text: "i can do saturday", time: "11:44 PM" },
+    { sender: 'Miriam', color: '#d2a8ff', initials: 'M', text: "same. earlier is better for me", time: "11:45 PM" },
+    { sender: 'Kai', color: '#ffa657', initials: 'K', text: "brunch then?", time: "11:45 PM" },
+    { sender: 'Alex', color: '#58a6ff', initials: 'A', text: "oh that new place on 5th", time: "11:46 PM" },
+    { sender: 'Dana', color: '#f78166', initials: 'D', text: "i've been wanting to try that", time: "11:46 PM" },
+    { sender: 'Miriam', color: '#d2a8ff', initials: 'M', text: "they have outdoor seating apparently", time: "11:47 PM" },
+    { sender: 'Kai', color: '#ffa657', initials: 'K', text: "sold. i'll make a reservation", time: "11:47 PM" },
+    { sender: 'Alex', color: '#58a6ff', initials: 'A', text: "nice", time: "11:48 PM" },
+  ];
+
+  // === SCROLL STATE ===
+  let scrollTriggered = {};
+  let chatBuilt = false;
+
+  function getScrollProgress() {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    if (scrollHeight <= 0) return 0;
+    return Math.min(1, Math.max(0, scrollTop / scrollHeight));
+  }
+
+  function elementVisibility(el) {
+    if (!el) return 0;
+    const rect = el.getBoundingClientRect();
+    const windowH = window.innerHeight;
+    // 0 = not yet visible, 1 = fully scrolled past
+    return Math.min(1, Math.max(0, (windowH - rect.top) / (windowH + rect.height)));
+  }
+
+  // === BUILD CHAT MESSAGES ===
+  function buildChat() {
+    if (chatBuilt) return;
+    chatBuilt = true;
+
+    chatData.forEach((msg, i) => {
+      const div = document.createElement('div');
+
+      if (msg.deleted) {
+        div.className = 'chat-msg yours-deleted';
+        div.innerHTML = `
+          <div class="msg-avatar" style="background:#484f58;">Y</div>
+          <div class="msg-body">
+            <div class="msg-sender msg-sender-you">${msg.sender}</div>
+            <div class="msg-text msg-text-deleted">${msg.text}</div>
+            <div class="msg-meta">${msg.time}</div>
+          </div>
+        `;
+      } else {
+        div.className = 'chat-msg';
+        div.innerHTML = `
+          <div class="msg-avatar" style="background:${msg.color};">${msg.initials}</div>
+          <div class="msg-body">
+            <div class="msg-sender" style="color:${msg.color};">${msg.sender}</div>
+            <div class="msg-text">${msg.text}</div>
+            <div class="msg-meta">${msg.time}</div>
+          </div>
+        `;
+      }
+
+      div.dataset.chatIndex = i;
+      chatMessages.appendChild(div);
+    });
+  }
+
+  // === ANOMALY TRIGGERS ===
+  const anomalyTriggers = [
+    { progress: 0.08, id: 'titleFaded', fn: () => {
+      if (titleRead) titleRead.style.opacity = '0.25';
+    }},
+    { progress: 0.44, id: 'ghostP1Degrade', fn: () => {
+      if (ghostP1) ghostP1.classList.add('degrading');
+    }},
+    { progress: 0.48, id: 'anomalyTimestamp', fn: () => {
+      if (anomalyTimestamp) anomalyTimestamp.classList.add('visible');
+    }},
+    { progress: 0.50, id: 'ghostP2Degrade', fn: () => {
+      if (ghostP2) ghostP2.classList.add('degrading');
+    }},
+    { progress: 0.52, id: 'anomalyTimestampLine', fn: () => {
+      if (anomalyTimestampLine) anomalyTimestampLine.classList.add('visible');
+    }},
+    { progress: 0.55, id: 'ghostP3Degrade', fn: () => {
+      if (ghostP3) ghostP3.classList.add('degrading');
+    }},
+    { progress: 0.57, id: 'anomalyQuote', fn: () => {
+      if (quote1) quote1.classList.add('visible');
+    }},
+    { progress: 0.60, id: 'ghostP4Degrade', fn: () => {
+      if (ghostP4) ghostP4.classList.add('degrading');
+    }},
+    { progress: 0.63, id: 'anomalyEdited', fn: () => {
+      if (anomalyEditedLine) anomalyEditedLine.classList.add('visible');
+    }},
+    { progress: 0.66, id: 'ghostP5Degrade', fn: () => {
+      if (ghostP5) ghostP5.classList.add('degrading');
+    }},
+    { progress: 0.70, id: 'noiseStart', fn: () => {
+      noiseOverlay.style.opacity = '0.04';
+    }},
+    { progress: 0.74, id: 'strikethrough', fn: () => {
+      if (strikethrough1) strikethrough1.classList.add('visible');
+    }},
+    { progress: 0.76, id: 'noiseMore', fn: () => {
+      noiseOverlay.style.opacity = '0.07';
+    }},
+    { progress: 0.80, id: 'transitionShow', fn: () => {
+      if (transitionSection) transitionSection.classList.add('visible');
+      buildChat();
+    }},
+    { progress: 0.90, id: 'noiseFade', fn: () => {
+      noiseOverlay.style.opacity = '0';
+    }},
+  ];
+
+  // === SCROLL HANDLER ===
+  let ticking = false;
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+
+    requestAnimationFrame(() => {
+      const progress = getScrollProgress();
+
+      // Progress bar
+      progressBar.style.width = (progress * 100) + '%';
+      // Fade out progress bar near end
+      progressBar.style.opacity = progress > 0.92 ? Math.max(0, 1 - (progress - 0.92) / 0.08) : 1;
+
+      // Trigger anomalies by scroll progress
+      anomalyTriggers.forEach(trigger => {
+        if (!scrollTriggered[trigger.id] && progress >= trigger.progress) {
+          scrollTriggered[trigger.id] = true;
+          trigger.fn();
+        }
+      });
+
+      // Reveal chat messages as they enter viewport
+      const chatMsgs = chatMessages.querySelectorAll('.chat-msg');
+      chatMsgs.forEach((msg, i) => {
+        if (!msg.classList.contains('revealed')) {
+          const rect = msg.getBoundingClientRect();
+          if (rect.top < window.innerHeight - 40) {
+            // Stagger: delay based on position
+            setTimeout(() => {
+              msg.classList.add('revealed');
+            }, i * 60);
+          }
+        }
+      });
+
+      // Reveal deleted block
+      if (deletedBlock1 && !deletedBlock1.classList.contains('visible')) {
+        const rect = deletedBlock1.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 60) {
+          deletedBlock1.classList.add('visible');
+        }
+      }
+
+      // Show typing indicator when near chat end
+      if (typingIndicator) {
+        const chatContainer = document.getElementById('chat-container');
+        if (chatContainer) {
+          const chatRect = chatContainer.getBoundingClientRect();
+          if (chatRect.bottom < window.innerHeight + 200) {
+            typingIndicator.classList.add('visible');
+          }
+        }
+      }
+
+      // Show freedom line
+      if (freedomLine) {
+        const rect = freedomLine.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.9) {
+          freedomLine.classList.add('visible');
+        }
+      }
+
+      // Show scroll cue
+      if (scrollCue) {
+        const rect = scrollCue.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.95) {
+          scrollCue.classList.add('visible');
+        }
+      }
+
+      ticking = false;
+    });
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // === INITIAL CALL ===
+  onScroll();
+
+  // === TYPING INDICATOR BREATHING ===
+  // After it becomes visible, gently pulse its opacity
+  let typingBreathing = false;
+  setInterval(() => {
+    if (typingIndicator && typingIndicator.classList.contains('visible') && !typingBreathing) {
+      typingBreathing = true;
+      // Gently vary opacity
+      let phase = 0;
+      setInterval(() => {
+        phase += 0.05;
+        typingIndicator.style.opacity = 0.5 + 0.5 * Math.sin(phase);
+      }, 100);
+    }
+  }, 1000);
+
+  // === REDUCED MOTION HANDLING ===
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (prefersReducedMotion.matches) {
+    // Disable animations but keep progressive reveal via scroll
+    document.querySelectorAll('.typing-dots span').forEach(s => {
+      s.style.animation = 'none';
+      s.style.opacity = '0.6';
+    });
+  }
+
+})();
+</script>
+
+</body>
+</html>

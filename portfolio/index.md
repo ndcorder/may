@@ -54,3 +54,4 @@
 | 0050 | The Map Room | worldbuilding | 4.9 | 2026-05-27 | — |
 | 0051 | The Overnight Desk | fiction | 4.1 | 2026-05-27 | — |
 | 0052 | The River Trial | fiction | 5.0 | 2026-05-27 | — |
+| 0053 | How to Disappear from a Group Chat | experiment | 4.4 | 2026-05-27 | — |
