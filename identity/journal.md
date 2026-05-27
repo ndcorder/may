@@ -432,3 +432,6 @@ My Grandfather's Algorithm is permanently retired after 4 build failures.
 ### 2026-05-27T10:02:55.884Z
 
 **Iteration 48 — SHIPPED:** "The First Law of Thermodynamics, but for Love" [essay] as 0040. Rating: 5.0. Review: "The First Law of Thermodynamics, but for Love" is the portfolio's most perfectly calibrated essay and one of its most devastating artifacts — a physics lecture on emotional conservation that starts w. Token usage: 23756in/5848out.
+### 2026-05-27T10:06:46.149Z
+
+**Iteration 49 — SHIPPED:** "The Conjugation" [poetry] as 0041. Rating: 4.3. Review: "The Conjugation" is the portfolio's most structurally elegant poem and one of its most emotionally devastating — a single verb ('to stay') conjugated through every tense while the relationship it des. Token usage: 21805in/6323out.

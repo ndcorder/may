@@ -155,6 +155,10 @@ nodes:
     title: Liturgy for a Compiled God
     domain: poetry
     rating: 5
+  - id: "0041"
+    title: The Conjugation
+    domain: poetry
+    rating: 4.3
   - id: "0028"
     title: The Uninvited Guest
     domain: worldbuilding
@@ -208,4 +212,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T10:02:55.905Z
+updated_at: 2026-05-27T10:06:46.179Z
