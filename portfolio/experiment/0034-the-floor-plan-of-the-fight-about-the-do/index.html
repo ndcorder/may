@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Floor Plan of the Fight About the Dog</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
+  
+  :root {
+    --line-blue: #2563eb;
+    --line-light: #93c5fd;
+    --line-ghost: #dbeafe;
+    --paper: #f8fafc;
+    --dim: #94a3b8;
+    --accent: #dc2626;
+    --closet-bg: rgba(251, 191, 36, 0.06);
+    --closet-border: rgba(251, 191, 36, 0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Courier Prime', 'Courier New', monospace;
+    background: #f1f5f9;
+    color: var(--line-blue);
+    padding: 1rem;
+    min-height: 100vh;
+  }
+
+  .sheet {
+    max-width: 960px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 1px solid var(--line-light);
+    padding: 2rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .sheet::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(var(--line-ghost) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-ghost) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+
+  .sheet > * { position: relative; }
+
+  /* === TITLE BLOCK === */
+  .title-block {
+    border: 2px solid var(--line-blue);
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .title-block h1 {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .title-block .meta {
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--dim);
+    line-height: 1.6;
+  }
+
+  /* === LEGEND === */
+  .legend {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.7rem;
+    color: var(--dim);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--line-light);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .legend-icon {
+    width: 24px;
+    height: 16px;
+    border: 1.5px solid var(--line-blue);
+    background: white;
+  }
+
+  .legend-icon.closet {
+    border: 1.5px dashed var(--closet-border);
+    background: var(--closet-bg);
+  }
+
+  .legend-icon.void {
+    border: none;
+    background: #e2e8f0;
+  }
+
+  /* === FLOOR PLAN === */
+  .plan {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(5, 90px);
+    gap: 4px;
+    margin-bottom: 2rem;
+  }
+
+  .room {
+    border: 1.5px solid var(--line-blue);
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .room:hover {
+    border-color: var(--accent);
+    background: #fef2f2;
+  }
+
+  .room.active {
+    border-color: var(--accent);
+    border-width: 2px;
+    background: #fef2f2;
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+
+  .room.closet {
+    border: 1.5px dashed var(--closet-border);
+    background: var(--closet-bg);
+  }
+
+  .room.closet:hover {
+    border-color: #f59e0b;
+    background: rgba(251, 191, 36, 0.12);
+  }
+
+  .room.closet.active {
+    border-color: #f59e0b;
+    border-width: 2px;
+    background: rgba(251, 191, 36, 0.12);
+    box-shadow: 0 0 0 1px #f59e0b;
+  }
+
+  .room.void {
+    border: none;
+    background: #f1f5f9;
+    cursor: default;
+  }
+
+  .room.void:hover {
+    border: none;
+    background: #f1f5f9;
+  }
+
+  .room-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-align: center;
+    line-height: 1.3;
+    pointer-events: none;
+  }
+
+  .room-dims {
+    font-size: 0.55rem;
+    color: var(--dim);
+    margin-top: 0.2rem;
+    pointer-events: none;
+  }
+
+  .room.closet .room-label {
+    color: #92400e;
+    font-weight: 400;
+    font-style: italic;
+  }
+
+  /* === DOORWAYS === */
+  .doorway-marker {
+    position: absolute;
+    background: var(--paper);
+    z-index: 2;
+  }
+
+  /* === DETAIL PANEL === */
+  .detail-panel {
+    border: 1.5px solid var(--line-blue);
+    padding: 1.5rem;
+    min-height: 200px;
+    display: none;
+    margin-bottom: 2rem;
+    background: white;
+  }
+
+  .detail-panel.visible {
+    display: block;
+  }
+
+  .detail-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--line-light);
+  }
+
+  .detail-specs {
+    font-size: 0.7rem;
+    color: var(--dim);
+    margin-bottom: 1rem;
+    line-height: 1.8;
+  }
+
+  .detail-body {
+    font-size: 0.8rem;
+    line-height: 1.75;
+    color: #1e293b;
+  }
+
+  .detail-body p {
+    margin-bottom: 0.75rem;
+  }
+
+  .detail-body p:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-body .closet-notice {
+    font-size: 0.65rem;
+    color: #92400e;
+    font-style: italic;
+    margin-bottom: 0.75rem;
+  }
+
+  /* === NOTES === */
+  .sheet-notes {
+    border-top: 1px solid var(--line-light);
+    padding-top: 1rem;
+    font-size: 0.65rem;
+    color: var(--dim);
+    line-height: 1.8;
+  }
+
+  .sheet-notes strong {
+    color: var(--line-blue);
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 640px) {
+    .plan {
+      grid-template-rows: repeat(5, 70px);
+    }
+    .room-label { font-size: 0.55rem; }
+    .sheet { padding: 1.25rem; }
+    .title-block { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .legend { flex-wrap: wrap; gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="title-block">
+    <h1>Residential Argument Survey<br>Final Floor Plan, As-Built</h1>
+    <div class="meta">
+      Project: The Fight About the Dog<br>
+      Client: Neither party (joint dissolution)<br>
+      Scale: Not to scale (nothing was)<br>
+      Sheet: 1 of 1<br>
+      Status: DEMOLISHED
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-icon"></div> Room</div>
+    <div class="legend-item"><div class="legend-icon closet"></div> Closet (things stored)</div>
+    <div class="legend-item"><div class="legend-icon void"></div> Void</div>
+    <div class="legend-item" style="margin-left:auto; font-style:italic;">Click any room to inspect</div>
+  </div>
+
+  <div class="plan" id="floorplan">
+    <!-- Row 1 -->
+    <div class="room" data-room="entryway" id="room-entryway" style="grid-column:1;grid-row:1;">
+      <span class="room-label">Entryway</span>
+      <span class="room-dims">2×3m</span>
+    </div>
+    <div class="room closet" data-room="entryway-closet" id="room-entryway-closet" style="grid-column:2;grid-row:1;">
+      <span class="room-label">Coat Closet</span>
+      <span class="room-dims">1×1m</span>
+    </div>
+    <div class="room" data-room="kitchen" id="room-kitchen" style="grid-column:3/5;grid-row:1;">
+      <span class="room-label">Kitchen</span>
+      <span class="room-dims">4×3m</span>
+    </div>
+    <div class="room" data-room="the-dog" id="room-the-dog" style="grid-column:5/7;grid-row:1;">
+      <span class="room-label">The Dog</span>
+      <span class="room-dims">4×3m</span>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="room" data-room="money" id="room-money" style="grid-column:1/3;grid-row:2;">
+      <span class="room-label">Money</span>
+      <span class="room-dims">3×3m</span>
+    </div>
+    <div class="room closet" data-room="kitchen-closet-1" id="room-kitchen-closet-1" style="grid-column:3;grid-row:2;">
+      <span class="room-label">Junk Drawer</span>
+      <span class="room-dims">1.5×1m</span>
+    </div>
+    <div class="room closet" data-room="kitchen-closet-2" id="room-kitchen-closet-2" style="grid-column:4;grid-row:2;">
+      <span class="room-label">Pantry</span>
+      <span class="room-dims">1.5×1m</span>
+    </div>
+    <div class="room" data-room="furniture" id="room-furniture" style="grid-column:5/7;grid-row:2;">
+      <span class="room-label">Furniture</span>
+      <span class="room-dims">4×3m</span>
+    </div>
+
+    <!-- Row 3 -->
+    <div class="room" data-room="that-thing" id="room-that-thing" style="grid-column:1/3;grid-row:3;">
+      <span class="room-label">That Thing You Said</span>
+      <span class="room-dims">3×3m</span>
+    </div>
+    <div class="room closet" data-room="money-closet" id="room-money-closet" style="grid-column:3;grid-row:3;">
+      <span class="room-label">Money Closet</span>
+      <span class="room-dims">1×1m</span>
+    </div>
+    <div class="room" data-room="hallway" id="room-hallway" style="grid-column:4/6;grid-row:3;">
+      <span class="room-label">Hallway</span>
+      <span class="room-dims">2×1m</span>
+    </div>
+    <div class="room closet" data-room="thing-closet" id="room-thing-closet" style="grid-column:6;grid-row:3;">
+      <span class="room-label">Denial Closet</span>
+      <span class="room-dims">1×1m</span>
+    </div>
+
+    <!-- Row 4 -->
+    <div class="room" data-room="your-mother" id="room-your-mother" style="grid-column:1/3;grid-row:4;">
+      <span class="room-label">Your Mother</span>
+      <span class="room-dims">3×3m</span>
+    </div>
+    <div class="room" data-room="who-we-were" id="room-who-we-were" style="grid-column:3/5;grid-row:4;">
+      <span class="room-label">Who We Were</span>
+      <span class="room-dims">3×3m</span>
+    </div>
+    <div class="room closet" data-room="bedroom-closet" id="room-bedroom-closet" style="grid-column:5;grid-row:4;">
+      <span class="room-label">His Side</span>
+      <span class="room-dims">1.5×1m</span>
+    </div>
+    <div class="room closet" data-room="silence-closet" id="room-silence-closet" style="grid-column:6;grid-row:4;">
+      <span class="room-label">Her Side</span>
+      <span class="room-dims">1.5×1m</span>
+    </div>
+
+    <!-- Row 5 -->
+    <div class="room" data-room="the-dog-ii" id="room-the-dog-ii" style="grid-column:1/3;grid-row:5;">
+      <span class="room-label">The Dog, Again</span>
+      <span class="room-dims">3×2m</span>
+    </div>
+    <div class="room" data-room="silence" id="room-silence" style="grid-column:3/5;grid-row:5;">
+      <span class="room-label">Silence</span>
+      <span class="room-dims">3×2m</span>
+    </div>
+    <div class="room" data-room="goodbye" id="room-goodbye" style="grid-column:5/7;grid-row:5;">
+      <span class="room-label">Goodbye</span>
+      <span class="room-dims">4×2m</span>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-title" id="detail-title"></div>
+    <div class="detail-specs" id="detail-specs"></div>
+    <div class="detail-body" id="detail-body"></div>
+  </div>
+
+  <div class="sheet-notes">
+    <strong>General Notes:</strong><br>
+    1. All doorways are one-way. Traffic flow has not been optimized and will not be.<br>
+    2. The structural engineer has reviewed this plan and would like to note, for the record, that no amount of reinforcement can fix what happened in here.<br>
+    3. Closets contain items stored during the argument for later retrieval. Most items have not been retrieved.<br>
+    4. Room dimensions are approximate. Emotional square footage may vary.<br>
+    5. The HVAC system was replaced in 2019 but still makes a sound like someone exhaling through their teeth when you set it above 68°F. Neither party wanted to address this.
+  </div>
+</div>
+
+<script>
+const rooms = {
+  "entryway": {
+    title: "Entryway",
+    specs: "Dimensions: 2×3m | Floor: hardwood, scratched near door jamb | Last words said here: \"Fine. I'm leaving.\" | Echo: moderate",
+    body: `<p>This is where arguments entered. Coat closet to the east for unspoken grievances. Kitchen visible ahead — arguments about money could see arguments about dishes preparing, and feel encouraged.</p>
+    <p>The scratched floor near the jamb corresponds to an incident on March 14th when she dragged the kennel outside at 11:47pm. He watched from the bedroom window. He did not go outside. He did not stop watching. He watched for eighteen minutes, then closed the curtains, then opened them again, then closed them. The scratch pattern suggests the kennel was lifted, then set back down, then dragged. Someone changed their mind about something. The floor recorded what neither of them would.</p>
+    <p>Dual panic hooks installed: one for keys, one for the leash. Neither used after October.</p>`
+  },
+  "entryway-closet": {
+    title: "Coat Closet",
+    specs: "Dimensions: 1×1m | Contents: 3 coats, 2 umbrellas, 1 unsent letter | Humidity: elevated",
+    body: `<p class="closet-notice">◇ CLOSET — items stored but never retrieved ◇</p>
+    <p>Her winter coat is still here because it was easier to buy a new one than come back for it. His rain jacket hangs beside it. They are touching at the shoulders. They have been touching at the shoulders for four months. Neither has noticed.</p>
+    <p>On the floor, beneath a shoe organizer that holds three shoes and a receipt from a restaurant called <em>Two Hearts</em>, there is an unsent letter. It begins: "I know you think I never—" and ends mid-sentence. The paper quality suggests it was started at a desk and finished in a car, then folded, then unfolded, then folded again the other way, then put in a pocket, then transferred to this closet. He was organizing his position. He never organized his position.</p>
+    <p>Two umbrellas. They argued about the umbrellas once. They were in the kitchen but the argument lived here.</p>`
+  },
+  "kitchen": {
+    title: "Kitchen",
+    specs: "Dimensions: 4×3m | Counter: quartz, perpetually cluttered | Ambient noise: dishwasher running at 2am (habitual) | Status: no longer used for cooking",
+    body: `<p>The kitchen opened to three arguments simultaneously: Money (west), The Dog (north), and the pantry, which contained six months of "I'll deal with it tomorrow." The dishwasher ran at 2am because neither of them could sleep and washing dishes felt like a form of progress. It ran every night. They never ran out of dishes. This is because he was washing the same twelve plates in rotation, and she noticed this on September 3rd and said "You know you're just washing the same ones over and over" and he said "That's literally what a dishwasher does" and she said "I mean YOU keep filling it with the same ones" and he said "We only own twelve plates, Helen" and she said "Then maybe we should own fewer" and he went to bed and she ran the dishwasher again even though it was empty.</p>
+    <p>The junk drawer contains every small argument they couldn't categorize. The pantry contains every large one they couldn't finish.</p>`
+  },
+  "kitchen-closet-1": {
+    title: "Junk Drawer",
+    specs: "Dimensions: 1.5×1m (virtualized) | Contents: batteries, take-out menus, three small arguments | Organizational system: entropy",
+    body: `<p class="closet-notice">◇ CLOSET — items stored but never retrieved ◇</p>
+    <p>Contains:</p>
+    <p>A battery that doesn't fit anything. (Argument about whether to throw it away: 8 minutes.)</p>
+    <p>A coupon for gutter cleaning that expired in 2023. (Argument about whether hiring someone for gutters is "the kind of person we are": 22 minutes, the longest argument about gutters in the recorded history of either family.)</p>
+    <p>A take-out menu from a Thai place that closed in April. They argued about the pad thai once. He said it was too sweet. She said he doesn't know what pad thai is supposed to taste like. He said he's eaten pad thai approximately forty times. She said "Then maybe you'd know it's supposed to be sweet." He said it was <em>too</em> sweet, not that it was sweet. She said that's what she said. He said it wasn't. The restaurant closed. The menu remains. The argument is technically still open.</p>`
+  },
+  "kitchen-closet-2": {
+    title: "Pantry",
+    specs: "Dimensions: 1.5×1m | Contents: expired olive oil, expired expectations, rice | Light: burned out, not replaced",
+    body: `<p class="closet-notice">◇ CLOSET — items stored but never retrieved ◇</p>
+    <p>Half a bag of jasmine rice. Neither cooks anymore. They discussed who would take it and both said "I don't really cook rice" and then neither of them could explain why they were arguing about rice in the first place but the rice argument connected to the meal-planning argument which connected to the you-never-think-about-what-I-want-to-eat argument which connected to a larger argument about consideration and the rice sat on the second shelf watching all of it with the calm indifference of a grain.</p>
+    <p>The expired olive oil is from the trip to CostCo in 2022 when they were still buying things in bulk, still planning to be somewhere long enough to use them. The oil has gone rancid. It was going to be used for a dinner party. The dinner party was going to be a housewarming. The house warmed. The party did not occur.</p>`
+  },
+  "the-dog": {
+    title: "The Dog",
+    specs: "Dimensions: 4×3m | Occupancy: disputed | Name: Kevin (his choice) | Vet records: current | License: current | Custody: see attached 4-page addendum",
+    body: `<p>Technically, the fight was about whether Kevin should be allowed on the bed. Kevin is a 34-pound terrier mix with arthritis in his left hip and an expression that suggests he has read several important books. He was allowed on the bed until April, when she said "My allergist says—" and he said "Your allergist didn't say anything about the dog" and she said "He said to reduce exposure to dander" and he said "In the bedroom?" and she said "That's where the dog IS, David" and he said "That's where KEVIN is" and then they were arguing about whether the dog's name should be used in argument tone, because apparently even the dog's name was contested territory.</p>
+    <p>But the fight was not about the dog. The fight was about the dog the way a house fire is about the curtains. The dog was the available accelerant. Underneath Kevin's arthritis medication, underneath the allergist's note, underneath the question of who bought the orthopedic bed (him) and who resented that the dog had a better mattress than they did (her, but also him, but he'd never say that because he bought it), underneath all of it: she wanted to leave and he could feel her wanting to leave and the dog was the only thing they still agreed was good.</p>
+    <p>The dog's bed is still here. The dog is not. She took him. He said "You can't take the dog" and she said "Watch me" and he watched her. He is very good at watching her do things he said she couldn't do.</p>`
+  },
+  "money": {
+    title: "Money",
+    specs: "Dimensions: 3×3m | Accounts: joint (dissolved), individual (insufficient) | The thing about the river: see south wall",
+    body: `<p>When they moved in, they opened a joint account at a bank near the river because she liked the teller who said "and how are WE today" like they were all in this together. In July, she moved $3,200 into her individual account and did not tell him, and he found out in August, and the argument about the money became an argument about trust, and the argument about trust became an argument about the river — they had gone to the river once, early, and he had said "We should do this more often" and they had not done it more often, and somehow this was her fault for not suggesting it, and also his fault for only suggesting things once and then waiting for her to read his mind, and also the river's fault for being so fucking <em>nice</em> that afternoon, setting expectations neither of them could sustain.</p>
+    <p>The money closet to the east contains the original budget spreadsheet they made together. Columns for Groceries, Utilities, Fun, and Future. "Fun" was $50/month for the first three months, then $25, then crossed out and replaced with "Dog." "Future" was $200. "Future" funded the dog's emergency vet visit in September and was never replenished.</p>`
+  },
+  "money-closet": {
+    title: "Money Closet",
+    specs: "Dimensions: 1×1m | Contents: 1 budget spreadsheet (abandoned), 2 receipts for things purchased alone | Security: emotional, not financial",
+    body: `<p class="closet-notice">◇ CLOSET — items stored but never retrieved ◇</p>
+    <p>The spreadsheet's last entry is October 3rd. Under "Notes" she wrote "organic groceries" and he added "again??" and she added "they're BETTER" and he added "for WHO" and then neither of them added anything for six days, and on the sixth day she added a row at the bottom that just said "moving boxes" in a cell that was not formatted as currency.</p>
+    <p>Receipt for a ceramic bowl, $34, purchased by her at a store he doesn't know about. It's the kind of bowl you buy when you're planning to have a kitchen that's just yours.</p>
+    <p>Receipt for a record, $28, purchased by him on the same day. They were at the same shopping center at the same time. They did not see each other. They bought things for their separate futures simultaneously. The receipts are timestamped twelve minutes apart. His was first.</p>`
+  },
+  "furniture": {
+    title: "Furniture",
+    specs: "Dimensions: 4×3m | Origin: her aunt's storage unit | Condition: functional but incorrect | Emotional weight: exceeds load-bearing capacity",
+    body: `<p>The couch came from her aunt's storage unit. He always hated it. He called it "the pact" because it was the color of a compromise — not gray, not beige, but the exact shade of neither person getting what they want. She said it was taupe. He said taupe <em>is</em> the color of not getting what you want. She said not everything is a metaphor. He said the couch is literally a metaphor, it's a couch from a failed marriage being used by people about to have one.</p>
+    <p>The bookshelf they assembled together. The IKEA KALLAX, 4×4, which took five hours because they argued about whether the middle shelf was level. It was level. They argued about the definition of level. He used a level. She said the level might be wrong. He said levels don't have opinions. She said he was the kind of person who trusts tools more than people. He said he was the kind of person who trusts reality. She said "Whose reality" and he said "The level's reality" and they both stared at each other across the KALLAX and neither of them was talking about the shelf anymore.</p>
+    <p>The bookshelf holds 14 books, 3 plants (1 dead), and a framed photo of them at the river. In the photo, they are happy. They argued about whether to display this photo. He wanted it visible. She said displaying happiness you no longer feel is "decorating with a lie." He said it was a reminder. She said "Of what?" He didn't answer.</p>`
+  },
+  "that-thing": {
+    title: "That Thing You Said In Front Of My Mother",
+    specs: "Dimensions: 3×3m | Date of incident: June 8th | Exact words: disputed | Witnesses: 1 (mother) | Statute of limitations: none apparently",
+    body: `<p>What he said: "Well, Helen's always been the practical one." At dinner. In front of her mother. Her mother who had spent twenty minutes describing Helen's sister's new boyfriend, a sculptor named Damien who "really <em>sees</em> her." The comment was meant to defend her. She knows it was meant to defend her. It landed like "Well, at least you're useful." Which is how her mother received it. Which is how Helen received it. Which is not how he meant it. Which he has explained. Seventeen times.</p>
+    <p>Every subsequent argument passed through this room. Money, the dog, the dishwasher, the rice — each one had a doorway here. "Just like you were practical about the joint account." "Just like you were practical about the dog." The word "practical" became a passkey that unlocked every grievance she'd stored since June 8th.</p>
+    <p>He maintains he was complimenting her. She maintains that calling someone "practical" in a room where someone has just been called "inspiring" is not a compliment. He said "I didn't call your sister inspiring." She said "You didn't have to." He said he was being compared to Damien the sculptor whether he liked it or not. She said "Welcome to my entire life." He said "What does that mean." She said "Nothing." It was not nothing. It has never been nothing.</p>`
+  },
+  "thing-closet": {
+    title: "Denial Closet",
+    specs: "Dimensions: 1×1m | Contents: things said that were taken back | Take-back validity: void",
+    body: `<p class="closet-notice">◇ CLOSET — items stored but never retrieved ◇</p>
+    <p>"I didn't mean it."</p>
+    <p>"You know what I meant."</p>
+    <p>"I was just angry."</p>
+    <p>"That's not what I said."</p>
+    <p>"You're twisting my words."</p>
+    <p>"I would never say that."</p>
+    <p>"You heard what you wanted to hear."</p>
+    <p>"Can we just drop it."</p>
+    <p>"I said I was sorry."</p>
+    <p>Each retrieved and used as needed. None of them fit anymore. All of them still in the closet, hanging in a row, pressed and ready.</p>`
+  },
+  "hallway": {
+    title: "Hallway",
+    specs: "Dimensions: 2×1m | Function: passage between who they were and who they became | Width: insufficient for two people carrying years of resentment",
+    body: `<p>Everyone passed through here. No one stayed. The hallway was an argument transit corridor — you could get from Money to Your Mother in four steps, or from The Thing You Said to Furniture in six, and by the time you arrived you'd accumulated the hallway's residue: the night-light they argued about (he wanted it off, she wanted to see where she was going, he said "where are you going at 3am" and she said she couldn't sleep and he said "So your solution is to be awake in the hallway" and she said her solution was never to have moved in and the hallway held that sentence in its walls like a stain).</p>
+    <p>The walls are blank. They never hung anything here. They hung things everywhere else. The hallway was for passing through. They passed through it at different speeds. He lingered. She hurried. He thought she was leaving. She thought he was blocking. They were both just trying to get to the next room, where the next argument was already assembled and waiting, like furniture you can't rearrange.</p>`
+  },
+  "your-mother": {
+    title: "Your Mother",
+    specs: "Dimensions: 3×3m | Proximity to The Thing You Said: adjacent, unavoidable | Phone calls: Sunday, 4pm, duration 47 minutes (avg) | Callback rate: 100%",
+    body: `<p>This room exists because it exists in every argument they ever had. Her mother called every Sunday. He said "She calls too much" and she said "She calls once a week" and he said "That's too much" and she said "How often does YOUR mother call?" and he said "That's different" and she said "How" and he said "She's different" and she said "She's different because she doesn't call or she's different because she's YOUR mother" and this sentence, this exact syntactic structure, is load-bearing in this relationship and it cannot hold any more weight.</p>
+    <p>His mother once said, at Thanksgiving, "Helen seems tense." He relayed this. She asked why his mother was analyzing her. He said his mother was making conversation. She said "That's a strange thing to make conversation about." He said his mother meant well. She said "Everyone means well." He said that was a dark thing to say. She said she learned it from his mother.</p>
+    <p>This room has two doors: one to That Thing You Said and one to Silence. The second door was installed in August. It's the one that gets used.</p>`
+  },
+  "who-we-were": {
+    title: "Who We Were",
+    specs: "Dimensions: 3×3m | Contents: 1 photo album, 2 ticket stubs, 1 inside joke about a man on a train | Structural integrity: compromised",
+    body: `<p>The room that every other room was trying to reach. Here's the thing: they were good once. Not good for a while — good. He knew her coffee order and she knew how to make him laugh so hard he'd snort, and they both pretended to hate it but neither of them hated it, and they once spent an entire train ride developing an elaborate backstory for a man sitting three rows ahead who was eating a sandwich with unusual focus. The man was named "Gregory" and he was an ornithologist who had been wronged and the sandwich was a turkey club, which was symbolic, because birds. They invented Gregory for forty-five minutes and they never mentioned him again, but she thought about Gregory last Tuesday for no reason and realized the inside joke was still inside and there was no one left to share an inside joke with.</p>
+    <p>This room is structurally unsound. Every argument weakened it. They didn't notice until the ceiling cracked — the night she said "I don't think you even like me" and he went quiet, which was worse than disagreeing, and she said "See?" and he said "I'm thinking" and she said "Don't bother" and the ceiling made a sound like a question being abandoned.</p>
+    <p>The photo album is on the floor, open to the river. The river was so nice that afternoon. That's the problem with nice afternoons. They make you think nice afternoons are possible. They make you think you deserve them. They make you think the next one is coming. The next one was not coming.</p>`
+  },
+  "bedroom-closet": {
+    title: "His Side",
+    specs: "Dimensions: 1.5×1m | Contents: dress shirts, 1 book about communication, 0 read chapters",
+    body: `<p class="closet-notice">◇ CLOSET — items stored but never retrieved ◇</p>
+    <p>Seven dress shirts. He wore them to work. She said he dressed better for work than for her. He said no one at work was going to comment on his appearance. She said "Exactly." He changed into a t-shirt. She said "I didn't say—" He said "I know what you said."</p>
+    <p>On the shelf above: <em>Hold Me Tight</em> by Sue Johnson. Purched October 2nd. Pages 1–14 show highlighting in blue pen. Pages 15–238 are pristine. He stopped reading at the section on "attachment injuries" because he recognized one and put the book down like it was hot. The book fell behind the shoe rack in November. It is still there. It is still on page 14. The highlighted passage reads: "The most basic question in any intimate relationship is: Are you there for me?" He highlighted it. He did not answer it.</p>`
+  },
+  "silence-closet": {
+    title: "Her Side",
+    specs: "Dimensions: 1.5×1m | Contents: dresses, 1 appointment card, 0 calls made",
+    body: `<p class="closet-notice">◇ CLOSET — items stored but never retrieved ◇</p>
+    <p>Three dresses she bought for events they never attended. A work dinner (he forgot). Her friend's birthday (they argued before leaving and didn't go). A wedding in April (they were still together when she bought it).</p>
+    <p>In the shoe box on the top shelf: a business card for a couples therapist. Dr. Morrow, 415-555-0142. Recommended by her friend Dawn, who said "We went for six weeks and it changed everything." She put the card in the shoe box. She carried the shoe box to the closet. She opened the closet every morning. She saw the shoe box. She did not call. She told herself she would call tomorrow. She had a lot of tomorrows. She used all of them. The card has a coffee ring on it from October 11th, which is the day she decided to call, and then didn't call, and the coffee was still hot when she put the card down and the ring is perfectly circular which means she held the mug there, deliberately, which means part of her was marking the card, recording the failure, documenting the exact moment she chose not to save this.</p>`
+  },
+  "the-dog-ii": {
+    title: "The Dog, Again",
+    specs: "Dimensions: 3×2m | Adjacency: your mother (east), money (north) | This room should not exist and yet here it is",
+    body: `<p>They came back to the dog. They always came back to the dog. The dog was the foyer of every argument — every topic led to Kevin eventually. Money: who paid for the vet. Your Mother: who told her mother about the hip surgery before telling him. Furniture: the dog bed that took up too much space (her) or the exact right amount of space (him). Silence: the dog snoring in the silence, which made the silence companionable, which made it worse, because the silence was only tolerable with a dog in it and neither of them could say that.</p>
+    <p>Kevin is in Portland now. She sends photos. He does not respond to the photos. He looks at the photos. He looks at every photo. He has a folder on his phone called "Work Receipts" that contains 43 photos of Kevin. He has looked at all of them today. He will look at all of them tomorrow.</p>
+    <p>Kevin is doing well. The arthritis is managed. He sleeps on the bed now. She lets him. The allergist's note is in a drawer she doesn't open.</p>`
+  },
+  "silence": {
+    title: "Silence",
+    specs: "Dimensions: 3×2m | Duration: 6 weeks | Acoustic properties: total | Occupancy: 2 (resentful)",
+    body: `<p>Six weeks before the end, they stopped arguing. People think arguments end relationships. Arguments are the relationship trying to continue. Silence is the relationship ending.</p>
+    <p>The first week was relief. The second was unfamiliar. The third was comfortable. The fourth was loud — not in sound but in weight, the silence developed a mass, it sat between them on the couch, it ate at the table with them, it slept in the bed between them and the dog, and it was wider than the bed, it hung off both sides, you could see it from the hallway. Week five, she started talking to the dog. Week six, he started talking to the dog. They did not talk to each other. They talked to the dog about each other, in the same room, at the same time, as if the dog were a translator, as if the dog could carry a message from one side of the couch to the other, as if the silence were a language and Kevin were the only one fluent in both.</p>
+    <p>This room has four doors and all of them lead out.</p>`
+  },
+  "goodbye": {
+    title: "The Room Where We Said Goodbye",
+    specs: "Dimensions: 4×2m | Light: late afternoon, through western window | Duration: 3 minutes | Contents: none",
+    body: `<p>Dimensions as stated. Light as noted. The conversation lasted three minutes. She said "I think we both know." He said "Yeah." She said "I'll come for my things next week." He said "I'll box up the kitchen." She said "You don't have to." He said "I want to." She said "Okay." He said "Okay." She picked up her keys. He watched her pick up her keys. She picked up the leash. He watched her pick up the leash. She did not pick up the coat in the closet. She did not pick up the letter she never sent. She did not pick up the coffee-stained business card. She opened the door. The door scratched the floor in the same place as March 14th.</p>
+    <p>Neither mentioned the scratch.</p>
+    <p>She said "Kevin, come." Kevin came.</p>
+    <p>The room is empty. The light is still arriving. It will arrive through that window every afternoon at this angle, hitting the floor at this spot, for longer than either of them will live here. The light does not know. The light will never know. The light is the only thing in this house that was never argued about.</p>`
+  }
+};
+
+const panel = document.getElementById('detail-panel');
+const detailTitle = document.getElementById('detail-title');
+const detailSpecs = document.getElementById('detail-specs');
+const detailBody = document.getElementById('detail-body');
+let activeRoom = null;
+
+document.querySelectorAll('.room:not(.void)').forEach(el => {
+  el.addEventListener('click', () => {
+    const roomId = el.dataset.room;
+    if (!rooms[roomId]) return;
+
+    document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+    el.classList.add('active');
+    activeRoom = roomId;
+
+    detailTitle.textContent = rooms[roomId].title;
+    detailSpecs.textContent = rooms[roomId].specs;
+    detailBody.innerHTML = rooms[roomId].body;
+    panel.classList.add('visible');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+});
+</script>
+</body>
+</html>

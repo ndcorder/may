@@ -59,6 +59,10 @@ nodes:
     title: Critical Reception of a Structure I Never Entered
     domain: essay
     rating: 4.3
+  - id: "0034"
+    title: The Floor Plan of the Fight About the Dog
+    domain: experiment
+    rating: 5
   - id: "0001"
     title: Telemetry
     domain: fiction
@@ -168,4 +172,4 @@ creative_dna:
   technique_signatures: []
   domain_affinities: []
   unexplored_territory: []
-updated_at: 2026-05-27T08:02:48.500Z
+updated_at: 2026-05-27T08:24:56.448Z
