@@ -1,0 +1,472 @@
+{
+  "slot_definitions": {
+    "accident_role": {
+      "data_path": "traffic_accidents.roles",
+      "extract_field": "label",
+      "description": "The role the user played in the traffic accident"
+    },
+    "accident_location": {
+      "data_path": "traffic_accidents.locations",
+      "description": "Where the traffic accident occurred"
+    },
+    "accident_severity": {
+      "data_path": "traffic_accidents.severity",
+      "description": "How serious the accident appeared"
+    },
+    "accident_detail": {
+      "data_path": "traffic_accidents.details",
+      "description": "Current status/what the user is doing about the accident"
+    },
+    "illness_name": {
+      "data_path": "illnesses.symptom_sets",
+      "extract_field": "name",
+      "description": "The name of the illness"
+    },
+    "illness_symptom": {
+      "data_path": "illnesses.symptom_sets",
+      "extract_nested": {"from_symptom_set": true, "field": "symptoms"},
+      "description": "A symptom from the selected illness"
+    },
+    "illness_duration": {
+      "data_path": "illnesses.durations",
+      "description": "Expected duration of the illness"
+    },
+    "family_situation": {
+      "data_path": "family_emergencies.situations",
+      "extract_field": "label",
+      "description": "The nature of the family emergency"
+    },
+    "family_situation_id": {
+      "data_path": "family_emergencies.situations",
+      "extract_field": "id",
+      "description": "Internal ID for the family situation (used for gravity)"
+    },
+    "family_location": {
+      "data_path": "family_emergencies.locations",
+      "description": "Where the family emergency is happening"
+    },
+    "family_situation_update": {
+      "data_path": "family_emergencies.situation_updates",
+      "description": "Current status of the family emergency"
+    },
+    "work_crisis": {
+      "data_path": "work_crises.scenarios",
+      "extract_field": "label",
+      "description": "The work crisis scenario"
+    },
+    "work_urgency": {
+      "data_path": "work_crises.urgency_signals",
+      "description": "Why the user specifically is needed"
+    },
+    "work_duration": {
+      "data_path": "work_crises.durations",
+      "description": "How long the work crisis will take"
+    },
+    "home_disaster": {
+      "data_path": "home_disasters.scenarios",
+      "extract_field": "label",
+      "description": "The home disaster scenario"
+    },
+    "home_detail": {
+      "data_path": "home_disasters.details",
+      "description": "Detail about handling the home disaster"
+    },
+    "car_trouble": {
+      "data_path": "car_troubles.scenarios",
+      "extract_field": "label",
+      "description": "The car trouble scenario"
+    },
+    "car_detail": {
+      "data_path": "car_troubles.details",
+      "description": "Detail about handling the car trouble"
+    },
+    "person_interaction": {
+      "data_path": "person_interactions.relationships",
+      "extract_field": "label",
+      "description": "The interpersonal situation requiring attention"
+    },
+    "person_detail": {
+      "data_path": "person_interactions.details",
+      "description": "Detail about the interpersonal situation"
+    },
+    "temporal_marker": {
+      "data_path": "temporal_markers.recent_events",
+      "description": "When the excuse-triggering event happened"
+    },
+    "guilt_expression": {
+      "data_path": "emotional_states.guilt_expressions",
+      "description": "Expression of guilt about cancelling"
+    },
+    "reluctance_signal": {
+      "data_path": "emotional_states.reluctance_signals",
+      "description": "Signal that the user tried to avoid cancelling"
+    },
+    "evasion_tactic": {
+      "data_path": "evasion_tactics.privacy_shields",
+      "description": "A way to deflect further questions"
+    },
+    "minimization": {
+      "data_path": "evasion_tactics.minimizations",
+      "description": "A way to downplay the situation"
+    },
+    "deflection": {
+      "data_path": "evasion_tactics.deflections",
+      "description": "A conversational deflection"
+    },
+    "coffee_shop": {
+      "data_path": "geographic_details.coffee_shops",
+      "description": "A specific coffee shop name"
+    },
+    "road_name": {
+      "data_path": "geographic_details.roads",
+      "description": "A specific road name"
+    },
+    "landmark": {
+      "data_path": "geographic_details.landmarks",
+      "description": "A specific landmark"
+    },
+    "proof_offer": {
+      "data_path": "verification_elements.offer_proof",
+      "description": "An offer to provide proof"
+    },
+    "unverifiable_claim": {
+      "data_path": "verification_elements.unverifiable_claims",
+      "description": "An unverifiable supporting claim"
+    }
+  },
+  "excuse_templates": {
+    "traffic_accident_involved": {
+      "target_match": ["friend", "date", "boss", "parent"],
+      "tolerance_match": ["medium", "nuclear"],
+      "slots": {
+        "role": "accident_role",
+        "location": "accident_location",
+        "severity": "accident_severity",
+        "detail": "accident_detail",
+        "when": "temporal_marker",
+        "guilt": "guilt_expression"
+      },
+      "slot_constraints": {
+        "role": {"must_have_id": "involved"}
+      },
+      "template_text": "{guilt} — {when}, I was at {location} and I was in a {severity}. I'm {detail}. I'm okay, just shaken up. I can't make it tonight.",
+      "truthfulness_flag": "fabricated",
+      "interrogation_type": "accident",
+      "believe_notes": "Traffic accidents are common but verifiable. Offer location details freely — they check on traffic apps."
+    },
+    "traffic_accident_witness": {
+      "target_match": ["friend", "date"],
+      "tolerance_match": ["medium", "nuclear"],
+      "slots": {
+        "location": "accident_location",
+        "severity": "accident_severity",
+        "detail": "accident_detail",
+        "guilt": "guilt_expression",
+        "minimize": "minimization"
+      },
+      "slot_constraints": {
+        "role": {"must_have_id": "witness"}
+      },
+      "template_text": "{guilt}. I witnessed a {severity} at {location} and I need to stay to give a statement. {minimize}. {detail}.",
+      "truthfulness_flag": "fabricated",
+      "interrogation_type": "accident",
+      "believe_notes": "Witness excuse is noble — implies civic duty. But requires commitment to the bit if questioned."
+    },
+    "illness_sudden": {
+      "target_match": ["friend", "date", "boss", "parent"],
+      "tolerance_match": ["low", "medium"],
+      "slots": {
+        "illness": "illness_name",
+        "symptom": "illness_symptom",
+        "duration": "illness_duration",
+        "guilt": "guilt_expression",
+        "unverifiable": "unverifiable_claim"
+      },
+      "template_text": "{guilt}. I came down with a {illness} — {symptom}. {unverifiable}. {duration}. I really can't make it.",
+      "truthfulness_flag": "fabricated",
+      "interrogation_type": "illness",
+      "believe_notes": "Illness is the classic excuse. Don't oversell the symptoms. Vague is better than specific."
+    },
+    "illness_severe": {
+      "target_match": ["friend", "date", "boss", "parent"],
+      "tolerance_match": ["medium", "nuclear"],
+      "slots": {
+        "illness": "illness_name",
+        "symptom": "illness_symptom",
+        "duration": "illness_duration",
+        "guilt": "guilt_expression",
+        "reluctance": "reluctance_signal"
+      },
+      "template_text": "{guilt}. {reluctance}, but I'm really sick. It's a {illness} — {symptom}. I don't think I'll be functional for {duration}.",
+      "truthfulness_flag": "fabricated",
+      "interrogation_type": "illness",
+      "believe_notes": "Severe illness requires commitment. If questioned, don't elaborate beyond what's in the excuse."
+    },
+    "family_medical_emergency": {
+      "target_match": ["friend", "boss", "parent", "date"],
+      "tolerance_match": ["nuclear"],
+      "slots": {
+        "situation": "family_situation",
+        "location": "family_location",
+        "update": "family_situation_update",
+        "evasion": "evasion_tactic",
+        "guilt": "guilt_expression"
+      },
+      "template_text": "{guilt}. {situation} and I need to be at {location}. {update}. {evasion} — I'll let you know when I know more.",
+      "truthfulness_flag": "fabricated",
+      "interrogation_type": "family_emergency",
+      "believe_notes": "Family emergency is the nuclear option. Use sparingly. The evasion tactic is critical — people generally don't press on family stuff."
+    },
+    "work_emergency": {
+      "target_match": ["friend", "date", "parent"],
+      "tolerance_match": ["medium", "nuclear"],
+      "slots": {
+        "crisis": "work_crisis",
+        "urgency": "work_urgency",
+        "duration": "work_duration",
+        "guilt": "guilt_expression",
+        "reluctance": "reluctance_signal"
+      },
+      "template_text": "{guilt}. Work thing came up — {crisis} and {urgency}. I know, I know. {reluctance}. Probably {duration}. I'm so sorry.",
+      "truthfulness_flag": "fabricated",
+      "interrogation_type": "work_emergency",
+      "believe_notes": "Work emergency is relatable. Risk: if they know your workplace, they might check. Keep details vague."
+    },
+    "home_disaster": {
+      "target_match": ["friend", "date", "boss", "parent"],
+      "tolerance_match": ["medium", "nuclear"],
+      "slots": {
+        "disaster": "home_disaster",
+        "detail": "home_detail",
+        "guilt": "guilt_expression",
+        "minimize": "minimization",
+        "when": "temporal_marker"
+      },
+      "template_text": "{guilt}. {when}, {disaster}. {detail}. {minimize}, but I really can't leave right now.",
+      "truthfulness_flag": "fabricated",
+      "interrogation_type": "home_emergency",
+      "believe_notes": "Home disaster is hard to verify but also hard to fake details for. Pick a scenario you actually understand."
+    },
+    "car_trouble_basic": {
+      "target_match": ["friend", "date", "boss", "parent"],
+      "tolerance_match": ["low", "medium"],
+      "slots": {
+        "trouble": "car_trouble",
+        "detail": "car_detail",
+        "guilt": "guilt_expression",
+        "minimize": "minimization"
+      },
+      "template_text": "{guilt}. My car — {trouble}. {detail}. {minimize}. I'll figure something out for next time.",
+      "truthfulness_flag": "fabricated",
+      "interrogation_type": "car_trouble",
+      "believe_notes": "Car trouble is the safest excuse. Everyone's had it. Don't invent a specific mechanic."
+    },
+    "pet_emergency": {
+      "target_match": ["friend", "date"],
+      "tolerance_match": ["medium", "nuclear"],
+      "slots": {
+        "guilt": "guilt_expression",
+        "detail": "person_detail",
+        "minimize": "minimization"
+      },
+      "slot_constraints": {
+        "interaction": {"must_have_id": "pet_emergency"}
+      },
+      "template_text": "{guilt}. My pet is sick and I need to take them to the vet. {detail}. {minimize}.",
+      "truthfulness_flag": "fabricated",
+      "interrogation_type": "general",
+      "believe_notes": "Pet emergency is effective because people don't question pet love. Know your vet's name."
+    },
+    "vague_personal": {
+      "target_match": ["friend", "date", "boss", "parent"],
+      "tolerance_match": ["low", "medium"],
+      "slots": {
+        "guilt": "guilt_expression",
+        "evasion": "evasion_tactic",
+        "deflection": "deflection",
+        "when": "temporal_marker"
+      },
+      "template_text": "{guilt}. Something personal came up {when}. {evasion}. {deflection}.",
+      "truthfulness_flag": "embellished",
+      "interrogation_type": "general",
+      "believe_notes": "Vague and personal. Won't hold up to scrutiny. Best for low-stakes cancellations with people who won't press."
+    }
+  },
+  "composite_templates": {
+    "work_then_family": {
+      "name": "Double Whammy",
+      "target_match": ["friend", "date"],
+      "tolerance_match": ["nuclear"],
+      "components": [
+        {
+          "template": "work_emergency",
+          "slots": {
+            "crisis": "work_crisis",
+            "urgency": "work_urgency",
+            "duration": "work_duration",
+            "guilt": "guilt_expression",
+            "reluctance": "reluctance_signal"
+          }
+        },
+        {
+          "template": "family_medical_emergency",
+          "slots": {
+            "situation": "family_situation",
+            "location": "family_location",
+            "update": "family_situation_update",
+            "evasion": "evasion_tactic",
+            "guilt": "guilt_expression"
+          }
+        }
+      ],
+      "connector": "And then, while I was dealing with that, ",
+      "template_text": "{work_text} And then, while I was dealing with that, {family_text}",
+      "interrogation_type": "family_emergency",
+      "believe_notes": "The double excuse is high risk. It sounds like overkill. Only use if you've established a pattern of reliability."
+    }
+  },
+  "interrogation_questions": {
+    "accident": [
+      "Where exactly did this happen?",
+      "What does the other car look like?",
+      "Did you call the police?",
+      "Is anyone hurt?",
+      "How long have you been waiting?",
+      "What's the cross street?",
+      "Were there witnesses?",
+      "Is your car drivable?",
+      "What were you doing at {accident_location}?",
+      "Did you get the other person's insurance info?",
+      "Have you called anyone else about this?"
+    ],
+    "illness": [
+      "What exactly are your symptoms?",
+      "When did this start?",
+      "Have you taken anything for it?",
+      "Have you been to a doctor?",
+      "Is it contagious?",
+      "What did you eat last?",
+      "Do you get this often?",
+      "Have you checked your temperature?",
+      "Should we bring you anything?",
+      "How are you getting home from the doctor?"
+    ],
+    "family_emergency": [
+      "Is everything okay?",
+      "What happened?",
+      "Which family member?",
+      "Do you need help?",
+      "Is it serious?",
+      "How long will you be there?",
+      "Can you talk about it?",
+      "Do your parents know?",
+      "Is there anything I can do?",
+      "Should I be worried?",
+      "Have you talked to [your sibling] about this?"
+    ],
+    "work_emergency": [
+      "What exactly happened?",
+      "Can't someone else handle it?",
+      "How long will this take?",
+      "Does your boss know you had plans?",
+      "Is this the same client as last time?",
+      "Will you get overtime?",
+      "Have you tried saying no?",
+      "What happens if you don't go in?",
+      "Is this really your problem?"
+    ],
+    "home_emergency": [
+      "What happened?",
+      "How bad is it?",
+      "Is your place still livable?",
+      "Did you call your landlord?",
+      "Are your neighbors affected?",
+      "How long until it's fixed?",
+      "Did you lose anything important?",
+      "Is insurance covering it?"
+    ],
+    "car_trouble": [
+      "What kind of car do you drive?",
+      "Where is it right now?",
+      "Did you try jumping it?",
+      "Have you had issues before?",
+      "How are you getting it fixed?",
+      "When's the last time you serviced it?",
+      "Can someone give you a ride instead?",
+      "Is it still under warranty?"
+    ],
+    "general": [
+      "Can you be more specific?",
+      "What do you mean by 'something came up'?",
+      "Is everything okay?",
+      "Are you sure you can't make it for even a bit?",
+      "This feels like it happens a lot — everything good?",
+      "Did you know about this before we made plans?",
+      "How are you going to handle it?",
+      "Is there anything I can do to help?",
+      "When will you know more?",
+      "Are you being honest with me?"
+    ]
+  },
+  "probing_follow_ups": {
+    "hesitation": [
+      "You paused before answering. Why?",
+      "That took a second. You sure about that?",
+      "You don't sound confident.",
+      "Take your time. I want the real answer."
+    ],
+    "vague_answer": [
+      "That's not really an answer.",
+      "Can you be more specific?",
+      "'Something' isn't a thing. What thing?",
+      "I asked a simple question.",
+      "Details. Give me details."
+    ],
+    "contradiction": [
+      "Wait — that doesn't match what you said earlier.",
+      "You said X before, now you're saying Y. Which is it?",
+      "That's a different story than two minutes ago.",
+      "You're changing your story. Why?",
+      "I want to believe you, but you're making it hard."
+    ],
+    "over_explaining": [
+      "You're giving me a lot of detail. Interesting.",
+      "That's very specific for a simple question.",
+      "You practiced that, didn't you?",
+      "Most people don't remember that much detail. But you do. Convenient."
+    ],
+    "emotional_deflection": [
+      "Getting defensive isn't helping your case.",
+      "Why are you upset if you're telling the truth?",
+      "I'm just asking questions. Your reaction is telling.",
+      "If you were honest, this wouldn't bother you."
+    ]
+  },
+  "scoring_commentary": {
+    "excellent": {
+      "range": [90, 100],
+      "comment": "Convincing delivery. You either told the truth or you're a sociopath. Either way, they'll buy it.",
+      "advice": "You don't need this tool. You need a long look in the mirror."
+    },
+    "good": {
+      "range": [70, 89],
+      "comment": "Solid performance. A few rough edges, but nothing that would trigger real suspicion.",
+      "advice": "Stay consistent with the details you committed to. Don't volunteer extra information."
+    },
+    "decent": {
+      "range": [50, 69],
+      "comment": "They'll probably believe you, but they'll have doubts. You might get a follow-up text.",
+      "advice": "Stick to your story. Don't elaborate if they ask again. Silence is your friend."
+    },
+    "poor": {
+      "range": [30, 49],
+      "comment": "They know something's up. Maybe not the full truth, but they don't buy your excuse.",
+      "advice": "Consider partial honesty: 'Okay, it's not exactly what I said, but I really can't make it.'"
+    },
+    "terrible": {
+      "range": [0, 29],
+      "comment": "That was painful to watch. They absolutely know you're lying.",
+      "advice": "Just tell the truth. It's easier. Or get better at this. Your call."
+    }
+  }
+}

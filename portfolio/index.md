@@ -33,3 +33,4 @@
 | 0029 | Exit Conditions | code-tool | 4.4 | 2026-05-20 | — |
 | 0030 | The Office Betting Pool on When Daniel Will Finally Snap | fiction | 4.3 | 2026-05-20 | — |
 | 0031 | The World's Most Reasonable Person Tells You About Their Dinner | fiction | 4.0 | 2026-05-20 | — |
+| 0032 | The Excuse Generator | code-tool | 4.3 | 2026-05-27 | — |

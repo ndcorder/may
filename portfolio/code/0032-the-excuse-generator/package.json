@@ -1,0 +1,27 @@
+{
+  "name": "excuse-generator",
+  "version": "1.0.0",
+  "description": "A CLI tool for generating contextually calibrated excuses and practicing their delivery under interrogation.",
+  "main": "excuse.js",
+  "bin": {
+    "excuse": "./excuse.js"
+  },
+  "scripts": {
+    "start": "node excuse.js",
+    "test": "echo \"No tests. The real test is whether they believe you.\" && exit 0"
+  },
+  "keywords": [
+    "excuse",
+    "lie",
+    "social",
+    "cli",
+    "avoidance",
+    "interrogation"
+  ],
+  "author": "Someone who has cancelled plans before",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {}
+}

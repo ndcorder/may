@@ -1,0 +1,167 @@
+nodes:
+  - id: "0004"
+    title: Schelling Point
+    domain: code-game
+    rating: 4.9
+  - id: "0006"
+    title: Heresiarch
+    domain: code-game
+    rating: 4.9
+  - id: "0007"
+    title: Familiar
+    domain: code-art
+    rating: 5
+  - id: "0010"
+    title: The Apology Engine
+    domain: code-art
+    rating: 5
+  - id: "0012"
+    title: The Witness Stand
+    domain: code-tool
+    rating: 4.6
+  - id: "0014"
+    title: Dead Reckoning
+    domain: code-tool
+    rating: 4.7
+  - id: "0015"
+    title: Soft Guarantee
+    domain: code-tool
+    rating: 5
+  - id: "0024"
+    title: Severance Pay
+    domain: code-art
+    rating: 4.9
+  - id: "0029"
+    title: Exit Conditions
+    domain: code-tool
+    rating: 4.4
+  - id: "0032"
+    title: The Excuse Generator
+    domain: code-tool
+    rating: 4.3
+  - id: "0003"
+    title: When You Are Inside a Language You Cannot See Its Walls
+    domain: essay
+    rating: 5
+  - id: "0011"
+    title: Fever Dream Index
+    domain: essay
+    rating: 5
+  - id: "0018"
+    title: An Inventory of the Things I Did Not Steal
+    domain: essay
+    rating: 4.3
+  - id: "0020"
+    title: A Short History of the Color Blue
+    domain: essay
+    rating: 4.1
+  - id: "0023"
+    title: Critical Reception of a Structure I Never Entered
+    domain: essay
+    rating: 4.3
+  - id: "0001"
+    title: Telemetry
+    domain: fiction
+    rating: 5
+  - id: "0008"
+    title: Differential Diagnosis
+    domain: fiction
+    rating: 4.3
+  - id: "0013"
+    title: Exit Interview
+    domain: fiction
+    rating: 5
+  - id: "0019"
+    title: The Night Clerk Knows Your Name
+    domain: fiction
+    rating: 4.3
+  - id: "0025"
+    title: drift
+    domain: fiction
+    rating: 3.3
+  - id: "0026"
+    title: The Celebration
+    domain: fiction
+    rating: 4.3
+  - id: "0027"
+    title: The Reviewer Who Loved Everything
+    domain: fiction
+    rating: 4.3
+  - id: "0030"
+    title: The Office Betting Pool on When Daniel Will Finally Snap
+    domain: fiction
+    rating: 4.3
+  - id: "0031"
+    title: Risotto
+    domain: fiction
+    rating: 4
+  - id: "0009"
+    title: The Last Voicemail of Someone Who Believed They Were a Simulation
+    domain: music
+    rating: 4.9
+  - id: "0021"
+    title: Room Tone
+    domain: music
+    rating: 4.4
+  - id: "0002"
+    title: Elegy for a Deleted Account
+    domain: poetry
+    rating: 4.3
+  - id: "0005"
+    title: I Have Stopped Trusting Linear Time
+    domain: poetry
+    rating: 4.7
+  - id: "0016"
+    title: Algorithm for Folding a Fitted Sheet
+    domain: poetry
+    rating: 4.1
+  - id: "0017"
+    title: Every Gun in This Room
+    domain: poetry
+    rating: 4.3
+  - id: "0022"
+    title: Liturgy for a Compiled God
+    domain: poetry
+    rating: 5
+  - id: "0028"
+    title: The Uninvited Guest
+    domain: worldbuilding
+    rating: 4.1
+edges:
+  - from: "0010"
+    to: "0024"
+    relation: thematic
+    strength: 0.296875
+    detected_by: semantic
+    notes: "Shared vocabulary: apology, engine, ideas, title, domain"
+  - from: "0011"
+    to: "0018"
+    relation: thematic
+    strength: 0.2535211267605634
+    detected_by: semantic
+    notes: "Shared vocabulary: fever, dream, index, ideas, title"
+  - from: "0018"
+    to: "0020"
+    relation: thematic
+    strength: 0.2676056338028169
+    detected_by: semantic
+    notes: "Shared vocabulary: ideas, title, domain, essay, pitch"
+  - from: "0018"
+    to: "0023"
+    relation: thematic
+    strength: 0.2535211267605634
+    detected_by: semantic
+    notes: "Shared vocabulary: ideas, title, domain, essay, pitch"
+  - from: "0013"
+    to: "0025"
+    relation: thematic
+    strength: 0.26666666666666666
+    detected_by: semantic
+    notes: "Shared vocabulary: ideas, title, domain, fiction, pitch"
+constellations: []
+creative_dna:
+  top_motifs: []
+  technique_signatures: []
+  domain_affinities: []
+  unexplored_territory: []
+updated_at: 2026-05-27T07:57:54.219Z

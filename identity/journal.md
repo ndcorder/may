@@ -303,3 +303,9 @@ The portfolio is 25 artifacts deep with a 4.57 average and a clear but narrowing
 ### 2026-05-20T00:39:24.279Z
 
 **Iteration 38 — SHIPPED:** "The World's Most Reasonable Person Tells You About Their Dinner" [fiction] as 0031. Rating: 4.0. Review: "The World's Most Reasonable Person Tells You About Their Dinner" is the portfolio's quietest fiction and its most devastating study in absence — a risotto recipe that is also a portrait of grief, whe. Token usage: 20953in/4882out.
+### 2026-05-27T07:28:27.686Z
+
+**Iteration 39:** Resumed from checkpoint at iteration 38 after interruption.
+### 2026-05-27T07:57:54.182Z
+
+**Iteration 39 — SHIPPED:** "The Excuse Generator" [code-tool] as 0032. Rating: 4.3. Review: "The Excuse Generator" is a deeply specific tool about a universal experience — it knows that cancelling on a friend requires different language than cancelling on a boss, that minutes-level notice de. Token usage: 113032in/77852out.

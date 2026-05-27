@@ -1,0 +1,253 @@
+{
+  "traffic_accidents": {
+    "roles": [
+      {"id": "involved", "label": "I was in a collision"},
+      {"id": "witness", "label": "I witnessed a collision"},
+      {"id": "blocked", "label": "I'm stuck behind a major accident"}
+    ],
+    "locations": [
+      "the intersection of 5th and Main",
+      "the highway on-ramp near exit 12",
+      "the parking garage on Oak Street",
+      "the roundabout by the shopping center",
+      "the stretch of Elm near the overpass"
+    ],
+    "severity": [
+      "minor fender-bender",
+      "two-car collision",
+      "multi-car pileup",
+      "hit-and-run"
+    ],
+    "details": [
+      "waiting for police to arrive",
+      "giving a witness statement",
+      "waiting for the tow truck",
+      "dealing with insurance on the phone",
+      "moved to the shoulder but can't leave yet"
+    ]
+  },
+  "illnesses": {
+    "symptom_sets": {
+      "stomach": {
+        "name": "stomach bug",
+        "symptoms": [
+          "can't be more than ten feet from a bathroom",
+          "started about an hour ago and it's getting worse",
+          "probably something I ate",
+          "the kind where you don't want to know the details"
+        ]
+      },
+      "migraine": {
+        "name": "migraine",
+        "symptoms": [
+          "light is physically painful right now",
+          "started behind my left eye this morning",
+          "I took something but it hasn't kicked in",
+          "I can barely look at my phone to type this"
+        ]
+      },
+      "flu": {
+        "name": "flu",
+        "symptoms": [
+          "fever came on this afternoon",
+          "every joint hurts",
+          "I'm alternating between freezing and burning up",
+          "can't remember the last time I felt this wiped out"
+        ]
+      },
+      "tooth": {
+        "name": "tooth emergency",
+        "symptoms": [
+          "woke up with a swollen jaw",
+          "can't close my mouth without sharp pain",
+          "dentist can see me but not until [time]",
+          "praying it's not an abscess"
+        ]
+      }
+    },
+    "durations": [
+      "should be fine by tomorrow",
+      "probably need 24 hours",
+      "rest of today for sure",
+      "going to play it by ear"
+    ]
+  },
+  "family_emergencies": {
+    "situations": [
+      {"id": "parent_hospital", "label": "my parent is in the hospital", "gravity": "high"},
+      {"id": "sibling_crisis", "label": "my sibling needs help urgently", "gravity": "medium"},
+      {"id": "relative_death", "label": "there was a death in the family", "gravity": "high"},
+      {"id": "elderly_relative", "label": "my elderly relative had a fall", "gravity": "medium"},
+      {"id": "family_gathering", "label": "a family thing came up that I can't skip", "gravity": "low"}
+    ],
+    "locations": [
+      "the hospital downtown",
+      "my parents' place",
+      "my aunt's house",
+      "the family home two hours away",
+      "their assisted living facility"
+    ],
+    "situation_updates": [
+      "they're running tests, waiting on results",
+      "looks stable but they want to keep them overnight",
+      "I need to be here for the next shift change",
+      "it's been a long day and it's not over yet",
+      "everyone's okay but shaken up"
+    ]
+  },
+  "work_crises": {
+    "scenarios": [
+      {"id": "server_down", "label": "the server is down"},
+      {"id": "client_emergency", "label": "a client is threatening to leave"},
+      {"id": "deadline_crash", "label": "a deadline got moved up to tomorrow"},
+      {"id": "coworker_no_show", "label": "my coworker didn't show and I have to cover"}
+    ],
+    "urgency_signals": [
+      "I'm the only one who knows the system",
+      "my boss specifically asked for me",
+      "the client is on the phone right now",
+      "if this doesn't get handled tonight we're in trouble"
+    ],
+    "durations": [
+      "shouldn't take more than an hour or two",
+      "could be a few hours",
+      "honestly no idea how long this will take",
+      "probably going to be here late"
+    ]
+  },
+  "home_disasters": {
+    "scenarios": [
+      {"id": "burst_pipe", "label": "a pipe burst and there's water everywhere"},
+      {"id": "power_out", "label": "the power went out and the food is spoiling"},
+      {"id": "locked_out", "label": "I locked myself out and the locksmith is coming"},
+      {"id": "break_in", "label": "someone broke in"},
+      {"id": "fire_alarm", "label": "the fire alarm won't stop and the building is freaking out"}
+    ],
+    "details": [
+      "waiting for the repair person",
+      "can't leave until this is handled",
+      "building manager is on the way",
+      "I need to be here when they show up",
+      "it's a whole situation"
+    ]
+  },
+  "car_troubles": {
+    "scenarios": [
+      {"id": "dead_battery", "label": "my battery is dead"},
+      {"id": "flat_tire", "label": "I have a flat tire"},
+      {"id": "won't_start", "label": "my car won't start for no apparent reason"},
+      {"id": "overheating", "label": "the engine is overheating"}
+    ],
+    "details": [
+      "waiting for AAA",
+      "my neighbor is trying to jump it",
+      "I tried everything I can think of",
+      "it was making a weird noise yesterday too",
+      "mechanic can't see it until tomorrow"
+    ]
+  },
+  "person_interactions": {
+    "relationships": [
+      {"id": "ex_showed_up", "label": "my ex showed up unannounced"},
+      {"id": "roommate_lockout", "label": "my roommate locked themselves out"},
+      {"id": "neighbor_complaint", "label": "my neighbor is having an issue that involves me"},
+      {"id": "pet_emergency", "label": "my pet is sick and I need to take them to the vet"}
+    ],
+    "details": [
+      "I can't just ignore this",
+      "they need my help right now",
+      "it's a whole thing",
+      "timing couldn't be worse"
+    ]
+  },
+  "temporal_markers": {
+    "times_of_day": {
+      "morning": ["first thing", "before I even got dressed", "as I was making coffee"],
+      "afternoon": ["right after lunch", "around 2pm", "an hour ago"],
+      "evening": ["as I was getting ready", "about thirty minutes ago", "literally just now"]
+    },
+    "recent_events": [
+      "I was literally reaching for my keys",
+      "I had my coat on",
+      "I was about to walk out the door",
+      "I was checking the route on my phone"
+    ]
+  },
+  "emotional_states": {
+    "guilt_expressions": [
+      "I feel terrible about this",
+      "I know this is last minute",
+      "I wouldn't do this unless I had to",
+      "you know I wouldn't flake on you",
+      "I hate cancelling",
+      "this is the last thing I wanted to do today"
+    ],
+    "reluctance_signals": [
+      "I tried to think of another way",
+      "if there was any way I could make it work, I would",
+      "I kept hoping it would resolve but it didn't",
+      "I put off making this call as long as I could"
+    ]
+  },
+  "geographic_details": {
+    "coffee_shops": [
+      "the Starbucks on 5th",
+      "that place on Main with the blue awning",
+      "the indie one near the park",
+      "Corner Coffee — you know, the one by the library"
+    ],
+    "roads": [
+      "the stretch of 5th between Main and Oak",
+      "the on-ramp to 101",
+      "that weird intersection downtown by the bank",
+      "the back road I always take to avoid traffic"
+    ],
+    "landmarks": [
+      "the building with the green roof",
+      "the shopping center with the big parking lot",
+      "the park where we walked that one time",
+      "the hospital complex on the hill"
+    ]
+  },
+  "evasion_tactics": {
+    "privacy_shields": [
+      "I'd rather not get into specifics",
+      "it's family stuff",
+      "it's personal",
+      "I don't really want to talk about the details",
+      "they asked me not to tell people"
+    ],
+    "minimizations": [
+      "it's not as bad as it sounds",
+      "everyone's okay, that's what matters",
+      "it's under control",
+      "I just need to be here"
+    ],
+    "deflections": [
+      "anyway, how's your day going?",
+      "I'll make it up to you, I promise",
+      "let's reschedule — my treat next time",
+      "thank you for understanding"
+    ]
+  },
+  "verification_elements": {
+    "offer_proof": [
+      "I can send you a photo if you want",
+      "I have the report number",
+      "you can ask [coworker] — they were there",
+      "check the traffic app — it's probably still showing the backup"
+    ],
+    "unverifiable_claims": [
+      "they said it's going around",
+      "it happened so fast",
+      "I was the only one who saw it",
+      "it's a confidential work thing"
+    ],
+    "risk_levels": {
+      "low": ["they said it's going around", "I was the only one who saw it"],
+      "medium": ["I can send you a photo if you want", "I have the report number"],
+      "high": ["you can ask [coworker] — they were there", "check the traffic app"],
+      "extreme": ["I'll forward you the email from my boss", "call the hospital if you need to verify"]
+    }
+  }
+}
