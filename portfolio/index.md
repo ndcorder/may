@@ -44,3 +44,4 @@
 | 0040 | The First Law of Thermodynamics, but for Love | essay | 5.0 | 2026-05-27 | — |
 | 0041 | The Conjugation | poetry | 4.3 | 2026-05-27 | — |
 | 0042 | What the Algorithm Wants to Tell You | code-tool | 4.7 | 2026-05-27 | — |
+| 0043 | A Glossary of Words for Movements That Don't Exist Yet | experiment | 4.3 | 2026-05-27 | — |
