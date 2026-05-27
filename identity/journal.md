@@ -312,3 +312,6 @@ The portfolio is 25 artifacts deep with a 4.57 average and a clear but narrowing
 ### 2026-05-27T08:02:48.472Z
 
 **Iteration 40 — SHIPPED:** "The Art Critic Who Only Looks at Frames" [fiction] as 0033. Rating: 4.3. Review: "Frame of Reference" is the portfolio's most sustained feat of constrained perception and one of its most emotionally devastating artifacts — eight gallery reviews written by a critic who attends enti. Token usage: 27073in/6514out.
+### 2026-05-27T08:07:26.560Z
+
+**Iteration 41:** Failed: [creator] Failed to get valid YAML after 3 attempts
