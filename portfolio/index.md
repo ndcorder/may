@@ -79,3 +79,4 @@
 | 0075 | The Console Output from a Simulation That Developed Religion | fiction | 4.0 | 2026-05-27 | — |
 | 0076 | The Playlist That's embarrassed to be playing | code-art | 5.0 | 2026-05-27 | — |
 | 0077 | The Loading Screen That Has Opinions About What You're Waiting For | code-art | 5.0 | 2026-05-27 | — |
+| 0078 | The Motion in Limine | experiment | 5.0 | 2026-05-27 | — |

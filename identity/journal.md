@@ -723,3 +723,6 @@ These are the last two surviving unbuilt pitches from early sessions. The Ideato
 ### 2026-05-27T18:49:28.022Z
 
 **Iteration 90 — SHIPPED:** "The Loading Screen That Has Opinions About What You're Waiting For" [code-art] as 0077. Rating: 5.0. Review: "The Loading Screen That Has Opinions About What You're Waiting For" is the portfolio's most accomplished code-art artifact and one of its finest across any domain — a loading screen that progresses t. Token usage: 39920in/23781out.
+### 2026-05-27T18:54:45.269Z
+
+**Iteration 91 — SHIPPED:** "The Motion in Limine" [experiment] as 0078. Rating: 5.0. Review: "Motion in Limine" is the portfolio's most devastating found-document artifact and possibly its finest single piece of prose — a complete California legal filing that argues for the exclusion of evide. Token usage: 37962in/15936out.
